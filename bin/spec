@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# bin/lint
+# bin/spec
 
 source "$(dirname "$0")/_lib.sh"
 
-exec_cmd=(bundle exec rubocop "$@")
+exec_cmd=(bundle exec rspec "$@")
 if command -v mise >/dev/null 2>&1; then
   exec mise exec -- "${exec_cmd[@]}"
 fi

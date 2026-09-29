@@ -11,6 +11,18 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Repository constitution and focused local skills for ABBU format evidence,
+  Ruby gem development, testing, and Sheriff-gated releases
+- Canonical `bin/spec` and `bin/package` workflows, with CI reusing project-local
+  `bin/spec` and `bin/lint` instead of duplicating their commands
+
+### Changed
+
+- Gem packaging now includes only the public `bin/abbu` executable instead of
+  repository-only developer commands
+
 ## [0.3.0] - 2026-09-29
 
 ### Added
