@@ -23,6 +23,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Minimum supported Ruby is now 3.3; CI covers Ruby 3.3, 3.4, and 4.0, with Ruby 3.3 as the designated lint/tooling job
 - Gem packaging now includes only the public `bin/abbu` executable instead of
   repository-only developer commands
 
