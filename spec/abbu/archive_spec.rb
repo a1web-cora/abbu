@@ -64,6 +64,7 @@ RSpec.describe Abbu::Archive do
         expect(contacts.size).to eq(1)
         expect(contacts.first.first_name).to eq('Stan')
         expect(contacts.first.last_name).to eq('Carver')
+        expect(contacts.first.source[:relative_path]).to eq('Records/stan.abcdp')
       end
     end
 

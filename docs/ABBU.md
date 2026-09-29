@@ -77,6 +77,24 @@ Notable columns in `ZABCDRECORD`:
 | `ZPRONOUNS`              | Pronouns                 |
 | `ZRINGTONE`              | Ringtone                 |
 | `ZTEXTTONE`              | Text tone                |
+| `ZCREATIONDATE`          | Optional record creation timestamp |
+| `ZMODIFICATIONDATE`      | Optional record modification timestamp |
+
+### Timestamp and source provenance
+
+Observed Contacts databases may include `ZCREATIONDATE` and `ZMODIFICATIONDATE` on
+`ZABCDRECORD`. ABBU interprets numeric values in those columns as Apple absolute time:
+seconds since 2001-01-01 00:00:00 UTC. The columns are optional because exported schemas
+vary across macOS releases and account providers; when either column is absent or invalid,
+the corresponding `Contact` value is `nil`.
+
+These values describe timestamps stored on the record. They must not be interpreted as
+proof of a user-initiated creation or edit, because syncing and migration can also affect
+them.
+
+Every parsed contact includes source provenance with the absolute source path, its path
+relative to the `.abbu` root, and whether it came from the root bundle or a database under
+`Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
 ### 2. Plist / `.abcdp` (legacy macOS)
 
@@ -97,6 +115,9 @@ The "Contacts Archive" option produces a `.abbu` bundle.
 ## References
 
 - [Apple Contacts Framework (private)](https://developer.apple.com/documentation/contacts)
+- [iQueryContacts forensic schema notes](https://github.com/MetadataForensics/iQueryContacts)
+- [Observed Contacts timestamp epoch](https://apple.stackexchange.com/questions/115551/how-to-sort-contacts-by-creation-date-or-modification-date-in-ios-contacts-or-os/229313)
+- [LifeOS Apple Contacts timestamp conversion](https://github.com/nbramia/LifeOS/blob/main/scripts/apple_data_export.py)
 - [SQLite3 gem](https://github.com/sparklemotion/sqlite3-ruby)
 - macOS `AddressBook.framework` private headers (reverse-engineered)
 

@@ -39,7 +39,9 @@ module FixtureGenerator # rubocop:disable Metrics/ModuleLength
         ZTITLE TEXT,
         ZSUFFIX TEXT,
         ZORGANIZATION TEXT,
-        ZIMAGEURI TEXT
+        ZIMAGEURI TEXT,
+        ZCREATIONDATE REAL,
+        ZMODIFICATIONDATE REAL
       )
     SQL
 
@@ -86,8 +88,9 @@ module FixtureGenerator # rubocop:disable Metrics/ModuleLength
     # Contact 1: Basic
     db.execute <<-SQL
       INSERT INTO ZABCDRECORD
-        (Z_PK, Z_ENT, ZFIRSTNAME, ZLASTNAME, ZNICKNAME, ZTITLE, ZSUFFIX, ZORGANIZATION, ZIMAGEURI)
-      VALUES (1, 14, 'Stan', 'Carver', 'Stretch', 'Honorable', 'II', 'Acme Corp', 'stan-photo')
+        (Z_PK, Z_ENT, ZFIRSTNAME, ZLASTNAME, ZNICKNAME, ZTITLE, ZSUFFIX, ZORGANIZATION, ZIMAGEURI,
+         ZCREATIONDATE, ZMODIFICATIONDATE)
+      VALUES (1, 14, 'Stan', 'Carver', 'Stretch', 'Honorable', 'II', 'Acme Corp', 'stan-photo', 0.0, 60.5)
     SQL
     db.execute <<-SQL
       INSERT INTO ZABCDEMAILADDRESS (ZOWNER, ZADDRESSNORMALIZED, ZLABEL)

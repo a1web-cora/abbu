@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Contact creation and modification timestamps from optional SQLite `ZCREATIONDATE` and `ZMODIFICATIONDATE` columns
+- Provenance metadata identifying each contact's source database or plist and its location within the ABBU bundle
+- Creation, modification, and source metadata in JSON exports
+
 ## [0.3.0] - 2026-09-29
 
 ### Added

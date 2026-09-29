@@ -11,7 +11,8 @@ module Abbu
                   :urls, :notes, :related_names, :social_profiles,
                   :birthday, :anniversary, :dates, :instant_messages,
                   :verification_code, :lunar_birthday,
-                  :image_uri, :image_path
+                  :image_uri, :image_path,
+                  :created_at, :modified_at, :source
 
     def initialize
       @emails = []

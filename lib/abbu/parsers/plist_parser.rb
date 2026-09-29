@@ -3,6 +3,7 @@
 
 require 'plist'
 require_relative '../contact'
+require_relative '../utils/source_descriptor'
 
 module Abbu
   module Parsers
@@ -21,8 +22,9 @@ module Abbu
       }.freeze
 
       # Accepts either a directory path (scans for *.abcdp) or an array of file paths
-      def initialize(paths)
+      def initialize(paths, root_path: nil)
         @paths = resolve_paths(paths)
+        @root_path = root_path
       end
 
       def contacts
@@ -47,13 +49,14 @@ module Abbu
         data = Plist.parse_xml(file.to_s)
         return nil unless data
 
-        build_contact(data)
+        build_contact(data, file)
       end
 
-      def build_contact(data)
+      def build_contact(data, file)
         contact = Contact.new
         assign_flat_fields(contact, data)
         assign_multi_value_fields(contact, data)
+        contact.source = Utils::SourceDescriptor.new(file, root_path: @root_path).to_h
         contact
       end
 

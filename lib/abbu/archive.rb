@@ -40,9 +40,9 @@ module Abbu
 
     def parser
       if sqlite?
-        Parsers::SqliteParser.new(db_paths)
+        Parsers::SqliteParser.new(db_paths, root_path: @path)
       else
-        Parsers::PlistParser.new(plist_paths)
+        Parsers::PlistParser.new(plist_paths, root_path: @path)
       end
     end
 

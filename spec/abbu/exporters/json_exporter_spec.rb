@@ -31,6 +31,9 @@ RSpec.describe Abbu::Exporters::JsonExporter do
     c.verification_code = 'V123'
     c.image_uri = 'stan-photo'
     c.image_path = Pathname.new('/tmp/Contacts.abbu/Images/stan-photo.jpg')
+    c.created_at = Time.utc(2001, 1, 1)
+    c.modified_at = Time.utc(2001, 1, 1, 0, 1, 0.5)
+    c.source = { path: '/tmp/Contacts.abbu/AddressBook-v22.abcddb', kind: 'root' }
     c
   end
 
@@ -65,6 +68,9 @@ RSpec.describe Abbu::Exporters::JsonExporter do
         expect(data['lunar_birthday']['day']).to eq(5)
         expect(data['image_uri']).to eq('stan-photo')
         expect(data['image_path']).to eq('/tmp/Contacts.abbu/Images/stan-photo.jpg')
+        expect(data['created_at']).to eq('2001-01-01T00:00:00Z')
+        expect(data['modified_at']).to eq('2001-01-01T00:01:00Z')
+        expect(data['source']['kind']).to eq('root')
       end
     end
   end

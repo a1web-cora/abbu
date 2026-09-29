@@ -1,6 +1,7 @@
 # spec/abbu/parsers/sqlite_parser_spec.rb
 # frozen_string_literal: true
 
+require 'fileutils'
 require 'sqlite3'
 require 'tmpdir'
 
@@ -15,7 +16,7 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         ZPHONETICFIRSTNAME TEXT, ZPHONETICMIDDLENAME TEXT, ZPHONETICLASTNAME TEXT,
         ZPHONETICORGANIZATION TEXT, ZPRONOUNS TEXT,
         ZRINGTONE TEXT, ZTEXTTONE TEXT, ZVERIFICATIONCODE TEXT,
-        ZIMAGEURI TEXT
+        ZIMAGEURI TEXT, ZCREATIONDATE REAL, ZMODIFICATIONDATE REAL
       )
     SQL
     db.execute <<-SQL
@@ -87,7 +88,7 @@ RSpec.describe Abbu::Parsers::SqliteParser do
       INSERT INTO ZABCDRECORD VALUES (
         1, 14, 'Stan', 'The Man', 'Carver', 'Stretch', 'Honorable', 'II',
         'Acme', 'Engineer', 'IT', 'Smith', 'Stan', 'The Phony', 'Karver',
-        'Akme', 'he/him', 'Marimba', 'Ding', 'V123', 'stan-photo'
+        'Akme', 'he/him', 'Marimba', 'Ding', 'V123', 'stan-photo', 0.0, 60.5
       )
     SQL
     db.execute("INSERT INTO ZABCDEMAILADDRESS VALUES (1, 1, 'stan@example.com', 'Work')")
@@ -127,7 +128,6 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         expect(contact.pronouns).to eq('he/him')
         expect(contact.ringtone).to eq('Marimba')
         expect(contact.texttone).to eq('Ding')
-
         # Relational fields
         expect(contact.emails).to eq([{ address: 'stan@example.com', label: 'Work' }])
         expect(contact.phones).to eq([{ number: '555-1234', label: 'Mobile' }])
@@ -140,6 +140,68 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         expect(contact.birthday).to eq({ year: 1980, month: 1, day: 1, label: '_$!<Birthday>!$_' })
         expect(contact.anniversary).to eq({ year: 2010, month: 6, day: 15, label: '_$!<Anniversary>!$_' })
         expect(contact.lunar_birthday).to eq({ year: 1980, month: 2, day: 5, label: '_$!<LunarBirthday>!$_' })
+      end
+    end
+
+    it 'records the database source relative to the ABBU root' do
+      Dir.mktmpdir('Contacts.abbu') do |dir|
+        source_dir = File.join(dir, 'Sources', 'TestAccount')
+        FileUtils.mkdir_p(source_dir)
+        db_path = File.join(source_dir, 'AddressBook-v22.abcddb')
+        build_test_db(db_path)
+
+        contact = described_class.new(db_path, root_path: dir).contacts.first
+
+        expect(contact.source).to eq({
+                                       path: File.expand_path(db_path),
+                                       relative_path: 'Sources/TestAccount/AddressBook-v22.abcddb',
+                                       kind: 'source',
+                                       identifier: 'TestAccount'
+                                     })
+        expect(contact.source).to be_frozen
+      end
+    end
+
+    it 'converts Apple absolute timestamps to UTC times' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        build_test_db(db_path)
+
+        contact = described_class.new(db_path).contacts.first
+
+        expect(contact.created_at).to eq(Time.utc(2001, 1, 1))
+        expect(contact.modified_at).to eq(Time.utc(2001, 1, 1, 0, 1, 0.5))
+      end
+    end
+
+    it 'leaves timestamps nil when the schema omits timestamp columns' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        db = SQLite3::Database.new(db_path)
+        create_schema(db)
+        db.execute('ALTER TABLE ZABCDRECORD DROP COLUMN ZCREATIONDATE')
+        db.execute('ALTER TABLE ZABCDRECORD DROP COLUMN ZMODIFICATIONDATE')
+        db.execute("INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME) VALUES (1, 14, 'Ghost')")
+        db.close
+
+        contact = described_class.new(db_path).contacts.first
+
+        expect(contact.created_at).to be_nil
+        expect(contact.modified_at).to be_nil
+      end
+    end
+
+    it 'leaves invalid timestamps nil' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        build_test_db(db_path)
+        db = SQLite3::Database.new(db_path)
+        db.execute("UPDATE ZABCDRECORD SET ZCREATIONDATE = 'invalid'")
+        db.close
+
+        contact = described_class.new(db_path).contacts.first
+
+        expect(contact.created_at).to be_nil
       end
     end
 
