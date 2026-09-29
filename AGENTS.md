@@ -30,10 +30,14 @@ in `docs/ABBU.md`.
 
 ## Product And Architecture
 
-- Support Ruby 3.2 and newer through `.mise.toml`, the gemspec, and CI.
+- Support Ruby 3.3 and newer through `.mise.toml`, the gemspec, and CI.
 - Keep the gem framework-independent and free of Rails-only runtime code.
 - Preserve `Abbu.open(path)` as the archive entry point, `Abbu::Contact` as the
   normalized contact model, and explicit parser/exporter boundaries.
+- Keep parsers responsible for translating supported SQLite or plist evidence
+  into `Abbu::Contact` instances. Keep exporters responsible for serializing
+  contacts, and keep `Abbu::Archive` responsible for bundle discovery and
+  parser selection.
 - Keep SQLite and plist parsing distinct when their evidence differs. Share only
   normalized behavior whose semantics are demonstrated across both formats.
 - Keep runtime dependencies minimal and justify additions with a concrete public
@@ -61,6 +65,9 @@ new canonical workflow under `bin/` before teaching CI a separate sequence.
 - Keep SQLite databases, plists, image files, and generated bundle layouts
   deterministic and synthetic.
 - Keep RuboCop clean and Guard usable for the local feedback loop.
+- Target Ruby 3.3 in RuboCop, matching the compatibility floor and designated
+  lint/tooling CI job.
+- Add a focused regression spec for every bug fix when practical.
 - Focused specs may fail the repository-wide coverage gate; the full suite is
   the authoritative coverage signal.
 
@@ -70,6 +77,8 @@ new canonical workflow under `bin/` before teaching CI a separate sequence.
   `# frozen_string_literal: true` on line 2.
 - Keep requires alphabetized within logical groups unless documented load order
   is necessary.
+- Require standard libraries in each source file that uses them instead of
+  relying on transitive or top-level requires.
 - Update `docs/CHANGELOG.md` and relevant public documentation for public or
   compatibility changes.
 - Preserve the MIT license, ownership, backlinks, and documentation footer.

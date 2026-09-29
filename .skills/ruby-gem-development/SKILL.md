@@ -7,7 +7,7 @@ description: Apply abbu's Ruby gem conventions when changing library code, publi
 
 ## Development Contract
 
-- Support Ruby 3.2 and newer through `mise`; `.mise.toml`, the gemspec, and CI
+- Support Ruby 3.3 and newer through `mise`; `.mise.toml`, the gemspec, and CI
   define the supported contract.
 - Use `bin/spec`, `bin/lint`, and `bin/package` as the canonical checks.
 - Preserve the `Abbu` namespace, `abbu` gem identity, and `bin/abbu` executable.

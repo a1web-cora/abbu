@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
   spec.homepage    = "https://github.com/scarver2/abbu"
   spec.license     = "MIT"
 
-  spec.required_ruby_version = ">= 3.2"
+  spec.required_ruby_version = ">= 3.3"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"]    = spec.homepage
