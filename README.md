@@ -107,6 +107,10 @@ SQLite table schema, and format history.
 
 See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature checklist.
 
+## Ruby Compatibility
+
+`abbu` supports Ruby 3.3 and newer. CI exercises Ruby 3.3, 3.4, and 4.0; Ruby 3.3 is the compatibility-floor and designated lint/tooling job.
+
 ## Development
 
 ```bash
