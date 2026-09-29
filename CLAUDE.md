@@ -1,13 +1,14 @@
+<!-- CLAUDE.md -->
+
 # CLAUDE.md
 
 This file provides project-specific context and conventions to optimize AI assistant workflows in the `abbu` repository.
 
 ## Commands
-* **Run Tests**: `bundle exec rspec`
-* **Run Linting**: `bundle exec rubocop`
-* **Run Linting (Auto-fix)**: `bundle exec rubocop -A`
-* **Build Gem**: `gem build abbu.gemspec`
-* **Release Gem**: `bundle exec rake release`
+* **Run Tests**: `bin/spec`
+* **Run Linting**: `bin/lint`
+* **Run Linting (Auto-fix)**: `bin/lint -A`
+* **Build and Verify Gem**: `bin/package`
 
 ## Architecture & Design
 * **Parsers**: Found in `lib/abbu/parsers`. Responsible for directly parsing specific storage formats (SQLite, Plist). Parsers MUST return an array of `Abbu::Contact` instances.
@@ -19,8 +20,13 @@ This file provides project-specific context and conventions to optimize AI assis
 * **Code Style**:
   * Adhere to RuboCop strictness (we use `rubocop-performance` and `rubocop-rake`).
   * Always use `frozen_string_literal: true` at the top of Ruby files.
-  * Supports Ruby versions `3.2`, `3.3`, `3.4`, and `4.0`.
-  * RuboCop targets Ruby version `3.2`.
+  * Supports Ruby versions `3.3`, `3.4`, and `4.0`.
+  * RuboCop targets Ruby version `3.3`.
 * **Testing**:
   * Use RSpec. Write isolated unit tests for parsers and exporters.
   * Any bug fix should include a regression guard spec (if applicable).
+
+—
+Stan Carver II
+Made in Texas 🤠
+https://stancarver.com
