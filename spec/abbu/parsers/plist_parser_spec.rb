@@ -135,6 +135,19 @@ RSpec.describe Abbu::Parsers::PlistParser do
       end
     end
 
+    it 'preserves the raw Apple anniversary label through vCard export' do
+      Dir.mktmpdir do |dir|
+        write_plist(dir, 'stan.abcdp', build_stan_plist)
+        contact = described_class.new(dir).contacts.first
+        exporter = Abbu::Exporters::VcardExporter.new([contact])
+
+        expect(contact.anniversary).to include(
+          label: 'Anniversary', raw_label: '_$!<Anniversary>!$_'
+        )
+        expect { exporter.to_stdout }.to output(/X-ABLABEL:_\$!<Anniversary>!\$_/).to_stdout
+      end
+    end
+
     it 'parses multiple .abcdp files in sorted order' do
       Dir.mktmpdir do |dir|
         write_plist(dir, 'b_homer.abcdp', { 'First' => 'Homer', 'Last' => 'Simpson' })

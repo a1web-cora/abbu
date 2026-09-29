@@ -137,7 +137,9 @@ stored label, so their normalized label is derived from the key and
 
 Normalization applies to email addresses, phone numbers, postal addresses,
 URLs, related names, date components, and instant-message handles. JSON keeps
-both values; human-facing CSV and vCard output uses the normalized label.
+both values. Human-facing CSV uses normalized labels, while vCard anniversary
+labels prefer `raw_label` so Apple label wrappers and custom source values
+survive parse → model → interchange export.
 
 ### 2. Plist / `.abcdp` (legacy macOS)
 

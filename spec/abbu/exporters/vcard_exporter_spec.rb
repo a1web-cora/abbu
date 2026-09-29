@@ -85,6 +85,16 @@ RSpec.describe Abbu::Exporters::VcardExporter do
     end
   end
 
+  context 'when exporting anniversary labels' do
+    it 'preserves a custom source label' do
+      contact.anniversary = {
+        year: 2010, month: 6, day: 15, label: 'First met 🌟', raw_label: 'First met 🌟'
+      }
+
+      expect { exporter.to_stdout }.to output(/X-ABLABEL:First met 🌟/).to_stdout
+    end
+  end
+
   context 'when contact has no company' do
     it 'omits the ORG line' do
       c = Abbu::Contact.new
