@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'tmpdir'
+require 'pathname'
 
 RSpec.describe Abbu::Exporters::VcardExporter do
   let(:contact) do
@@ -28,6 +29,7 @@ RSpec.describe Abbu::Exporters::VcardExporter do
     c.lunar_birthday = { year: 1980, month: 2, day: 5 }
     c.instant_messages = [{ address: 'stan.carver', label: 'Work', service: 'Skype' }]
     c.verification_code = 'V123'
+    c.image_path = Pathname.new('/tmp/Contacts.abbu/Images/stan.jpg')
     c
   end
 
@@ -61,6 +63,7 @@ RSpec.describe Abbu::Exporters::VcardExporter do
         expect(content).to include('X-ABLABEL:_$!<Anniversary>!$_')
         expect(content).to include('IMPP;TYPE=Work:skype:stan.carver')
         expect(content).to include('X-VERIFICATION-CODE:V123')
+        expect(content).to include('PHOTO;VALUE=URI:file:///tmp/Contacts.abbu/Images/stan.jpg')
         expect(content).to include('END:VCARD')
       end
     end
@@ -97,6 +100,24 @@ RSpec.describe Abbu::Exporters::VcardExporter do
       c.first_name = 'Cher'
       exp = described_class.new([c])
       expect { exp.to_stdout }.not_to output(/NICKNAME:/).to_stdout
+    end
+  end
+
+  context 'when contact has no image_path' do
+    it 'omits the PHOTO line' do
+      c = Abbu::Contact.new
+      c.first_name = 'Prince'
+      exp = described_class.new([c])
+      expect { exp.to_stdout }.not_to output(/PHOTO:/).to_stdout
+    end
+  end
+
+  context 'when image_path contains URI-reserved characters' do
+    it 'percent-encodes the photo file URI' do
+      contact.image_path = Pathname.new('/tmp/My Contacts/stan#100%-résumé.jpg')
+
+      expect { exporter.to_stdout }
+        .to output(%r{PHOTO;VALUE=URI:file:///tmp/My%20Contacts/stan%23100%25-r%C3%A9sum%C3%A9\.jpg}).to_stdout
     end
   end
 end

@@ -10,7 +10,8 @@ module Abbu
                   :phonetic_company, :pronouns, :ringtone, :texttone,
                   :urls, :notes, :related_names, :social_profiles,
                   :birthday, :anniversary, :dates, :instant_messages,
-                  :verification_code, :lunar_birthday
+                  :verification_code, :lunar_birthday,
+                  :image_uri, :image_path
 
     def initialize
       @emails = []

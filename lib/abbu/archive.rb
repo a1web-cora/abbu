@@ -4,6 +4,7 @@
 require 'pathname'
 require_relative 'parsers/sqlite_parser'
 require_relative 'parsers/plist_parser'
+require_relative 'utils/image_resolver'
 
 module Abbu
   class Archive
@@ -15,7 +16,7 @@ module Abbu
     end
 
     def contacts
-      parser.contacts
+      @contacts ||= parser.contacts.tap { |cs| attach_images(cs) }
     end
 
     def sqlite?
@@ -42,6 +43,17 @@ module Abbu
         Parsers::SqliteParser.new(db_paths)
       else
         Parsers::PlistParser.new(plist_paths)
+      end
+    end
+
+    def attach_images(contacts)
+      return if contacts.empty?
+
+      resolver = Utils::ImageResolver.new(@path)
+      contacts.each do |contact|
+        next unless contact.image_uri
+
+        contact.image_path = resolver.resolve(contact.image_uri)
       end
     end
   end

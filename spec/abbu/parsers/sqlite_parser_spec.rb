@@ -14,7 +14,8 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         ZJOBTITLE TEXT, ZDEPARTMENT TEXT, ZMAIDENNAME TEXT,
         ZPHONETICFIRSTNAME TEXT, ZPHONETICMIDDLENAME TEXT, ZPHONETICLASTNAME TEXT,
         ZPHONETICORGANIZATION TEXT, ZPRONOUNS TEXT,
-        ZRINGTONE TEXT, ZTEXTTONE TEXT, ZVERIFICATIONCODE TEXT
+        ZRINGTONE TEXT, ZTEXTTONE TEXT, ZVERIFICATIONCODE TEXT,
+        ZIMAGEURI TEXT
       )
     SQL
     db.execute <<-SQL
@@ -86,7 +87,7 @@ RSpec.describe Abbu::Parsers::SqliteParser do
       INSERT INTO ZABCDRECORD VALUES (
         1, 14, 'Stan', 'The Man', 'Carver', 'Stretch', 'Honorable', 'II',
         'Acme', 'Engineer', 'IT', 'Smith', 'Stan', 'The Phony', 'Karver',
-        'Akme', 'he/him', 'Marimba', 'Ding', 'V123'
+        'Akme', 'he/him', 'Marimba', 'Ding', 'V123', 'stan-photo'
       )
     SQL
     db.execute("INSERT INTO ZABCDEMAILADDRESS VALUES (1, 1, 'stan@example.com', 'Work')")
@@ -139,6 +140,17 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         expect(contact.birthday).to eq({ year: 1980, month: 1, day: 1, label: '_$!<Birthday>!$_' })
         expect(contact.anniversary).to eq({ year: 2010, month: 6, day: 15, label: '_$!<Anniversary>!$_' })
         expect(contact.lunar_birthday).to eq({ year: 1980, month: 2, day: 5, label: '_$!<LunarBirthday>!$_' })
+      end
+    end
+
+    it 'extracts ZIMAGEURI to image_uri' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        build_test_db(db_path)
+
+        contact = described_class.new(Pathname.new(db_path)).contacts.first
+
+        expect(contact.image_uri).to eq('stan-photo')
       end
     end
 

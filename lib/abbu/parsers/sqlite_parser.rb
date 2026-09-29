@@ -21,7 +21,8 @@ module Abbu
         'ZPHONETICORGANIZATION' => :phonetic_company,
         'ZPRONOUNS' => :pronouns,
         'ZRINGTONE' => :ringtone, 'ZTEXTTONE' => :texttone,
-        'ZVERIFICATIONCODE' => :verification_code
+        'ZVERIFICATIONCODE' => :verification_code,
+        'ZIMAGEURI' => :image_uri
       }.freeze
 
       def initialize(db_paths)

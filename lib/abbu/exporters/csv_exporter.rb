@@ -28,7 +28,7 @@ module Abbu
 
       def headers
         %w[Name First Middle Last Email Phone Company Address Groups URLs Notes RelatedNames SocialProfiles Birthday
-           Anniversary InstantMessages VerificationCode LunarBirthday]
+           Anniversary InstantMessages VerificationCode LunarBirthday ImagePath]
       end
 
       def row(contact)
@@ -50,7 +50,7 @@ module Abbu
           format_related_names(contact.related_names), format_social_profiles(contact.social_profiles),
           format_date(contact.birthday), format_date(contact.anniversary),
           format_instant_messages(contact.instant_messages), contact.verification_code,
-          format_date(contact.lunar_birthday)
+          format_date(contact.lunar_birthday), contact.image_path.to_s
         ]
       end
 

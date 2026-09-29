@@ -9,18 +9,23 @@ module FixtureGenerator # rubocop:disable Metrics/ModuleLength
   def self.generate_abbu(path = 'spec/fixtures/TestContacts.abbu')
     FileUtils.rm_rf(path)
     FileUtils.mkdir_p("#{path}/Sources/TestAccount")
+    FileUtils.mkdir_p("#{path}/Images")
 
-    # Create root database (Local contacts)
-    db_root = SQLite3::Database.new("#{path}/AddressBook-v22.abcddb")
-    setup_schema(db_root)
-    seed_root(db_root)
-    db_root.close
+    build_database("#{path}/AddressBook-v22.abcddb", :seed_root)
+    build_database("#{path}/Sources/TestAccount/AddressBook-v22.abcddb", :seed_synced)
 
-    # Create synced database (e.g., iCloud contacts in Sources)
-    db_synced = SQLite3::Database.new("#{path}/Sources/TestAccount/AddressBook-v22.abcddb")
-    setup_schema(db_synced)
-    seed_synced(db_synced)
-    db_synced.close
+    seed_images(path)
+  end
+
+  def self.build_database(db_path, seed_method)
+    db = SQLite3::Database.new(db_path)
+    setup_schema(db)
+    send(seed_method, db)
+    db.close
+  end
+
+  def self.seed_images(path)
+    File.write("#{path}/Images/stan-photo.jpg", "\xFF\xD8\xFF\xE0stub")
   end
 
   def self.setup_schema(db) # rubocop:disable Metrics/MethodLength
@@ -33,7 +38,8 @@ module FixtureGenerator # rubocop:disable Metrics/ModuleLength
         ZNICKNAME TEXT,
         ZTITLE TEXT,
         ZSUFFIX TEXT,
-        ZORGANIZATION TEXT
+        ZORGANIZATION TEXT,
+        ZIMAGEURI TEXT
       )
     SQL
 
@@ -80,8 +86,8 @@ module FixtureGenerator # rubocop:disable Metrics/ModuleLength
     # Contact 1: Basic
     db.execute <<-SQL
       INSERT INTO ZABCDRECORD
-        (Z_PK, Z_ENT, ZFIRSTNAME, ZLASTNAME, ZNICKNAME, ZTITLE, ZSUFFIX, ZORGANIZATION)
-      VALUES (1, 14, 'Stan', 'Carver', 'Stretch', 'Honorable', 'II', 'Acme Corp')
+        (Z_PK, Z_ENT, ZFIRSTNAME, ZLASTNAME, ZNICKNAME, ZTITLE, ZSUFFIX, ZORGANIZATION, ZIMAGEURI)
+      VALUES (1, 14, 'Stan', 'Carver', 'Stretch', 'Honorable', 'II', 'Acme Corp', 'stan-photo')
     SQL
     db.execute <<-SQL
       INSERT INTO ZABCDEMAILADDRESS (ZOWNER, ZADDRESSNORMALIZED, ZLABEL)

@@ -52,7 +52,9 @@ module Abbu
           dates: contact.dates,
           instant_messages: contact.instant_messages,
           verification_code: contact.verification_code,
-          lunar_birthday: contact.lunar_birthday
+          lunar_birthday: contact.lunar_birthday,
+          image_uri: contact.image_uri,
+          image_path: contact.image_path&.to_s
         }.compact
       end
     end

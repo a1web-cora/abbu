@@ -3,6 +3,7 @@
 
 require 'tmpdir'
 require 'csv'
+require 'pathname'
 
 RSpec.describe Abbu::Exporters::CsvExporter do
   let(:contact) do
@@ -23,6 +24,7 @@ RSpec.describe Abbu::Exporters::CsvExporter do
     c.lunar_birthday = { year: 1980, month: 2, day: 5 }
     c.instant_messages = [{ address: 'stan.carver', label: 'Work', service: 'Skype' }]
     c.verification_code = 'V123'
+    c.image_path = Pathname.new('/tmp/Contacts.abbu/Images/stan.jpg')
     c
   end
 
@@ -36,7 +38,8 @@ RSpec.describe Abbu::Exporters::CsvExporter do
         rows = CSV.read(path)
 
         expected_headers = %w[Name First Middle Last Email Phone Company Address Groups URLs Notes RelatedNames
-                              SocialProfiles Birthday Anniversary InstantMessages VerificationCode LunarBirthday]
+                              SocialProfiles Birthday Anniversary InstantMessages VerificationCode
+                              LunarBirthday ImagePath]
         expect(rows.first).to eq(expected_headers)
 
         expected_row = [
@@ -45,7 +48,8 @@ RSpec.describe Abbu::Exporters::CsvExporter do
           'https://stancarver.com', 'Great guy',
           'John (brother)', '@scarver2 on Twitter',
           '1980-01-01', '2010-06-15',
-          'stan.carver (Skype)', 'V123', '1980-02-05'
+          'stan.carver (Skype)', 'V123', '1980-02-05',
+          '/tmp/Contacts.abbu/Images/stan.jpg'
         ]
         expect(rows[1]).to eq(expected_row)
       end
@@ -55,6 +59,15 @@ RSpec.describe Abbu::Exporters::CsvExporter do
   describe '#to_stdout' do
     it 'prints CSV to stdout' do
       expect { exporter.to_stdout }.to output(/Stan Carver/).to_stdout
+    end
+  end
+
+  context 'when contact has no image_path' do
+    it 'emits an empty ImagePath cell' do
+      c = Abbu::Contact.new
+      c.first_name = 'Prince'
+      exp = described_class.new([c])
+      expect { exp.to_stdout }.to output(/,Prince,/).to_stdout
     end
   end
 

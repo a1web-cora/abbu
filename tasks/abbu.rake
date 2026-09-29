@@ -12,7 +12,7 @@ namespace :abbu do
     CSV.open('contacts.csv', 'w') do |csv|
       csv << %w[Name Email Phone Company]
       archive.contacts.each do |c|
-        csv << [c.full_name, c.emails.first, c.phones.first, c.company]
+        csv << [c.full_name, c.emails.first&.dig(:address), c.phones.first&.dig(:number), c.company]
       end
     end
 

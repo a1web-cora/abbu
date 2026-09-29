@@ -9,6 +9,11 @@ RSpec.describe Abbu::Contact do
     expect(contact.phones).to eq([])
   end
 
+  it 'initializes with nil image_uri and image_path' do
+    expect(contact.image_uri).to be_nil
+    expect(contact.image_path).to be_nil
+  end
+
   describe '#full_name' do
     it 'joins first and last name' do
       contact.first_name = 'Stan'

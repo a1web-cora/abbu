@@ -102,14 +102,17 @@ Feature checklist organized by release version.
 
 ---
 
-## v0.3.0 — Image Extraction
+## v0.3.0 — Image Extraction (In Progress)
 
-- [ ] Extract contact photos from `Images/` directory
-- [ ] Map image UUIDs to contacts via `ZIMAGEURI` or `ZHASIMAGE`
-- [ ] `Contact#image_path` accessor
+- [x] Extract contact photos from `Images/` directory
+- [x] Map image UUIDs to contacts via `ZIMAGEURI` (SqliteParser)
+- [x] `Contact#image_uri` and `Contact#image_path` accessors
+- [x] Support JPEG, PNG, HEIC formats (case-insensitive)
+- [x] Image resolution across nested `Sources/<account>/Images/` directories
+- [x] CSV / JSON / vCard export of image paths
 - [ ] CLI: `--extract-images` flag to export photos alongside contacts
-- [ ] Support JPEG, PNG, HEIC formats
 - [ ] Thumbnail vs. full-size image handling
+- [ ] vCard PHOTO base64 embedding (currently references absolute path)
 
 ---
 

@@ -3,6 +3,7 @@
 
 require 'tmpdir'
 require 'json'
+require 'pathname'
 
 RSpec.describe Abbu::Exporters::JsonExporter do
   let(:contact) do
@@ -28,6 +29,8 @@ RSpec.describe Abbu::Exporters::JsonExporter do
     c.lunar_birthday = { 'year' => 1980, 'month' => 2, 'day' => 5 }
     c.instant_messages = [{ address: 'stan.carver', label: 'Work', service: 'Skype' }]
     c.verification_code = 'V123'
+    c.image_uri = 'stan-photo'
+    c.image_path = Pathname.new('/tmp/Contacts.abbu/Images/stan-photo.jpg')
     c
   end
 
@@ -60,6 +63,8 @@ RSpec.describe Abbu::Exporters::JsonExporter do
         expect(data['instant_messages'].first['address']).to eq('stan.carver')
         expect(data['verification_code']).to eq('V123')
         expect(data['lunar_birthday']['day']).to eq(5)
+        expect(data['image_uri']).to eq('stan-photo')
+        expect(data['image_path']).to eq('/tmp/Contacts.abbu/Images/stan-photo.jpg')
       end
     end
   end
@@ -67,6 +72,22 @@ RSpec.describe Abbu::Exporters::JsonExporter do
   describe '#to_stdout' do
     it 'prints JSON to stdout' do
       expect { exporter.to_stdout }.to output(/Stan The Man \\"Stretch\\" Carver/).to_stdout
+    end
+  end
+
+  context 'when contact has no image' do
+    it 'omits image_uri and image_path from the output' do
+      c = Abbu::Contact.new
+      c.first_name = 'Prince'
+      exp = described_class.new([c])
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, 'out.json')
+        exp.to_file(path)
+        data = JSON.parse(File.read(path)).first
+
+        expect(data).not_to have_key('image_uri')
+        expect(data).not_to have_key('image_path')
+      end
     end
   end
 end
