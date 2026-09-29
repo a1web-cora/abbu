@@ -25,6 +25,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 - Minimum supported Ruby and RuboCop target are now 3.3; CI covers Ruby 3.3,
   3.4, and 4.0, with Ruby 3.3 as the designated lint/tooling job
+- Agent guidance is consolidated in `AGENTS.md`; the redundant `CLAUDE.md` has
+  been removed
 - Gem packaging now includes only the public `bin/abbu` executable instead of
   repository-only developer commands
 
