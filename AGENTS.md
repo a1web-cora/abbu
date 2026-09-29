@@ -4,7 +4,7 @@
 
 ## What This Is
 
-Ruby gem (v0.2.0) for reading and processing Apple Contacts `.abbu` archive bundles. Parses SQLite-backed and legacy plist-based contact records, exports to CSV/JSON/vCard, finds duplicates, ships with a CLI and Rake tasks.
+Ruby gem (v0.3.0) for reading and processing Apple Contacts `.abbu` archive bundles. Parses SQLite-backed and legacy plist-based contact records, exports to CSV/JSON/vCard, finds duplicates, ships with a CLI and Rake tasks.
 
 ## Project Layout
 

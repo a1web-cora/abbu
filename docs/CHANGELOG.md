@@ -11,6 +11,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-29
+
 ### Added
 
 - `Contact#image_uri` and `Contact#image_path` accessors
@@ -30,11 +32,6 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - vCard `PHOTO` file URIs now percent-encode spaces, reserved characters, and non-ASCII bytes in image paths
-
-## [0.2.4] - Unreleased
-
-### Fixed
-
 - `abbu:export` Rake task wrote hash literals (e.g. `{:address=>"…", :label=>"…"}`) into the `Email` and `Phone` CSV columns. Now correctly extracts the first address and number from each contact's multi-value field.
 
 ## [0.2.0] - 2026-05-03

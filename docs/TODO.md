@@ -52,7 +52,7 @@ Feature checklist organized by release version.
 
 ---
 
-## v0.2.0 — Plist Parser (In Progress)
+## v0.2.0 — Plist Parser (Released)
 
 - [x] `PlistParser` — parse legacy `.abcdp` plist contact files
 - [x] Full field extraction matching SqliteParser output shape
@@ -102,7 +102,7 @@ Feature checklist organized by release version.
 
 ---
 
-## v0.3.0 — Image Extraction (In Progress)
+## v0.3.0 — Image Extraction (Released; Follow-ups Open)
 
 - [x] Extract contact photos from `Images/` directory
 - [x] Map image UUIDs to contacts via `ZIMAGEURI` (SqliteParser)
@@ -110,6 +110,7 @@ Feature checklist organized by release version.
 - [x] Support JPEG, PNG, HEIC formats (case-insensitive)
 - [x] Image resolution across nested `Sources/<account>/Images/` directories
 - [x] CSV / JSON / vCard export of image paths
+- [ ] Detect ambiguous duplicate image stems across nested source directories
 - [ ] CLI: `--extract-images` flag to export photos alongside contacts
 - [ ] Thumbnail vs. full-size image handling
 - [ ] vCard PHOTO base64 embedding (currently references absolute path)
