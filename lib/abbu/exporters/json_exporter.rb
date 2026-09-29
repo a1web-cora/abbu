@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'time'
 
 module Abbu
   module Exporters
@@ -54,7 +55,10 @@ module Abbu
           verification_code: contact.verification_code,
           lunar_birthday: contact.lunar_birthday,
           image_uri: contact.image_uri,
-          image_path: contact.image_path&.to_s
+          image_path: contact.image_path&.to_s,
+          created_at: contact.created_at&.iso8601,
+          modified_at: contact.modified_at&.iso8601,
+          source: contact.source
         }.compact
       end
     end

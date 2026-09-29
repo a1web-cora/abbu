@@ -14,6 +14,12 @@ RSpec.describe Abbu::Contact do
     expect(contact.image_path).to be_nil
   end
 
+  it 'initializes with nil timestamp and source metadata' do
+    expect(contact.created_at).to be_nil
+    expect(contact.modified_at).to be_nil
+    expect(contact.source).to be_nil
+  end
+
   describe '#full_name' do
     it 'joins first and last name' do
       contact.first_name = 'Stan'

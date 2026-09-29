@@ -146,6 +146,23 @@ RSpec.describe Abbu::Parsers::PlistParser do
       end
     end
 
+    it 'records the plist source relative to the ABBU root' do
+      Dir.mktmpdir('Contacts.abbu') do |dir|
+        records_dir = File.join(dir, 'Records')
+        FileUtils.mkdir_p(records_dir)
+        write_plist(records_dir, 'stan.abcdp', build_stan_plist)
+
+        contact = described_class.new(records_dir, root_path: dir).contacts.first
+
+        expect(contact.source).to eq({
+                                       path: File.expand_path(File.join(records_dir, 'stan.abcdp')),
+                                       relative_path: 'Records/stan.abcdp',
+                                       kind: 'root',
+                                       identifier: nil
+                                     })
+      end
+    end
+
     it 'returns empty array when path does not exist' do
       parser = described_class.new('/nonexistent/path/Records')
       expect(parser.contacts).to eq([])

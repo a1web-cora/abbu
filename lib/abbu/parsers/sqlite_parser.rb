@@ -3,10 +3,13 @@
 
 require 'sqlite3'
 require_relative '../contact'
+require_relative '../utils/source_descriptor'
 
 module Abbu
   module Parsers
     class SqliteParser # rubocop:disable Metrics/ClassLength
+      APPLE_EPOCH_OFFSET = 978_307_200
+
       # Column-name → attr_accessor mapping for flat fields on ZABCDRECORD
       RECORD_FIELD_MAP = {
         'ZFIRSTNAME' => :first_name, 'ZMIDDLENAME' => :middle_name,
@@ -25,8 +28,9 @@ module Abbu
         'ZIMAGEURI' => :image_uri
       }.freeze
 
-      def initialize(db_paths)
+      def initialize(db_paths, root_path: nil)
         @db_paths = Array(db_paths)
+        @root_path = root_path
       end
 
       def contacts
@@ -40,7 +44,7 @@ module Abbu
       def parse_db(db_path)
         db = SQLite3::Database.new(db_path.to_s)
         db.results_as_hash = true
-        records(db).map { |row| build_contact(db, row) }
+        records(db).map { |row| build_contact(db, row, db_path) }
       ensure
         db&.close
       end
@@ -150,11 +154,26 @@ module Abbu
         []
       end
 
-      def build_contact(db, row)
+      def build_contact(db, row, db_path)
         contact = Contact.new
         assign_flat_fields(contact, row)
         assign_relational_fields(contact, db, row['Z_PK'])
+        assign_metadata(contact, row, db_path)
         contact
+      end
+
+      def assign_metadata(contact, row, db_path)
+        contact.created_at = apple_time(row['ZCREATIONDATE'])
+        contact.modified_at = apple_time(row['ZMODIFICATIONDATE'])
+        contact.source = Utils::SourceDescriptor.new(db_path, root_path: @root_path).to_h
+      end
+
+      def apple_time(value)
+        return if value.nil?
+
+        Time.at(Float(value) + APPLE_EPOCH_OFFSET).utc
+      rescue ArgumentError, TypeError
+        nil
       end
 
       def assign_flat_fields(contact, row)
