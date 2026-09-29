@@ -30,7 +30,7 @@ in `docs/ABBU.md`.
 
 ## Product And Architecture
 
-- Support Ruby 3.2 and newer through `.mise.toml`, the gemspec, and CI.
+- Support Ruby 3.3 and newer through `.mise.toml`, the gemspec, and CI.
 - Keep the gem framework-independent and free of Rails-only runtime code.
 - Preserve `Abbu.open(path)` as the archive entry point, `Abbu::Contact` as the
   normalized contact model, and explicit parser/exporter boundaries.
