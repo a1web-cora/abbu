@@ -3,7 +3,10 @@
 
 RSpec.describe Abbu do
   it 'has a version number' do
-    expect(Abbu::VERSION).not_to be_nil
+    expect(Abbu::VERSION).to match(
+      /\A\d+\.\d+\.\d+(?:[.-][0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?(?:\+[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?\z/
+    )
+    expect(Gem::Version.new(Abbu::VERSION).to_s).to eq(Abbu::VERSION)
   end
 
   it 'responds to .open' do
