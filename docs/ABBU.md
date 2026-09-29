@@ -9,9 +9,34 @@
 They are **not** a single file format — they are a macOS "package" (a directory bundle that Finder
 presents as a single file). This means you can inspect the contents with `ls` or `open -a Finder`.
 
+## Evidence Standard
+
+Apple does not publish a stable specification for every internal Contacts
+archive schema represented by `.abbu` bundles. This document therefore
+distinguishes observed repository-fixture behavior from documented Apple APIs
+and from hypotheses that still require verification.
+
+Never infer Apple Contacts storage semantics merely from Core Data table or
+column names. Require observed fixture evidence, Apple documentation where
+available, or reproducible verification, and record consequential discoveries
+in this document.
+
+For each new schema, relationship, source layout, image convention, or version
+variation:
+
+1. record the macOS or Contacts version when known;
+2. identify the synthetic fixture, SQLite query, plist key path, file evidence,
+   or Apple documentation supporting the conclusion;
+3. add a deterministic regression fixture and spec; and
+4. label unresolved interpretations as hypotheses rather than format guarantees.
+
+Real address-book exports contain sensitive personal data. Use them only for
+local verification, sanitize the observed behavior into deterministic synthetic
+fixtures, and never commit the original contacts, photos, or account identifiers.
+
 ## Structure
 
-Typical contents of a `.abbu` bundle:
+The supported synthetic fixtures and observed exports use layouts such as:
 
 ```text
 Contacts.abbu/
@@ -36,11 +61,15 @@ Contacts.abbu/
 
 ### 1. SQLite (modern macOS)
 
-Newer macOS versions store the address book in a single SQLite database:
+Supported modern fixtures contain one or more SQLite databases named:
 
 ```
 AddressBook-v22.abcddb
 ```
+
+The following tables and mappings are exercised by the repository's generated
+SQLite fixture and parser specs. Their names alone are not evidence that the
+same semantics apply to every macOS version.
 
 Key tables:
 
@@ -98,9 +127,24 @@ relative to the `.abbu` root, and whether it came from the root bundle or a data
 
 ### 2. Plist / `.abcdp` (legacy macOS)
 
-Older macOS versions stored each contact as a separate binary plist file under `Records/`.
-Each file is a serialised `ABPerson` dictionary. The `abbu` gem currently stubs this parser
-and returns an empty array with a warning.
+Older macOS versions stored contacts as separate plist files under `Records/`.
+The repository fixtures demonstrate dictionaries that the plist parser
+normalizes into the same contact model used by the SQLite parser. Additional
+plist keys or layouts require fixture evidence before they are treated as
+supported semantics.
+
+## Repository Evidence
+
+- `spec/fixtures/TestContacts.abbu/` exercises the supported synthetic SQLite,
+  nested source, and image-resolution behavior.
+- `spec/fixtures/PlistContacts.abbu/` exercises the supported synthetic legacy
+  plist behavior.
+- `spec/support/fixture_generator.rb` is the reproducible source for generated
+  SQLite fixture structure and data.
+
+These fixtures prove only the variations they contain. Table names, column
+names, entity numbers, UUIDs, and directory names alone are not sufficient
+evidence for new behavior.
 
 ## Export Steps
 
@@ -114,12 +158,16 @@ The "Contacts Archive" option produces a `.abbu` bundle.
 
 ## References
 
-- [Apple Contacts Framework (private)](https://developer.apple.com/documentation/contacts)
+- [Apple Contacts framework](https://developer.apple.com/documentation/contacts)
 - [iQueryContacts forensic schema notes](https://github.com/MetadataForensics/iQueryContacts)
 - [Observed Contacts timestamp epoch](https://apple.stackexchange.com/questions/115551/how-to-sort-contacts-by-creation-date-or-modification-date-in-ios-contacts-or-os/229313)
 - [LifeOS Apple Contacts timestamp conversion](https://github.com/nbramia/LifeOS/blob/main/scripts/apple_data_export.py)
 - [SQLite3 gem](https://github.com/sparklemotion/sqlite3-ruby)
-- macOS `AddressBook.framework` private headers (reverse-engineered)
+- Repository fixtures and regression specs listed above
+
+Apple's public Contacts framework documents application-facing concepts, not a
+stable `.abbu` storage contract. Private framework names and Core Data names are
+not normative references.
 
 ---
 Stan Carver II

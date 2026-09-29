@@ -23,19 +23,29 @@ This runs RSpec and RuboCop automatically on file changes.
 ## Running Tests
 
 ```bash
-mise exec -- bundle exec rspec
+bin/spec
 ```
 
 ## Linting
 
 ```bash
-mise exec -- bundle exec rubocop
+bin/lint
 mise exec -- bundle exec rubocop -a   # autocorrect
 ```
 
+## Packaging
+
+```bash
+bin/package
+```
+
+This builds the current gem, verifies its metadata, installs it into an isolated
+gem home, and loads that installed copy. A successful package check is evidence
+only; it does not authorize a release tag or RubyGems publication.
+
 ## Pull Request Guidelines
 
-- Base branch: `master`
+- Base branch: `main`
 - Commit style: [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `chore:`)
 - All specs must pass and coverage must remain at 100%
 - RuboCop must pass with no offenses
