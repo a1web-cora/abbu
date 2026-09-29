@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# bin/package
+
+source "$(dirname "$0")/_lib.sh"
+
+version="$(run_tool ruby -Ilib -rabbu/version -e 'print Abbu::VERSION')"
+gem_file="abbu-${version}.gem"
+
+run_tool gem build abbu.gemspec
+run_tool ruby -rrubygems/package -e '
+  package = Gem::Package.new(ARGV.fetch(0))
+  spec = package.spec
+  expected_files = Gem::Specification.load("abbu.gemspec").files.sort
+  abort "unexpected gem name: #{spec.name}" unless spec.name == "abbu"
+  abort "unexpected gem version: #{spec.version}" unless spec.version.to_s == ARGV.fetch(1)
+  abort "package file list does not match the gemspec" unless spec.files.sort == expected_files
+' "$gem_file" "$version"
+
+isolated_gem_home="$(mktemp -d "${TMPDIR:-/tmp}/abbu-package.XXXXXX")"
+cleanup() {
+  rm -rf "$isolated_gem_home"
+}
+trap cleanup EXIT
+
+GEM_HOME="$isolated_gem_home" run_tool gem install "$gem_file" --local --no-document
+GEM_HOME="$isolated_gem_home" run_tool ruby -e '
+  gem "abbu", ARGV.fetch(0)
+  require "abbu"
+  spec = Gem.loaded_specs.fetch("abbu")
+  abort "version mismatch" unless Abbu::VERSION == ARGV.fetch(0)
+  gem_home = File.realpath(ENV.fetch("GEM_HOME"))
+  loaded_path = File.realpath(spec.full_gem_path)
+  abort "gem was not loaded from isolated GEM_HOME" unless loaded_path.start_with?(gem_home)
+' "$version"
+
+printf 'Verified %s\n' "$gem_file"

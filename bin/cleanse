@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # bin/cleanse
-set -euo pipefail
 
-cd "$(dirname "$0")/.."
+source "$(dirname "$0")/_lib.sh"
 
-exec bundle exec rubocop -A "$@"
+bundle_exec rubocop -A "$@"

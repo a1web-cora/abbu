@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # bin/outdated
-set -euo pipefail
 
-cd "$(dirname "$0")/.."
+source "$(dirname "$0")/_lib.sh"
 
-exec bundle outdated "$@"
+run_tool bundle outdated "$@"

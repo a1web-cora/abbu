@@ -111,9 +111,10 @@ See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature che
 
 ```bash
 mise exec -- bundle install
-mise exec -- bundle exec guard    # DX loop: auto-test + auto-lint
-mise exec -- bundle exec rspec    # run specs
-mise exec -- bundle exec rubocop  # lint
+bin/dev      # Guard feedback loop
+bin/spec     # RSpec with the 100% coverage gate
+bin/lint     # RuboCop
+bin/package  # build and verify the gem in isolation
 ```
 
 ## Contributing
