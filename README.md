@@ -38,10 +38,14 @@ archive = Abbu.open("Contacts.abbu")
 contacts = archive.contacts
 
 contacts.first.full_name   # => "Honorable Stan \"Stretch\" Carver II"
-contacts.first.emails      # => [{ address: "stan@example.com", label: "Work" }]
-contacts.first.phones      # => [{ number: "555-1234", label: "Mobile" }]
+contacts.first.emails      # => [{ address: "stan@example.com", label: "Work", raw_label: "_$!<Work>!$_" }]
+contacts.first.phones      # => [{ number: "555-1234", label: "Mobile", raw_label: "Mobile" }]
 contacts.first.job_title   # => "Engineer"
 ```
+
+Labeled values expose a normalized `label` for display and retain the source
+value in `raw_label`. For example, `_$!<Mobile>!$_` becomes `Mobile` while the
+original wrapper remains available in `raw_label`.
 
 ### Export
 

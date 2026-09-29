@@ -139,7 +139,7 @@ module Abbu
         return unless contact.anniversary
 
         lines << "X-ABDATE;type=pref:#{format_vcard_date(contact.anniversary)}"
-        lines << 'X-ABLABEL:_$!<Anniversary>!$_'
+        lines << "X-ABLABEL:#{contact.anniversary[:label] || 'Anniversary'}"
       end
 
       def format_vcard_date(date)

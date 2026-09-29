@@ -60,7 +60,7 @@ RSpec.describe Abbu::Exporters::VcardExporter do
         expect(content).to include('BDAY:1980-01-01')
         expect(content).to include('X-LUNAR-BDAY:1980-02-05')
         expect(content).to include('X-ABDATE;type=pref:2010-06-15')
-        expect(content).to include('X-ABLABEL:_$!<Anniversary>!$_')
+        expect(content).to include('X-ABLABEL:Anniversary')
         expect(content).to include('IMPP;TYPE=Work:skype:stan.carver')
         expect(content).to include('X-VERIFICATION-CODE:V123')
         expect(content).to include('PHOTO;VALUE=URI:file:///tmp/Contacts.abbu/Images/stan.jpg')

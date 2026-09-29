@@ -13,6 +13,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Normalized Apple standard labels with the original source value preserved as
+  `raw_label` on labeled contact values
 - Contact creation and modification timestamps from optional SQLite `ZCREATIONDATE` and `ZMODIFICATIONDATE` columns
 - Provenance metadata identifying each contact's source database or plist and its location within the ABBU bundle
 - Creation, modification, and source metadata in JSON exports

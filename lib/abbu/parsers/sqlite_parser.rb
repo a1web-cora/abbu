@@ -3,6 +3,7 @@
 
 require 'sqlite3'
 require_relative '../contact'
+require_relative '../utils/label_normalizer'
 require_relative '../utils/source_descriptor'
 
 module Abbu
@@ -58,14 +59,14 @@ module Abbu
         db.execute(
           'SELECT ZADDRESSNORMALIZED, ZLABEL FROM ZABCDEMAILADDRESS WHERE ZOWNER = ?',
           record_id
-        ).map { |row| { address: row['ZADDRESSNORMALIZED'], label: row['ZLABEL'] } }
+        ).map { |row| { address: row['ZADDRESSNORMALIZED'], **label_fields(row['ZLABEL']) } }
       end
 
       def phones_for(db, record_id)
         db.execute(
           'SELECT ZFULLNUMBER, ZLABEL FROM ZABCDPHONENUMBER WHERE ZOWNER = ?',
           record_id
-        ).map { |row| { number: row['ZFULLNUMBER'], label: row['ZLABEL'] } }
+        ).map { |row| { number: row['ZFULLNUMBER'], **label_fields(row['ZLABEL']) } }
       end
 
       def addresses_for(db, record_id) # rubocop:disable Metrics/MethodLength
@@ -79,7 +80,7 @@ module Abbu
             state: row['ZSTATE'],
             zip: row['ZZIPCODE'],
             country: row['ZCOUNTRYNAME'],
-            label: row['ZLABEL']
+            **label_fields(row['ZLABEL'])
           }
         end
       end
@@ -100,7 +101,7 @@ module Abbu
         db.execute(
           'SELECT ZURL, ZLABEL FROM ZABCDURLADDRESS WHERE ZOWNER = ?',
           record_id
-        ).map { |row| { url: row['ZURL'], label: row['ZLABEL'] } }
+        ).map { |row| { url: row['ZURL'], **label_fields(row['ZLABEL']) } }
       rescue SQLite3::SQLException
         []
       end
@@ -118,7 +119,7 @@ module Abbu
         db.execute(
           'SELECT ZNAME, ZLABEL FROM ZABCDRELATEDNAME WHERE ZOWNER = ?',
           record_id
-        ).map { |row| { name: row['ZNAME'], label: row['ZLABEL'] } }
+        ).map { |row| { name: row['ZNAME'], **label_fields(row['ZLABEL']) } }
       rescue SQLite3::SQLException
         []
       end
@@ -136,9 +137,7 @@ module Abbu
         db.execute(
           'SELECT ZYEAR, ZMONTH, ZDAY, ZLABEL FROM ZABCDDATECOMPONENTS WHERE ZOWNER = ?',
           record_id
-        ).map do |row|
-          { year: row['ZYEAR'], month: row['ZMONTH'], day: row['ZDAY'], label: row['ZLABEL'] }
-        end
+        ).map { |row| date_from(row) }
       rescue SQLite3::SQLException
         []
       end
@@ -148,7 +147,7 @@ module Abbu
           'SELECT ZADDRESS, ZLABEL, ZSERVICENAME FROM ZABCDMESSAGINGADDRESS WHERE ZOWNER = ?',
           record_id
         ).map do |row|
-          { address: row['ZADDRESS'], label: row['ZLABEL'], service: row['ZSERVICENAME'] }
+          { address: row['ZADDRESS'], service: row['ZSERVICENAME'], **label_fields(row['ZLABEL']) }
         end
       rescue SQLite3::SQLException
         []
@@ -176,6 +175,17 @@ module Abbu
         nil
       end
 
+      def label_fields(raw_label)
+        { label: Utils::LabelNormalizer.normalize(raw_label), raw_label: raw_label }
+      end
+
+      def date_from(row)
+        {
+          year: row['ZYEAR'], month: row['ZMONTH'], day: row['ZDAY'],
+          **label_fields(row['ZLABEL'])
+        }
+      end
+
       def assign_flat_fields(contact, row)
         RECORD_FIELD_MAP.each do |column, attr|
           contact.public_send(:"#{attr}=", row[column])
@@ -195,9 +205,9 @@ module Abbu
 
         all_dates = dates_for(db, record_id)
         contact.dates = all_dates
-        contact.birthday    = all_dates.find { |d| d[:label] == '_$!<Birthday>!$_' }
-        contact.anniversary = all_dates.find { |d| d[:label] == '_$!<Anniversary>!$_' }
-        contact.lunar_birthday = all_dates.find { |d| d[:label] == '_$!<LunarBirthday>!$_' }
+        contact.birthday    = all_dates.find { |d| d[:label] == 'Birthday' }
+        contact.anniversary = all_dates.find { |d| d[:label] == 'Anniversary' }
+        contact.lunar_birthday = all_dates.find { |d| d[:label] == 'LunarBirthday' }
       end
     end
   end
