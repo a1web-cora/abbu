@@ -2,7 +2,9 @@
 
 # abbu
 
-Read and process Apple Contacts `.abbu` archives in Ruby.
+Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
+Version 0.4.0 adds querying, diagnostics, identity evidence, and safe image extraction
+alongside CSV, JSON, and vCard export. The public API remains pre-1.0.
 
 ## Features
 
@@ -10,11 +12,16 @@ Read and process Apple Contacts `.abbu` archives in Ruby.
 - Opt-in, read-only access to a local macOS Contacts store
 - SQLite-backed contact extraction (modern macOS)
 - Legacy plist `.abcdp` parsing (older macOS)
-- Full Apple Contacts schema: names, nicknames, prefix/suffix, job title, department, phonetics, pronouns, and more
+- Evidence-backed Apple Contacts fields: names, nicknames, prefix/suffix, job title, department, phonetics, pronouns, and more
 - Rich relational data: addresses, URLs, notes, related names, social profiles
 - Export to CSV, JSON, vCard 3.0
 - CLI + Ruby API
-- Duplicate detection
+- Source provenance and creation/modification timestamps
+- Lossless raw labels alongside human-friendly normalization
+- Schema introspection, tolerant diagnostics, and strict mode
+- Chainable archive queries, exact identifier lookup, and TSV/JSON CLI search
+- Provenance-aware duplicate suggestions without automatic merging
+- Safe photo extraction with content detection and no destination overwrites
 
 ## Installation
 
@@ -72,6 +79,10 @@ Full Disk Access under **System Settings → Privacy & Security → Full Disk Ac
 Live inputs expose parser `diagnostics` and accept `strict: true` (CLI `--strict`).
 The live CLI supports stats, deduplication, and exports; archive-only search, schema,
 and image-extraction options are rejected explicitly.
+
+Live access does not write Contacts databases. WAL/concurrent-writer consistency
+remains unverified ([#28](https://github.com/scarver2/abbu/issues/28)).
+
 Labeled values expose a normalized `label` for display and retain the source
 value in `raw_label`. For example, `_$!<Mobile>!$_` becomes `Mobile` while the
 original wrapper remains available in `raw_label`.
@@ -159,6 +170,7 @@ abbu --live --stats
 
 # Read a caller-supplied AddressBook directory
 abbu --live-path /path/to/AddressBook -f json
+
 # Fail on the first corrupt or unsupported optional record/table.
 abbu Contacts.abbu --stats --strict
 

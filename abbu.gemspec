@@ -9,9 +9,10 @@ Gem::Specification.new do |spec|
   spec.authors     = ["Stan Carver II"]
   spec.email       = ["stan@a1webconsulting.com"]
 
-  spec.summary     = "Read and process Apple Contacts .abbu archives in Ruby."
-  spec.description = "Parse Apple Address Book Archive (.abbu) files and export contacts to CSV, JSON, or vCard. " \
-                     "Supports modern SQLite-backed archives and legacy plist-based records."
+  spec.summary     = "Read-only Apple Contacts toolkit for archives and live macOS stores."
+  spec.description = "Read SQLite and legacy plist .abbu archives or opt into read-only live macOS Contacts access. " \
+                     "Query contacts, inspect schemas and diagnostics, compare identity evidence, extract images, " \
+                     "and export CSV, JSON, or vCard."
   spec.homepage    = "https://github.com/scarver2/abbu"
   spec.license     = "MIT"
 
@@ -20,7 +21,7 @@ Gem::Specification.new do |spec|
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"]    = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["changelog_uri"]   = "#{spec.homepage}/blob/master/docs/CHANGELOG.md"
+  spec.metadata["changelog_uri"]   = "#{spec.homepage}/blob/main/docs/CHANGELOG.md"
   spec.metadata["rubygems_mfa_required"] = "true"
 
   spec.files = Dir[

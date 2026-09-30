@@ -102,82 +102,79 @@ Feature checklist organized by release version.
 
 ---
 
-## v0.3.0 — Image Extraction (Released; Follow-ups Open)
+## v0.3.0 — Image Resolution (Released)
 
-- [x] Extract contact photos from `Images/` directory
-- [x] Map image UUIDs to contacts via `ZIMAGEURI` (SqliteParser)
+- [x] Resolve contact photos through observed `ZIMAGEURI` relationships
 - [x] `Contact#image_uri` and `Contact#image_path` accessors
-- [x] Support JPEG, PNG, HEIC formats (case-insensitive)
-- [x] Image resolution across nested `Sources/<account>/Images/` directories
-- [x] CSV / JSON / vCard export of image paths
-- [x] Detect ambiguous duplicate image stems across nested source directories
-- [x] CLI: `--extract-images` flag to export photos alongside contacts
-- [x] Content-aware image extensions, safe Unicode filenames, and extraction diagnostics
-- [ ] Thumbnail vs. full-size image handling (awaiting reproducible format evidence)
-- [ ] vCard PHOTO base64 embedding (currently references absolute path)
+- [x] Root and nested source image discovery
+- [x] CSV / JSON image paths and vCard PHOTO file URI references
 
 ---
 
-## v0.4.0 — Fuzzy Deduplication
+## v0.4.0 — Read-only Contacts Toolkit
 
-- [x] Provenance-aware identity evidence and ambiguous match suggestions
-- [x] International-aware phone comparison without assuming national numbers are global
-- [x] Explicit merge-policy boundary preserving original source records
-- [ ] Levenshtein distance matching for name-based deduplication
-- [ ] Phone number normalization (strip formatting, compare digits)
-- [ ] Configurable similarity thresholds
-- [ ] `Deduplicator#fuzzy_duplicates` method
-- [ ] CLI: `--dedupe --fuzzy` flag
-- [ ] Merge suggestions output (side-by-side diff)
+Implemented in the accepted #19–#25 tranche and earlier prerequisites; publication
+is gated by [release issue #27](https://github.com/scarver2/abbu/issues/27),
+Deputy exact-head review, and Sheriff release authority.
 
----
+- [x] Evidence-safe schema introspection and `--schema`
+- [x] Lossless Apple label normalization with `raw_label` and anniversary vCard fidelity
+- [x] Creation/modification timestamps and source provenance
+- [x] Tolerant structured diagnostics, per-database/table deduplication, and strict mode
+- [x] Provenance-aware identity suggestions, phone comparison, and explicit merge-policy boundary
+- [x] Source-aware duplicate image-stem resolution
+- [x] First-class image extraction with content detection, safe filenames, and no destination overwrites
+- [x] Chainable query API, exact email/phone lookup, and partial name/email search
+- [x] TSV and stable JSON CLI search output
+- [x] Explicit read-only live macOS Contacts input through `--live` / `--live-path PATH`
+- [x] Ruby 3.3 minimum and lint/tooling gate; Ruby 3.4 and 4.0 CI
+- [x] Pull-request CI plus canonical-main pushes, without duplicate feature-branch runs
+- [x] `AGENTS.md`, local skills, and canonical spec/lint/package workflows
 
-## v0.5.0 — Merge Engine
+## Pre-1.0 Backlog — Not Included in 0.4.0
 
-- [ ] `Contact#merge(other)` — combine two contacts preserving all data
-- [ ] Conflict resolution strategies (keep-first, keep-last, keep-both)
-- [ ] `Archive#deduplicate!` — in-place merge with backup
-- [ ] CLI: `--merge` interactive mode
-- [ ] Export merged results to new `.abbu` bundle
+These remain future work; no implementation is authorized by release preparation.
+Version assignments below 1.0 are intentionally deferred until scopes are accepted.
 
----
+- [ ] [#28](https://github.com/scarver2/abbu/issues/28): synthetic WAL, sidecar, and concurrent-writer validation
+- [ ] [#29](https://github.com/scarver2/abbu/issues/29): stronger Apple-compatible vCard fidelity and round trips
+- [ ] [#30](https://github.com/scarver2/abbu/issues/30): embedded vCard photos (currently file URI references)
+- [ ] [#31](https://github.com/scarver2/abbu/issues/31): first-class read-only source objects
+- [ ] [#32](https://github.com/scarver2/abbu/issues/32): first-class groups and membership queries
+- [ ] [#33](https://github.com/scarver2/abbu/issues/33): evidence-backed My Card identification
+- [ ] [#34](https://github.com/scarver2/abbu/issues/34): modified-since and date-range queries
+- [ ] [#35](https://github.com/scarver2/abbu/issues/35): evidence-backed save/edit history
+- [ ] [#36](https://github.com/scarver2/abbu/issues/36): alternate-calendar and lunar metadata research
+- [ ] [#37](https://github.com/scarver2/abbu/issues/37): explainable fuzzy names and configurable thresholds
+- [ ] [#38](https://github.com/scarver2/abbu/issues/38): merge plans, side-by-side evidence, and safe built-in policies
+- [ ] [#39](https://github.com/scarver2/abbu/issues/39): broader machine-readable JSON CLI contract
+- [ ] [#40](https://github.com/scarver2/abbu/issues/40): streaming contact iteration/export and large-store performance
+- [ ] [#41](https://github.com/scarver2/abbu/issues/41): portable SQLite export
+- [ ] [#42](https://github.com/scarver2/abbu/issues/42): birthday/anniversary iCalendar export
+- [ ] [#43](https://github.com/scarver2/abbu/issues/43): identity-aware snapshot diffs
+- [ ] [#44](https://github.com/scarver2/abbu/issues/44): history across snapshot directories
+- [ ] [#45](https://github.com/scarver2/abbu/issues/45): optional MCP/agent adapter over read-only interfaces
+- [ ] [#46](https://github.com/scarver2/abbu/issues/46): evidence-backed new-ABBU writer research
+- [ ] [#47](https://github.com/scarver2/abbu/issues/47): public API stability checklist
+- [ ] Thumbnail/full-size image selection after reproducible format evidence
+- [ ] Region filtering and an explicit CLI filter grammar
 
-## v0.6.0 — Filtering & Querying
+Previous in-place `Archive#deduplicate!` / source-archive mutation proposals are
+superseded. Merge plans must preserve originals; any future writer targets a new
+output bundle and requires evidence-backed round-trip validation. Writing live
+Contacts databases is not part of the roadmap.
 
-- [x] `Archive#where(field: value)` query API
-- [x] Exact normalized email and phone lookup
-- [x] Case-insensitive partial name and email search
-- [x] CLI search with tab-separated, provenance-aware output
-- [ ] Filter by region (state, city, country)
-- [ ] Filter by group membership
-- [ ] Filter by date range (created, modified)
-- [ ] CLI: `--filter` flag with key=value syntax
-- [x] Chainable query interface
+## v1.0.0 — Future Stable API
 
----
+- [ ] Complete the API-stability checklist and acceptance evidence before promising stability
+- [ ] Comprehensive public API documentation
+- [ ] Benchmarks for large archives (10k+ contacts)
+- [ ] Optional external CRM adapters (Printavo, HubSpot, generic webhook/API), separately scoped
 
-## v0.7.0 — Write Support
+See [README](../README.md) and [CHANGELOG](CHANGELOG.md) for current behavior
+and historical releases.
 
-- [ ] Create new `.abbu` bundles from Contact objects
-- [ ] Write SQLite databases with correct schema
-- [ ] Write `.abcdp` plist files
-- [ ] Round-trip: read → modify → write
-- [ ] `Archive#save(path)` method
-
----
-
-## v1.0.0 — Sync Adapters & Stable API
-
-- [ ] Adapter interface for external CRM sync
-- [ ] Printavo adapter
-- [ ] HubSpot adapter
-- [ ] Generic webhook/API adapter
-- [ ] Stable public API guarantee
-- [ ] Comprehensive API documentation (YARD)
-- [ ] Performance benchmarks for large archives (10k+ contacts)
-
----
-
+—
 Stan Carver II
 Made in Texas 🤠
 https://stancarver.com
