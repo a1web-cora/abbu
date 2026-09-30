@@ -122,6 +122,9 @@ gate.
 
 ## Git And Release Authority
 
+- Each completed feature gets a minor version bump; bug-fix-only releases get
+  a patch bump. Prepare versions in reviewed PRs; this does not grant publication
+  authority. Coordinate successive bumps against the latest accepted version.
 - `main` is the canonical branch. Work on purpose-named branches and use pull
   requests.
 - Never bypass hooks, CI, review, or branch protection.

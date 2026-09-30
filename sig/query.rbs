@@ -1,0 +1,21 @@
+# sig/query.rbs
+module Abbu
+  class Contact
+  end
+
+  class Query
+    include Enumerable[Contact]
+
+    def initialize: (Enumerable[Contact] contacts) -> void
+    def each: () { (Contact) -> void } -> Array[Contact]
+            | () -> Enumerator[Contact, Array[Contact]]
+    def where: (Hash[Symbol, untyped] criteria) -> Query
+    def search: (String term) -> Query
+    def find_by_email: (String email) -> Query
+    def find_by_phone: (String phone) -> Query
+    def to_a: () -> Array[Contact]
+    def created_since: (Time | String value) -> Query
+    def modified_since: (Time | String value) -> Query
+    def date_range: (:created_at | :modified_at field, ?since: Time | String | nil, ?before: Time | String | nil) -> Query
+  end
+end

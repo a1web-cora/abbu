@@ -1,6 +1,8 @@
 # lib/abbu/query.rb
 # frozen_string_literal: true
 
+require_relative 'timestamp_range'
+
 module Abbu
   class Query
     include Enumerable
@@ -47,6 +49,19 @@ module Abbu
 
     def to_a
       @contacts.dup
+    end
+
+    def modified_since(value)
+      date_range(:modified_at, since: value)
+    end
+
+    def created_since(value)
+      date_range(:created_at, since: value)
+    end
+
+    def date_range(field, since: nil, before: nil)
+      range = TimestampRange.new(field, since: since, before: before)
+      self.class.new(select { |contact| range.include?(contact.public_send(field)) })
     end
 
     private

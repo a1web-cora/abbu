@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
     "docs/**/*",
     "examples/**/*.rb",
     "lib/**/*.rb",
+    "sig/**/*.rbs",
     "tasks/**/*.rake",
     "LICENSE",
     "README.md"
