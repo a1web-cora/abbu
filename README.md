@@ -43,6 +43,23 @@ contacts.first.phones      # => [{ number: "555-1234", label: "Mobile" }]
 contacts.first.job_title   # => "Engineer"
 ```
 
+### Search and identifier lookup
+
+```ruby
+# Exact lookup normalizes email case/whitespace and phone punctuation.
+archive.find_by_email("STAN@EXAMPLE.COM").each { |contact| puts contact.full_name }
+archive.find_by_phone("(555) 123-4567").each { |contact| puts contact.full_name }
+
+# Name and email search is case-insensitive and can be chained with `where`.
+archive.where(company: "Acme Corp").search("stan").each do |contact|
+  puts [contact.full_name, contact.source[:relative_path]].join("\t")
+end
+```
+
+Lookup methods return every match as an `Abbu::Query`; they never silently pick
+one contact when the same identifier appears in multiple sources. Returned
+contacts retain their parser-provided source provenance.
+
 ### Export
 
 ```ruby
@@ -83,7 +100,20 @@ abbu Contacts.abbu --stats
 
 # Find duplicates
 abbu Contacts.abbu --dedupe
+
+# Tab-separated search output: name, emails, phones, source-relative path
+abbu Contacts.abbu --search stan
+abbu Contacts.abbu --email stan@example.com
+abbu Contacts.abbu --phone '(555) 123-4567'
+
+# Stable structured search output using the regular contact JSON schema
+abbu Contacts.abbu --search stan --json | jq .
 ```
+
+CLI search defaults to tab-separated output and exits successfully when at least
+one contact matches. A search with no matches exits with status 1; TSV mode emits
+no output, while `--json` emits a valid empty array. This makes both modes
+suitable for shell conditionals, pipelines, and agent integrations.
 
 ## Rake Tasks
 
