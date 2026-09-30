@@ -11,6 +11,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-30
+
 ### Fixed
 
 - Live CLI input uses distinct `--live` auto-discovery and `--live-path PATH` forms;
