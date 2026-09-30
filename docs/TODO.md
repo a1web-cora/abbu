@@ -110,9 +110,10 @@ Feature checklist organized by release version.
 - [x] Support JPEG, PNG, HEIC formats (case-insensitive)
 - [x] Image resolution across nested `Sources/<account>/Images/` directories
 - [x] CSV / JSON / vCard export of image paths
-- [ ] Detect ambiguous duplicate image stems across nested source directories
-- [ ] CLI: `--extract-images` flag to export photos alongside contacts
-- [ ] Thumbnail vs. full-size image handling
+- [x] Detect ambiguous duplicate image stems across nested source directories
+- [x] CLI: `--extract-images` flag to export photos alongside contacts
+- [x] Content-aware image extensions, safe Unicode filenames, and extraction diagnostics
+- [ ] Thumbnail vs. full-size image handling (awaiting reproducible format evidence)
 - [ ] vCard PHOTO base64 embedding (currently references absolute path)
 
 ---

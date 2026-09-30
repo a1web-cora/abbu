@@ -13,6 +13,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `Archive#extract_images` and `Abbu::ImageExtractor` for copying contact photos to a
+  caller-selected directory with structured missing, unreadable, and unsupported-image
+  diagnostics
+- `--extract-images DIR` CLI support with content-aware JPEG, PNG, GIF, and HEIC extension
+  selection and safe, Unicode-preserving, collision-resistant filenames
+- Source-local resolution for duplicate image stems in nested account directories without
+  guessing when provenance cannot disambiguate candidates
 - Contact creation and modification timestamps from optional SQLite `ZCREATIONDATE` and `ZMODIFICATIONDATE` columns
 - Provenance metadata identifying each contact's source database or plist and its location within the ABBU bundle
 - Creation, modification, and source metadata in JSON exports

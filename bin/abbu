@@ -10,6 +10,7 @@ require 'abbu'
 options = {
   format: nil,
   output: nil,
+  extract_images: nil,
   dedupe: false,
   stats: false
 }
@@ -23,6 +24,10 @@ parser = OptionParser.new do |opts|
 
   opts.on('-o', '--output FILE', 'Output file (default: stdout)') do |o|
     options[:output] = o
+  end
+
+  opts.on('--extract-images DIR', 'Copy contact images to DIR') do |dir|
+    options[:extract_images] = dir
   end
 
   opts.on('--stats', 'Print contact statistics') do
@@ -54,6 +59,15 @@ if file.nil?
 end
 
 archive = Abbu.open(file)
+
+if options[:extract_images]
+  result = archive.extract_images(options[:extract_images])
+  puts "Extracted #{result.files.count} image(s) to #{File.expand_path(options[:extract_images])}"
+  result.diagnostics.each do |diagnostic|
+    warn "Image #{diagnostic[:code]}: #{diagnostic[:contact_name]} (#{diagnostic[:image_uri]})"
+  end
+  exit unless options[:format] || options[:stats] || options[:dedupe]
+end
 
 if options[:stats]
   contacts = archive.contacts

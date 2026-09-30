@@ -31,4 +31,15 @@ RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
     output = `#{bin} "#{fixture}" --stats 2>&1`
     expect(output).to include('Total contacts : 2')
   end
+
+  it 'extracts images to a caller-selected directory' do
+    fixture = File.expand_path('fixtures/TestContacts.abbu', __dir__)
+    Dir.mktmpdir do |dir|
+      output = `#{bin} "#{fixture}" --extract-images "#{dir}" 2>&1`
+
+      expect(output).to include('Extracted 1 image(s)')
+      expect(Dir.children(dir).first).to match(/Honorable-Stan.*stan-photo.*\.jpg\z/)
+      expect(Dir.children(dir).count).to eq(1)
+    end
+  end
 end

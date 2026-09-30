@@ -41,6 +41,11 @@ contacts.first.full_name   # => "Honorable Stan \"Stretch\" Carver II"
 contacts.first.emails      # => [{ address: "stan@example.com", label: "Work" }]
 contacts.first.phones      # => [{ number: "555-1234", label: "Mobile" }]
 contacts.first.job_title   # => "Engineer"
+
+# Copy resolved photos using safe, content-derived filenames.
+result = archive.extract_images("exported-photos")
+result.files        # copied-file metadata, including source_path and media_type
+result.diagnostics  # missing, unreadable, or unsupported image evidence
 ```
 
 ### Export
@@ -77,6 +82,9 @@ abbu Contacts.abbu -f json | jq .
 
 # vCard export
 abbu Contacts.abbu -f vcard -o contacts.vcf
+
+# Copy contact photos to a selected directory
+abbu Contacts.abbu --extract-images exported-photos
 
 # Stats
 abbu Contacts.abbu --stats

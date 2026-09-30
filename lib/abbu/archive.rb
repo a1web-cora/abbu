@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require_relative 'image_extractor'
 require_relative 'parsers/sqlite_parser'
 require_relative 'parsers/plist_parser'
 require_relative 'utils/image_resolver'
@@ -21,6 +22,10 @@ module Abbu
 
     def sqlite?
       db_paths.any?
+    end
+
+    def extract_images(output_dir)
+      ImageExtractor.new(contacts).extract(output_dir)
     end
 
     private
@@ -53,7 +58,7 @@ module Abbu
       contacts.each do |contact|
         next unless contact.image_uri
 
-        contact.image_path = resolver.resolve(contact.image_uri)
+        contact.image_path = resolver.resolve(contact.image_uri, source: contact.source)
       end
     end
   end
