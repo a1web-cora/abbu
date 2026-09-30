@@ -28,8 +28,9 @@ module Abbu
         'ZIMAGEURI' => :image_uri
       }.freeze
 
-      def initialize(db_paths, root_path: nil)
+      def initialize(db_paths, root_path: nil, readonly: false)
         @db_paths = Array(db_paths)
+        @readonly = readonly
         @root_path = root_path
       end
 
@@ -42,7 +43,7 @@ module Abbu
       private
 
       def parse_db(db_path)
-        db = SQLite3::Database.new(db_path.to_s)
+        db = SQLite3::Database.new(db_path.to_s, readonly: @readonly)
         db.results_as_hash = true
         records(db).map { |row| build_contact(db, row, db_path) }
       ensure

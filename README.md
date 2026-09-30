@@ -7,6 +7,7 @@ Read and process Apple Contacts `.abbu` archives in Ruby.
 ## Features
 
 - Parse ABBU (Apple Contacts export) bundles
+- Opt-in, read-only access to a local macOS Contacts store
 - SQLite-backed contact extraction (modern macOS)
 - Legacy plist `.abcdp` parsing (older macOS)
 - Full Apple Contacts schema: names, nicknames, prefix/suffix, job title, department, phonetics, pronouns, and more
@@ -42,6 +43,20 @@ contacts.first.emails      # => [{ address: "stan@example.com", label: "Work" }]
 contacts.first.phones      # => [{ number: "555-1234", label: "Mobile" }]
 contacts.first.job_title   # => "Engineer"
 ```
+
+Live-store access is a separate, explicit API and never changes `Abbu.open` archive
+validation:
+
+```ruby
+# Auto-discover the current macOS user's AddressBook directory
+live_contacts = Abbu.open_live.contacts
+
+# Or supply a directory for automation and platform-independent testing
+live_contacts = Abbu.open_live("/path/to/AddressBook").contacts
+```
+
+Live databases are opened with SQLite's read-only mode. The process may require
+Full Disk Access under **System Settings → Privacy & Security → Full Disk Access**.
 
 ### Export
 
@@ -83,6 +98,12 @@ abbu Contacts.abbu --stats
 
 # Find duplicates
 abbu Contacts.abbu --dedupe
+
+# Read the current macOS user's live Contacts store
+abbu --live --stats
+
+# Read a caller-supplied AddressBook directory
+abbu --live /path/to/AddressBook -f json
 ```
 
 ## Rake Tasks

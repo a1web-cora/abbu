@@ -1,6 +1,8 @@
 # spec/cli_spec.rb
 # frozen_string_literal: true
 
+require 'tmpdir'
+
 RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
   let(:bin) { File.expand_path('../bin/abbu', __dir__) }
 
@@ -30,5 +32,20 @@ RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
     fixture = File.expand_path('fixtures/PlistContacts.abbu', __dir__)
     output = `#{bin} "#{fixture}" --stats 2>&1`
     expect(output).to include('Total contacts : 2')
+  end
+
+  it 'reads a caller-supplied live Contacts store explicitly' do
+    fixture = File.expand_path('fixtures/TestContacts.abbu', __dir__)
+    output = `#{bin} --live "#{fixture}" --stats 2>&1`
+
+    expect(output).to include('Total contacts : 3')
+    expect($CHILD_STATUS.exitstatus).to eq(0)
+  end
+
+  it 'prints an actionable error for an unavailable live store' do
+    output = `#{bin} --live "/missing/AddressBook" --stats 2>&1`
+
+    expect(output).to include('Live Contacts store not found')
+    expect($CHILD_STATUS.exitstatus).not_to eq(0)
   end
 end

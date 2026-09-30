@@ -13,6 +13,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Explicit, read-only live Contacts access through `Abbu.open_live` and
+  `abbu --live [PATH]`, with root and `Sources/*` database discovery
+- Actionable live-store errors for missing databases, unsupported automatic
+  discovery, and macOS Full Disk Access restrictions
+- Platform-independent synthetic coverage for live-store discovery, source
+  provenance, SQLite read-only enforcement, and CLI behavior
 - Contact creation and modification timestamps from optional SQLite `ZCREATIONDATE` and `ZMODIFICATIONDATE` columns
 - Provenance metadata identifying each contact's source database or plist and its location within the ABBU bundle
 - Creation, modification, and source metadata in JSON exports
