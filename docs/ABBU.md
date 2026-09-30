@@ -148,6 +148,61 @@ No repository fixture currently demonstrates a reliable Apple thumbnail-versus-f
 naming or selection rule. ABBU therefore exports the image resolved by the observed
 `ZIMAGEURI` relationship and does not infer size semantics from filenames or directories.
 
+### Recovery and diagnostics
+
+By default, ABBU recovers from malformed individual plist records, missing
+optional SQLite relationship tables, and unresolved image references. Each
+recovery appends an `Abbu::Diagnostic` to `archive.diagnostics` with a category,
+parser, source path, non-PII context, and a stable message. Required contact
+schema failures still raise because no evidence-backed contact record can be
+recovered safely.
+
+An absent optional SQLite table produces one diagnostic per database and table,
+regardless of contact count. ABBU does not place record identifiers or raw image
+references in these schema- and image-level diagnostic contexts.
+
+Pass `strict: true` to `Abbu.open` or `--strict` to the CLI to raise
+`Abbu::ParseError` on the first recoverable condition. The CLI prints a
+diagnostic summary to standard error so exported data on standard output remains
+pipeable.
+
+### Schema diagnostics
+
+`Archive#schema_report` and `abbu Contacts.abbu --schema` inspect every discovered
+SQLite database and return deterministic schema metadata. Reports identify recognized
+and unrecognized tables and columns, recognized items that are absent, declared SQLite
+types, primary-key and nullability metadata, source provenance, and exact owner/contact-
+style column names that may represent contact links.
+
+These reports are research evidence, not parser mappings. In particular, a
+`contact_link_candidate` flag records only an exact column-name shape such as `ZOWNER`,
+`ZCONTACT`, or `Z_CONTACT`; it does not claim a foreign-key target or assign Apple
+Contacts semantics. Unknown tables and columns must be reproduced in a sanitized fixture
+or supported by documentation before ABBU uses them to populate contacts.
+
+Missing recognized tables and columns remain visible as diagnostic observations. The
+parser tolerates absent established email, phone, and postal-address tables by returning
+empty collections, while the schema report preserves the absence for compatibility
+research. If one of those tables exists but lacks an expected column, parsing raises the
+SQLite schema error instead of silently treating the contact as having no corresponding
+data. The core `ZABCDRECORD` table remains required for contact parsing.
+
+### Labeled values
+
+The synthetic SQLite and plist fixtures include both custom labels and Apple's
+observed standard-label wrapper, such as `_$!<Work>!$_`. ABBU exposes the
+human-facing value as `label` (`Work`) and preserves the exact stored value as
+`raw_label`. Custom, blank, malformed, Unicode, and already-normalized labels
+are not otherwise rewritten. Direct plist keys such as `Birthday` have no
+stored label, so their normalized label is derived from the key and
+`raw_label` is `nil`.
+
+Normalization applies to email addresses, phone numbers, postal addresses,
+URLs, related names, date components, and instant-message handles. JSON keeps
+both values. Human-facing CSV uses normalized labels, while vCard anniversary
+labels prefer `raw_label` so Apple label wrappers and custom source values
+survive parse → model → interchange export.
+
 ### 2. Plist / `.abcdp` (legacy macOS)
 
 Older macOS versions stored contacts as separate plist files under `Records/`.
@@ -164,6 +219,8 @@ supported semantics.
   plist behavior.
 - `spec/support/fixture_generator.rb` is the reproducible source for generated
   SQLite fixture structure and data.
+- `spec/abbu/schema_inspector_spec.rb` builds deterministic temporary SQLite
+  schemas for missing tables, unknown contact-link candidates, and column drift.
 
 These fixtures prove only the variations they contain. Table names, column
 names, entity numbers, UUIDs, and directory names alone are not sufficient

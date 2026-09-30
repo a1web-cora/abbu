@@ -45,6 +45,37 @@ in `docs/ABBU.md`.
 - Treat documented contact fields, normalized hashes, exporter output, CLI
   behavior, and error behavior as public API governed by SemVer.
 
+## Lossless Parsing And Serialization Boundaries
+
+Normalization is a presentation/convenience layer, not permission to discard
+source evidence or rewrite interchange semantics.
+
+- Preserve the exact observed source value whenever ABBU also exposes a
+  normalized value. Use explicit evidence fields such as `raw_label` rather
+  than overwriting the source representation.
+- Parser normalization must be non-destructive: callers must be able to inspect
+  both the normalized semantic value and the original stored value when the
+  source supplied one.
+- Do not let display-oriented normalization leak into lossless or interchange
+  exporters. vCard and any future ABBU writer/round-trip path must prefer the
+  original source representation when that representation can affect Apple
+  import or round-trip behavior.
+- Treat changes to regexes, matchers, label recognition, date classification,
+  identifier parsing, path/UUID interpretation, and parser dispatch as
+  compatibility-sensitive. Review both what newly matches and what stops
+  matching.
+- Whenever a matcher or normalization rule changes, add boundary regression
+  cases for: a known Apple value, a custom value, a malformed near-match, an
+  already-normalized value, and Unicode where applicable.
+- Whenever parsed data can later be serialized, add a round-trip-oriented
+  regression proving source-significant values survive parse → model → export.
+- Never replace an observed Apple token with a friendlier spelling in an
+  interchange format solely because the friendly value is preferable for human
+  display. Require evidence that the target consumer treats the forms
+  equivalently.
+- If source fidelity and human-friendly output need different representations,
+  keep both and make the exporter choose deliberately for its target format.
+
 ## Canonical Workflows
 
 Project-local commands are authoritative:
@@ -56,6 +87,12 @@ Project-local commands are authoritative:
 
 CI must call these commands instead of recreating their implementation. Add a
 new canonical workflow under `bin/` before teaching CI a separate sequence.
+
+CI event policy is also intentional: `pull_request` validates proposed branch
+commits, while `push` runs only for canonical `main` after integration. Do not
+restore unrestricted feature-branch `push` CI alongside `pull_request`; that
+runs the same Ruby matrix twice for ordinary PR commits without adding a distinct
+gate.
 
 ## Tests And Fixtures
 

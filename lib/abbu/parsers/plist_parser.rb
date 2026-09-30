@@ -3,6 +3,9 @@
 
 require 'plist'
 require_relative '../contact'
+require_relative '../diagnostic'
+require_relative '../parse_error'
+require_relative '../utils/label_normalizer'
 require_relative '../utils/source_descriptor'
 
 module Abbu
@@ -22,9 +25,13 @@ module Abbu
       }.freeze
 
       # Accepts either a directory path (scans for *.abcdp) or an array of file paths
-      def initialize(paths, root_path: nil)
+      attr_reader :diagnostics
+
+      def initialize(paths, root_path: nil, diagnostics: nil, strict: false)
         @paths = resolve_paths(paths)
         @root_path = root_path
+        @diagnostics = diagnostics || []
+        @strict = strict
       end
 
       def contacts
@@ -47,9 +54,25 @@ module Abbu
 
       def parse_file(file)
         data = Plist.parse_xml(file.to_s)
-        return nil unless data
+        return recover(file) unless data.is_a?(Hash)
 
         build_contact(data, file)
+      rescue ParseError
+        raise
+      rescue ArgumentError, EOFError, Plist::UnimplementedElementError, SystemCallError, TypeError
+        recover(file)
+      end
+
+      def recover(file)
+        diagnostic = Diagnostic.new(
+          category: :malformed_record,
+          message: 'Unable to parse plist contact record',
+          parser: :plist,
+          source: file,
+          context: {}
+        )
+        diagnostics << diagnostic
+        raise ParseError, diagnostic if @strict
       end
 
       def build_contact(data, file)
@@ -79,14 +102,14 @@ module Abbu
         contact.birthday = extract_birthday(data)
         contact.lunar_birthday = extract_lunar_birthday(data)
         contact.dates = extract_dates(data)
-        contact.anniversary = contact.dates.find { |d| d[:label] == '_$!<Anniversary>!$_' }
+        contact.anniversary = contact.dates.find { |d| d[:label] == 'Anniversary' }
       end
 
       def extract_labeled_values(data, key, value_key)
         return [] unless data[key]&.dig('values')
 
         data[key]['values'].map do |entry|
-          { value_key => entry['value'], label: entry['label'] }
+          { value_key => entry['value'], **label_fields(entry['label']) }
         end
       end
 
@@ -101,7 +124,7 @@ module Abbu
             state: addr['State'],
             zip: addr['ZIP'],
             country: addr['Country'],
-            label: entry['label']
+            **label_fields(entry['label'])
           }
         end
       end
@@ -125,7 +148,7 @@ module Abbu
 
         data['InstantMessage']['values'].map do |entry|
           msg = entry['value'] || {}
-          { address: msg['address'], label: entry['label'], service: msg['serviceName'] }
+          { address: msg['address'], service: msg['serviceName'], **label_fields(entry['label']) }
         end
       end
 
@@ -133,14 +156,14 @@ module Abbu
         val = data['Birthday']
         return nil unless val.respond_to?(:year)
 
-        { year: val.year, month: val.month, day: val.day, label: '_$!<Birthday>!$_' }
+        { year: val.year, month: val.month, day: val.day, label: 'Birthday', raw_label: nil }
       end
 
       def extract_lunar_birthday(data)
         val = data['LunarBirthday']
         return nil unless val.respond_to?(:year)
 
-        { year: val.year, month: val.month, day: val.day, label: '_$!<LunarBirthday>!$_' }
+        { year: val.year, month: val.month, day: val.day, label: 'LunarBirthday', raw_label: nil }
       end
 
       def extract_dates(data)
@@ -150,8 +173,12 @@ module Abbu
           val = entry['value']
           next unless val.respond_to?(:year)
 
-          { year: val.year, month: val.month, day: val.day, label: entry['label'] }
+          { year: val.year, month: val.month, day: val.day, **label_fields(entry['label']) }
         end
+      end
+
+      def label_fields(raw_label)
+        { label: Utils::LabelNormalizer.normalize(raw_label), raw_label: raw_label }
       end
     end
   end

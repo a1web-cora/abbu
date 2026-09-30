@@ -141,12 +141,15 @@ Feature checklist organized by release version.
 
 ## v0.6.0 — Filtering & Querying
 
-- [ ] `Archive#where(field: value)` query API
+- [x] `Archive#where(field: value)` query API
+- [x] Exact normalized email and phone lookup
+- [x] Case-insensitive partial name and email search
+- [x] CLI search with tab-separated, provenance-aware output
 - [ ] Filter by region (state, city, country)
 - [ ] Filter by group membership
 - [ ] Filter by date range (created, modified)
 - [ ] CLI: `--filter` flag with key=value syntax
-- [ ] Chainable query interface
+- [x] Chainable query interface
 
 ---
 
