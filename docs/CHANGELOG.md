@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Image extraction exclusively creates destination files and reports `destination_exists`
+  rather than overwriting existing files, symlinks, or hard links. Output directory aliases
+  are resolved before extraction; extraction diagnostic privacy is documented.
+
 ### Added
 
 - `Archive#extract_images` and `Abbu::ImageExtractor` for copying contact photos to a

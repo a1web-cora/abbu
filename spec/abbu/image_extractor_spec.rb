@@ -44,7 +44,7 @@ RSpec.describe Abbu::ImageExtractor do
       result = described_class.new([record]).extract(output)
       target = result.files.first[:path]
 
-      expect(target.dirname).to eq(output.expand_path)
+      expect(target.dirname).to eq(output.realpath)
       expect(target.basename.to_s).to include('José', '東京', 'portrait')
       expect(target.basename.to_s).not_to include('..', '/', '\\')
     end
@@ -112,6 +112,59 @@ RSpec.describe Abbu::ImageExtractor do
 
       expect(result.files).to be_empty
       expect(result.diagnostics).to be_empty
+    end
+  end
+
+  %i[symlink dangling_symlink hardlink regular].each do |kind|
+    it "refuses an existing #{kind} destination without modifying outside files" do
+      Dir.mktmpdir do |dir|
+        source = Pathname.new(dir).join('source.jpg')
+        source.binwrite(jpeg)
+        record = contact(name: 'Example Person', uri: 'photo', path: source)
+        extractor = described_class.new([record])
+        baseline = extractor.extract(File.join(dir, 'baseline'))
+        output = Pathname.new(dir).join('output')
+        output.mkdir
+        target = output.join(baseline.files.first[:path].basename)
+        sentinel = Pathname.new(dir).join('sentinel')
+        sentinel.write('keep me') unless kind == :dangling_symlink
+        case kind
+        when :symlink, :dangling_symlink then File.symlink(sentinel, target)
+        when :hardlink then File.link(sentinel, target)
+        when :regular then target.write('existing image')
+        end
+
+        result = extractor.extract(output)
+
+        expect(result.files).to be_empty
+        expect(result.diagnostics.map { |item| item[:code] }).to eq([:destination_exists])
+        if kind == :dangling_symlink
+          expect(sentinel).not_to exist
+        else
+          expect(sentinel.read).to eq('keep me')
+        end
+        expect(target.read).to eq('existing image') if kind == :regular
+        expect(target).to be_symlink if kind.to_s.end_with?('symlink')
+        expect(output.children).to eq([target])
+      end
+    end
+  end
+
+  it 'resolves the selected directory and its parent aliases before extraction' do
+    Dir.mktmpdir do |dir|
+      root = Pathname.new(dir)
+      real = root.join('real')
+      real.mkdir
+      alias_path = root.join('alias')
+      File.symlink(real, alias_path)
+      source = root.join('source.jpg')
+      source.binwrite(jpeg)
+      record = contact(name: 'Example Person', uri: 'photo', path: source)
+
+      result = described_class.new([record]).extract(alias_path.join('output'))
+
+      expect(result.files.first[:path].dirname).to eq(real.join('output').realpath)
+      expect(result.files.first[:path].binread).to eq(jpeg)
     end
   end
 end

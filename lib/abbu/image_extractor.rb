@@ -23,6 +23,7 @@ module Abbu
     def extract(output_dir)
       destination = Pathname.new(output_dir).expand_path
       FileUtils.mkdir_p(destination)
+      destination = destination.realpath
       files = []
       diagnostics = []
       used_names = Hash.new(0)
@@ -46,10 +47,20 @@ module Abbu
       return add_diagnostic(diagnostics, :unsupported_image, contact, source) unless type
 
       target = destination.join(unique_filename(contact, source, type[:extension], used_names))
-      FileUtils.copy_file(source, target)
+      return add_diagnostic(diagnostics, :destination_exists, contact, source) unless copy_image(source, target)
+
       files << file_record(contact, source, target, type)
     rescue IOError, SystemCallError => e
       add_diagnostic(diagnostics, :unreadable_image, contact, source, e.message)
+    end
+
+    def copy_image(source, target)
+      File.open(target, File::WRONLY | File::CREAT | File::EXCL, 0o600) do |output|
+        source.open('rb') { |input| IO.copy_stream(input, output) }
+      end
+      true
+    rescue Errno::EEXIST
+      false
     end
 
     def detect_type(path)

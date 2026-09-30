@@ -46,7 +46,7 @@ contacts.first.job_title   # => "Engineer"
 # Copy resolved photos using safe, content-derived filenames.
 result = archive.extract_images("exported-photos")
 result.files        # copied-file metadata, including source_path and media_type
-result.diagnostics  # missing, unreadable, or unsupported image evidence
+result.diagnostics  # image errors or destination_exists; may contain contact identifiers
 
 # Recover safe records and inspect non-fatal data loss.
 archive.diagnostics.each { |diagnostic| warn diagnostic.to_h }
