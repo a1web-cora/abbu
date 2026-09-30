@@ -15,6 +15,8 @@ options = {
   dedupe: false,
   email: nil,
   json: false,
+  live: nil,
+  live_path: nil,
   phone: nil,
   search: nil,
   schema: false,
@@ -23,7 +25,7 @@ options = {
 }
 
 parser = OptionParser.new
-parser.banner = 'Usage: abbu <file.abbu> [options]'
+parser.banner = 'Usage: abbu <file.abbu> [options] | abbu --live [options] | abbu --live-path PATH [options]'
 
 parser.on('-f', '--format FORMAT', %w[csv json vcard], 'Export format (csv, json, vcard)') do |f|
   options[:format] = f
@@ -79,19 +81,40 @@ parser.on('-h', '--help', 'Print this help') do
   exit
 end
 
+parser.on('--live', 'Auto-discover the current macOS Contacts store') do
+  options[:live] = true
+end
+
+parser.on('--live-path PATH', 'Read the specified live AddressBook directory') do |path|
+  options[:live_path] = path
+end
+
 parser.parse!
+
+live_mode = options[:live] || !options[:live_path].nil?
+live_path = options[:live_path]
+
+if options[:live] && live_path
+  warn 'Use only one of --live or --live-path PATH.'
+  exit 1
+end
+
+if live_mode && ARGV.any?
+  warn 'Unexpected positional arguments in live mode; use --live-path PATH for an explicit store.'
+  exit 1
+end
 
 file = ARGV.shift
 
-if file.nil?
+if file.nil? && !live_mode
   puts parser
   exit 1
 end
 
-archive = Abbu.open(file, strict: options[:strict])
+archive = nil
 
 at_exit do
-  next if archive.diagnostics.empty?
+  next if archive.nil? || archive.diagnostics.empty?
 
   warn "Diagnostics: #{archive.diagnostics.count}"
   archive.diagnostics.each do |diagnostic|
@@ -100,6 +123,12 @@ at_exit do
 end
 
 begin
+  if live_mode && options.values_at(:extract_images, :schema, :search, :email, :phone, :json).any?
+    warn '--live supports --stats, --dedupe, --format, and --strict; archive-only options are not supported.'
+    exit 1
+  end
+  archive = live_mode ? Abbu.open_live(live_path, strict: options[:strict]) : Abbu.open(file, strict: options[:strict])
+
   if options[:extract_images]
     result = archive.extract_images(options[:extract_images])
     puts "Extracted #{result.files.count} image(s) to #{File.expand_path(options[:extract_images])}"
@@ -186,6 +215,9 @@ begin
     puts parser
     exit 1
   end
+rescue Abbu::LiveStore::Error => e
+  warn "abbu: #{e.message}"
+  exit 1
 rescue Abbu::ParseError => e
   warn "abbu: #{e.message}"
   exit 2

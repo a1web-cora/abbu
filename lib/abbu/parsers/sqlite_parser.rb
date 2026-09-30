@@ -33,8 +33,9 @@ module Abbu
 
       attr_reader :diagnostics
 
-      def initialize(db_paths, root_path: nil, diagnostics: nil, strict: false)
+      def initialize(db_paths, root_path: nil, readonly: false, diagnostics: nil, strict: false)
         @db_paths = Array(db_paths)
+        @readonly = readonly
         @root_path = root_path
         @diagnostics = diagnostics || []
         @missing_optional_tables = {}
@@ -52,7 +53,7 @@ module Abbu
 
       def parse_db(db_path)
         @active_db_path = db_path
-        db = SQLite3::Database.new(db_path.to_s)
+        db = SQLite3::Database.new(db_path.to_s, readonly: @readonly)
         db.results_as_hash = true
         records(db).filter_map { |row| build_contact(db, row, db_path) }
       ensure

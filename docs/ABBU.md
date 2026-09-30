@@ -125,6 +125,37 @@ Every parsed contact includes source provenance with the absolute source path, i
 relative to the `.abbu` root, and whether it came from the root bundle or a database under
 `Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
+### Opt-in live Contacts stores
+
+The CLI uses `--live` only for auto-discovery and `--live-path PATH` for an explicit
+store. These forms are mutually exclusive and accept no positional archive/path arguments.
+Option ordering does not change input selection. Synthetic WAL-mode and concurrent-writer
+validation remains a follow-up; read-only handles do not establish snapshot consistency
+across an actively changing Contacts store.
+
+`Abbu.open_live` and the CLI's live modes can read an AddressBook directory
+without first exporting an `.abbu` archive. This mode is deliberately separate from
+`Abbu.open`: archive validation and plist fallback do not apply to a live store.
+
+When no path is supplied on macOS, ABBU checks the observed per-user location at
+`~/Library/Application Support/AddressBook`. Callers may instead provide a directory,
+which keeps automation and tests independent of the host platform and user account.
+ABBU discovers databases directly under that directory and one level below
+`Sources/<identifier>/`, preserving the same root/source provenance used for archives.
+Only files matching the observed `AddressBook-v*.abcddb` shape are candidates; this
+filename pattern is discovery evidence, not a guarantee of stable Apple semantics.
+
+Every live-store database is opened using SQLite's read-only mode. ABBU has no live-store
+write API and never creates, updates, or deletes Contacts data. macOS privacy controls may
+deny access even when the path exists. In that case ABBU raises
+`Abbu::LiveStore::PermissionError` with instructions to grant the calling terminal or
+application Full Disk Access in **System Settings → Privacy & Security → Full Disk
+Access**. Missing directories and databases raise `Abbu::LiveStore::NotFoundError`, and
+automatic discovery without a caller-supplied path raises
+`Abbu::LiveStore::UnsupportedPlatformError` outside macOS.
+
+The repository verifies live-store behavior only with deterministic synthetic SQLite
+fixtures. It does not inspect or commit a developer's real Contacts store.
 ### Provenance-aware identity evidence
 
 ABBU treats deduplication as a suggestion boundary rather than proof that two records are
@@ -281,6 +312,7 @@ The "Contacts Archive" option produces a `.abbu` bundle.
 - [Observed Contacts timestamp epoch](https://apple.stackexchange.com/questions/115551/how-to-sort-contacts-by-creation-date-or-modification-date-in-ios-contacts-or-os/229313)
 - [LifeOS Apple Contacts timestamp conversion](https://github.com/nbramia/LifeOS/blob/main/scripts/apple_data_export.py)
 - [SQLite3 gem](https://github.com/sparklemotion/sqlite3-ruby)
+- [macos-ts live Contacts reader](https://github.com/evantahler/macos-ts)
 - Repository fixtures and regression specs listed above
 
 Apple's public Contacts framework documents application-facing concepts, not a
