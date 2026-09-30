@@ -41,6 +41,12 @@ contacts.first.full_name   # => "Honorable Stan \"Stretch\" Carver II"
 contacts.first.emails      # => [{ address: "stan@example.com", label: "Work" }]
 contacts.first.phones      # => [{ number: "555-1234", label: "Mobile" }]
 contacts.first.job_title   # => "Engineer"
+
+# Recover safe records and inspect non-fatal data loss.
+archive.diagnostics.each { |diagnostic| warn diagnostic.to_h }
+
+# Or fail on the first corrupt/unsupported optional input.
+strict_contacts = Abbu.open("Contacts.abbu", strict: true).contacts
 ```
 
 ### Export
@@ -83,6 +89,9 @@ abbu Contacts.abbu --stats
 
 # Find duplicates
 abbu Contacts.abbu --dedupe
+
+# Fail on the first corrupt or unsupported optional record/table.
+abbu Contacts.abbu --stats --strict
 ```
 
 ## Rake Tasks

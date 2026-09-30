@@ -125,6 +125,20 @@ Every parsed contact includes source provenance with the absolute source path, i
 relative to the `.abbu` root, and whether it came from the root bundle or a database under
 `Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
+### Recovery and diagnostics
+
+By default, ABBU recovers from malformed individual plist records, missing
+optional SQLite relationship tables, and unresolved image references. Each
+recovery appends an `Abbu::Diagnostic` to `archive.diagnostics` with a category,
+parser, source path, non-PII context, and a stable message. Required contact
+schema failures still raise because no evidence-backed contact record can be
+recovered safely.
+
+Pass `strict: true` to `Abbu.open` or `--strict` to the CLI to raise
+`Abbu::ParseError` on the first recoverable condition. The CLI prints a
+diagnostic summary to standard error so exported data on standard output remains
+pipeable.
+
 ### 2. Plist / `.abcdp` (legacy macOS)
 
 Older macOS versions stored contacts as separate plist files under `Records/`.

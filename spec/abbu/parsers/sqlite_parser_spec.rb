@@ -245,6 +245,53 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         contacts = parser.contacts
 
         expect(contacts.first.groups).to eq([])
+        expect(parser.diagnostics.map(&:to_h)).to include(
+          include(category: :missing_optional_data, parser: :sqlite,
+                  context: include(table: 'Z_ABCDCONTACTGROUP', record_id: 1))
+        )
+      end
+    end
+
+    it 'raises for missing optional data in strict mode' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        db = SQLite3::Database.new(db_path)
+        create_schema(db)
+        db.execute('DROP TABLE Z_ABCDCONTACTGROUP')
+        db.execute("INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME) VALUES (1, 14, 'Ghost')")
+        db.close
+
+        parser = described_class.new(db_path, strict: true)
+
+        expect { parser.contacts }
+          .to raise_error(Abbu::ParseError, /Optional SQLite table or columns are unavailable/)
+      end
+    end
+
+    it 'raises a structured error when the required contact table is absent' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        SQLite3::Database.new(db_path).close
+        parser = described_class.new(db_path)
+
+        expect { parser.contacts }
+          .to raise_error(Abbu::ParseError, /Required SQLite contact schema is unavailable/)
+        expect(parser.diagnostics.first.category).to eq(:required_schema)
+      end
+    end
+
+    it 'skips a malformed contact while recording non-PII context' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        build_test_db(db_path)
+        parser = described_class.new(db_path)
+        allow(parser).to receive(:assign_flat_fields).and_raise(TypeError)
+
+        expect(parser.contacts).to eq([])
+        expect(parser.diagnostics.map(&:to_h)).to include(
+          include(category: :malformed_record, parser: :sqlite,
+                  context: { record_id: 1 })
+        )
       end
     end
   end

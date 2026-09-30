@@ -11,7 +11,8 @@ options = {
   format: nil,
   output: nil,
   dedupe: false,
-  stats: false
+  stats: false,
+  strict: false
 }
 
 parser = OptionParser.new do |opts|
@@ -31,6 +32,10 @@ parser = OptionParser.new do |opts|
 
   opts.on('--dedupe', 'Find and print duplicate contacts') do
     options[:dedupe] = true
+  end
+
+  opts.on('--strict', 'Raise on unsupported or corrupt optional data') do
+    options[:strict] = true
   end
 
   opts.on('-v', '--version', 'Print version') do
@@ -53,41 +58,55 @@ if file.nil?
   exit 1
 end
 
-archive = Abbu.open(file)
+archive = Abbu.open(file, strict: options[:strict])
 
-if options[:stats]
-  contacts = archive.contacts
-  puts "Total contacts : #{contacts.count}"
-  puts "With email     : #{contacts.count { |c| c.emails.any? }}"
-  puts "With phone     : #{contacts.count { |c| c.phones.any? }}"
-  exit
-end
+at_exit do
+  next if archive.diagnostics.empty?
 
-if options[:dedupe]
-  require 'abbu/utils/deduplicator'
-  dupes = Abbu::Utils::Deduplicator.new(archive.contacts).duplicates
-  if dupes.empty?
-    puts 'No duplicates found.'
-  else
-    dupes.each do |email, contacts|
-      puts "Duplicate: #{email}"
-      contacts.each { |c| puts "  - #{c.full_name}" }
-    end
+  warn "Diagnostics: #{archive.diagnostics.count}"
+  archive.diagnostics.each do |diagnostic|
+    warn "- #{diagnostic.category}: #{diagnostic.message} [#{diagnostic.source}]"
   end
-  exit
 end
 
-case options[:format]
-when 'csv'
-  exporter = Abbu::Exporters::CsvExporter.new(archive.contacts)
-  options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
-when 'json'
-  exporter = Abbu::Exporters::JsonExporter.new(archive.contacts)
-  options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
-when 'vcard'
-  exporter = Abbu::Exporters::VcardExporter.new(archive.contacts)
-  options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
-else
-  puts parser
-  exit 1
+begin
+  if options[:stats]
+    contacts = archive.contacts
+    puts "Total contacts : #{contacts.count}"
+    puts "With email     : #{contacts.count { |c| c.emails.any? }}"
+    puts "With phone     : #{contacts.count { |c| c.phones.any? }}"
+    exit
+  end
+
+  if options[:dedupe]
+    require 'abbu/utils/deduplicator'
+    dupes = Abbu::Utils::Deduplicator.new(archive.contacts).duplicates
+    if dupes.empty?
+      puts 'No duplicates found.'
+    else
+      dupes.each do |email, contacts|
+        puts "Duplicate: #{email}"
+        contacts.each { |c| puts "  - #{c.full_name}" }
+      end
+    end
+    exit
+  end
+
+  case options[:format]
+  when 'csv'
+    exporter = Abbu::Exporters::CsvExporter.new(archive.contacts)
+    options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+  when 'json'
+    exporter = Abbu::Exporters::JsonExporter.new(archive.contacts)
+    options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+  when 'vcard'
+    exporter = Abbu::Exporters::VcardExporter.new(archive.contacts)
+    options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+  else
+    puts parser
+    exit 1
+  end
+rescue Abbu::ParseError => e
+  warn "abbu: #{e.message}"
+  exit 2
 end

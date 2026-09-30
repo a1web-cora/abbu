@@ -31,4 +31,28 @@ RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
     output = `#{bin} "#{fixture}" --stats 2>&1`
     expect(output).to include('Total contacts : 2')
   end
+
+  it 'prints a non-fatal diagnostic summary for skipped records' do
+    Dir.mktmpdir('sample.abbu') do |dir|
+      File.write(File.join(dir, 'bad.abcdp'), 'not a plist')
+
+      output = `#{bin} "#{dir}" --stats 2>&1`
+
+      expect(output).to include('Total contacts : 0')
+      expect(output).to include('Diagnostics: 1')
+      expect(output).to include('malformed_record: Unable to parse plist contact record')
+      expect($CHILD_STATUS.exitstatus).to eq(0)
+    end
+  end
+
+  it 'exits non-zero on the first recoverable condition in strict mode' do
+    Dir.mktmpdir('sample.abbu') do |dir|
+      File.write(File.join(dir, 'bad.abcdp'), 'not a plist')
+
+      output = `#{bin} "#{dir}" --stats --strict 2>&1`
+
+      expect(output).to include('abbu: Unable to parse plist contact record')
+      expect($CHILD_STATUS.exitstatus).to eq(2)
+    end
+  end
 end
