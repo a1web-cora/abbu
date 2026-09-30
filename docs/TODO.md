@@ -119,6 +119,9 @@ Feature checklist organized by release version.
 
 ## v0.4.0 — Fuzzy Deduplication
 
+- [x] Provenance-aware identity evidence and ambiguous match suggestions
+- [x] International-aware phone comparison without assuming national numbers are global
+- [x] Explicit merge-policy boundary preserving original source records
 - [ ] Levenshtein distance matching for name-based deduplication
 - [ ] Phone number normalization (strip formatting, compare digits)
 - [ ] Configurable similarity thresholds

@@ -125,6 +125,26 @@ Every parsed contact includes source provenance with the absolute source path, i
 relative to the `.abbu` root, and whether it came from the root bundle or a database under
 `Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
+### Provenance-aware identity evidence
+
+ABBU treats deduplication as a suggestion boundary rather than proof that two records are
+the same person. `Utils::Deduplicator#matches` compares normalized email, phone, name, and
+organization signals while returning both original contacts, both source records, raw
+evidence, normalized comparison values, confidence, and ambiguity status.
+
+Email comparison trims surrounding whitespace and applies Unicode-aware case folding.
+Names and organizations use Unicode NFKC normalization, case folding, and whitespace or
+punctuation normalization without transliterating distinct characters. Explicit `+` and
+`00` phone forms are compared as international numbers. National-format numbers remain
+source-local evidence because ABBU has no country or numbering-plan evidence with which
+to infer a global identity.
+
+SQLite primary keys, source identifiers, private Apple link identifiers, and image stems
+are not treated as global contact identifiers. The repository fixtures do not establish
+such semantics. Competing candidates and weak name/organization or source-local phone
+matches remain ambiguous, and no contact is merged unless the caller supplies an explicit
+merge policy.
+
 ### 2. Plist / `.abcdp` (legacy macOS)
 
 Older macOS versions stored contacts as separate plist files under `Records/`.
@@ -139,6 +159,8 @@ supported semantics.
   nested source, and image-resolution behavior.
 - `spec/fixtures/PlistContacts.abbu/` exercises the supported synthetic legacy
   plist behavior.
+- `spec/fixtures/identity_cases.yml` contains deterministic synthetic cross-source and
+  Unicode near-collision identity evidence.
 - `spec/support/fixture_generator.rb` is the reproducible source for generated
   SQLite fixture structure and data.
 

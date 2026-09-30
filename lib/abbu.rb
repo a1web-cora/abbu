@@ -9,6 +9,7 @@ require_relative 'abbu/parsers/plist_parser'
 require_relative 'abbu/exporters/csv_exporter'
 require_relative 'abbu/exporters/json_exporter'
 require_relative 'abbu/exporters/vcard_exporter'
+require_relative 'abbu/utils/contact_identity'
 require_relative 'abbu/utils/deduplicator'
 
 module Abbu

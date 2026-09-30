@@ -13,6 +13,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Provenance-aware `Utils::Deduplicator#matches` suggestions with normalized email,
+  international/source-local phone, Unicode name, and organization evidence
+- Match confidence, ambiguity status, original source records, and raw evidence, plus an
+  explicit callable merge-policy boundary that never silently collapses contacts
 - Contact creation and modification timestamps from optional SQLite `ZCREATIONDATE` and `ZMODIFICATIONDATE` columns
 - Provenance metadata identifying each contact's source database or plist and its location within the ABBU bundle
 - Creation, modification, and source metadata in JSON exports

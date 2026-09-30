@@ -1,0 +1,42 @@
+# spec/fixtures/identity_cases.yml
+
+cross_source_person:
+  - first_name: José
+    last_name: Núñez
+    company: Açme LLC
+    emails:
+      - address: " Person@Example.COM "
+        label: Home
+    phones:
+      - number: "+1 (512) 555-0100"
+        label: Mobile
+    source:
+      relative_path: AddressBook-v22.abcddb
+      kind: root
+  - first_name: José
+    last_name: Núñez
+    company: Açme LLC
+    emails:
+      - address: person@example.com
+        label: Work
+    phones:
+      - number: "00 1 512 555 0100"
+        label: Work
+    source:
+      relative_path: Sources/Cloud/AddressBook-v22.abcddb
+      kind: source
+      identifier: Cloud
+
+unicode_near_collision:
+  - first_name: José
+    company: Example
+    emails:
+      - address: not-an-email
+    phones:
+      - number: "123"
+  - first_name: Jose
+    company: Example
+    emails:
+      - address: not-an-email
+    phones:
+      - number: not-a-phone
