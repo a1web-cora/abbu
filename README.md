@@ -36,10 +36,11 @@ require "abbu"
 
 archive = Abbu.open("Contacts.abbu")
 contacts = archive.contacts
+schema = archive.schema_report # Evidence-only SQLite schema diagnostics
 
 contacts.first.full_name   # => "Honorable Stan \"Stretch\" Carver II"
-contacts.first.emails      # => [{ address: "stan@example.com", label: "Work" }]
-contacts.first.phones      # => [{ number: "555-1234", label: "Mobile" }]
+contacts.first.emails      # => [{ address: "stan@example.com", label: "Work", raw_label: "_$!<Work>!$_" }]
+contacts.first.phones      # => [{ number: "555-1234", label: "Mobile", raw_label: "Mobile" }]
 contacts.first.job_title   # => "Engineer"
 
 # Recover safe records and inspect non-fatal data loss.
@@ -48,6 +49,27 @@ archive.diagnostics.each { |diagnostic| warn diagnostic.to_h }
 # Or fail on the first corrupt/unsupported optional input.
 strict_contacts = Abbu.open("Contacts.abbu", strict: true).contacts
 ```
+
+Labeled values expose a normalized `label` for display and retain the source
+value in `raw_label`. For example, `_$!<Mobile>!$_` becomes `Mobile` while the
+original wrapper remains available in `raw_label`.
+
+### Search and identifier lookup
+
+```ruby
+# Exact lookup normalizes email case/whitespace and phone punctuation.
+archive.find_by_email("STAN@EXAMPLE.COM").each { |contact| puts contact.full_name }
+archive.find_by_phone("(555) 123-4567").each { |contact| puts contact.full_name }
+
+# Name and email search is case-insensitive and can be chained with `where`.
+archive.where(company: "Acme Corp").search("stan").each do |contact|
+  puts [contact.full_name, contact.source[:relative_path]].join("\t")
+end
+```
+
+Lookup methods return every match as an `Abbu::Query`; they never silently pick
+one contact when the same identifier appears in multiple sources. Returned
+contacts retain their parser-provided source provenance.
 
 ### Export
 
@@ -92,7 +114,23 @@ abbu Contacts.abbu --dedupe
 
 # Fail on the first corrupt or unsupported optional record/table.
 abbu Contacts.abbu --stats --strict
+
+# Inspect each SQLite schema without inferring undocumented semantics
+abbu Contacts.abbu --schema
+
+# Tab-separated search output: name, emails, phones, source-relative path
+abbu Contacts.abbu --search stan
+abbu Contacts.abbu --email stan@example.com
+abbu Contacts.abbu --phone '(555) 123-4567'
+
+# Stable structured search output using the regular contact JSON schema
+abbu Contacts.abbu --search stan --json | jq .
 ```
+
+CLI search defaults to tab-separated output and exits successfully when at least
+one contact matches. A search with no matches exits with status 1; TSV mode emits
+no output, while `--json` emits a valid empty array. This makes both modes
+suitable for shell conditionals, pipelines, and agent integrations.
 
 ## Rake Tasks
 

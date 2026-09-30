@@ -5,6 +5,7 @@ require 'sqlite3'
 require_relative '../contact'
 require_relative '../diagnostic'
 require_relative '../parse_error'
+require_relative '../utils/label_normalizer'
 require_relative '../utils/source_descriptor'
 
 module Abbu
@@ -52,10 +53,6 @@ module Abbu
         db = SQLite3::Database.new(db_path.to_s)
         db.results_as_hash = true
         records(db).filter_map { |row| build_contact(db, row, db_path) }
-      rescue ParseError
-        raise
-      rescue SQLite3::Exception
-        fail_required_schema(db_path)
       ensure
         db&.close
       end
@@ -63,19 +60,21 @@ module Abbu
       def records(db)
         # Exclude groups (typically Z_ENT = 15 in this schema version)
         db.execute('SELECT * FROM ZABCDRECORD WHERE Z_ENT != 15')
+      rescue SQLite3::Exception
+        fail_required_schema(@active_db_path)
       end
 
       def emails_for(db, record_id)
         query = 'SELECT ZADDRESSNORMALIZED, ZLABEL FROM ZABCDEMAILADDRESS WHERE ZOWNER = ?'
         optional_rows(db, record_id, 'ZABCDEMAILADDRESS', query).map do |row|
-          { address: row['ZADDRESSNORMALIZED'], label: row['ZLABEL'] }
+          { address: row['ZADDRESSNORMALIZED'], **label_fields(row['ZLABEL']) }
         end
       end
 
       def phones_for(db, record_id)
         query = 'SELECT ZFULLNUMBER, ZLABEL FROM ZABCDPHONENUMBER WHERE ZOWNER = ?'
         optional_rows(db, record_id, 'ZABCDPHONENUMBER', query).map do |row|
-          { number: row['ZFULLNUMBER'], label: row['ZLABEL'] }
+          { number: row['ZFULLNUMBER'], **label_fields(row['ZLABEL']) }
         end
       end
 
@@ -89,9 +88,13 @@ module Abbu
             state: row['ZSTATE'],
             zip: row['ZZIPCODE'],
             country: row['ZCOUNTRYNAME'],
-            label: row['ZLABEL']
+            **label_fields(row['ZLABEL'])
           }
         end
+      end
+
+      def table_exists?(db, table_name)
+        db.table_info(table_name).any?
       end
 
       def groups_for(db, record_id)
@@ -107,7 +110,7 @@ module Abbu
       def urls_for(db, record_id)
         query = 'SELECT ZURL, ZLABEL FROM ZABCDURLADDRESS WHERE ZOWNER = ?'
         optional_rows(db, record_id, 'ZABCDURLADDRESS', query).map do |row|
-          { url: row['ZURL'], label: row['ZLABEL'] }
+          { url: row['ZURL'], **label_fields(row['ZLABEL']) }
         end
       end
 
@@ -119,7 +122,7 @@ module Abbu
       def related_names_for(db, record_id)
         query = 'SELECT ZNAME, ZLABEL FROM ZABCDRELATEDNAME WHERE ZOWNER = ?'
         optional_rows(db, record_id, 'ZABCDRELATEDNAME', query).map do |row|
-          { name: row['ZNAME'], label: row['ZLABEL'] }
+          { name: row['ZNAME'], **label_fields(row['ZLABEL']) }
         end
       end
 
@@ -132,28 +135,26 @@ module Abbu
 
       def dates_for(db, record_id)
         query = 'SELECT ZYEAR, ZMONTH, ZDAY, ZLABEL FROM ZABCDDATECOMPONENTS WHERE ZOWNER = ?'
-        optional_rows(db, record_id, 'ZABCDDATECOMPONENTS', query).map do |row|
-          { year: row['ZYEAR'], month: row['ZMONTH'], day: row['ZDAY'], label: row['ZLABEL'] }
-        end
+        optional_rows(db, record_id, 'ZABCDDATECOMPONENTS', query).map { |row| date_from(row) }
       end
 
       def instant_messages_for(db, record_id)
         query = 'SELECT ZADDRESS, ZLABEL, ZSERVICENAME FROM ZABCDMESSAGINGADDRESS WHERE ZOWNER = ?'
         optional_rows(db, record_id, 'ZABCDMESSAGINGADDRESS', query).map do |row|
-          { address: row['ZADDRESS'], label: row['ZLABEL'], service: row['ZSERVICENAME'] }
+          { address: row['ZADDRESS'], service: row['ZSERVICENAME'], **label_fields(row['ZLABEL']) }
         end
       end
 
       def optional_rows(db, record_id, table, query)
+        return recover(optional_diagnostic(table, record_id), fallback: []) unless table_exists?(db, table)
+
         db.execute(query, record_id)
-      rescue SQLite3::SQLException
-        recover(optional_diagnostic(table, record_id), fallback: [])
       end
 
       def optional_diagnostic(table, record_id)
         Diagnostic.new(
           category: :missing_optional_data,
-          message: 'Optional SQLite table or columns are unavailable',
+          message: 'Optional SQLite table is unavailable',
           parser: :sqlite,
           source: @active_db_path,
           context: { table: table, record_id: record_id }.freeze
@@ -201,6 +202,17 @@ module Abbu
         nil
       end
 
+      def label_fields(raw_label)
+        { label: Utils::LabelNormalizer.normalize(raw_label), raw_label: raw_label }
+      end
+
+      def date_from(row)
+        {
+          year: row['ZYEAR'], month: row['ZMONTH'], day: row['ZDAY'],
+          **label_fields(row['ZLABEL'])
+        }
+      end
+
       def assign_flat_fields(contact, row)
         RECORD_FIELD_MAP.each do |column, attr|
           contact.public_send(:"#{attr}=", row[column])
@@ -220,9 +232,9 @@ module Abbu
 
         all_dates = dates_for(db, record_id)
         contact.dates = all_dates
-        contact.birthday    = all_dates.find { |d| d[:label] == '_$!<Birthday>!$_' }
-        contact.anniversary = all_dates.find { |d| d[:label] == '_$!<Anniversary>!$_' }
-        contact.lunar_birthday = all_dates.find { |d| d[:label] == '_$!<LunarBirthday>!$_' }
+        contact.birthday    = all_dates.find { |d| d[:label] == 'Birthday' }
+        contact.anniversary = all_dates.find { |d| d[:label] == 'Anniversary' }
+        contact.lunar_birthday = all_dates.find { |d| d[:label] == 'LunarBirthday' }
       end
     end
   end

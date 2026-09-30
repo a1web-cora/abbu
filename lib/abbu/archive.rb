@@ -4,8 +4,10 @@
 require 'pathname'
 require_relative 'diagnostic'
 require_relative 'parse_error'
-require_relative 'parsers/sqlite_parser'
 require_relative 'parsers/plist_parser'
+require_relative 'parsers/sqlite_parser'
+require_relative 'query'
+require_relative 'schema_inspector'
 require_relative 'utils/image_resolver'
 
 module Abbu
@@ -23,8 +25,32 @@ module Abbu
       @contacts ||= parser.contacts.tap { |cs| attach_images(cs) }
     end
 
+    def query
+      Query.new(contacts)
+    end
+
+    def where(criteria)
+      query.where(criteria)
+    end
+
+    def search(term)
+      query.search(term)
+    end
+
+    def find_by_email(email)
+      query.find_by_email(email)
+    end
+
+    def find_by_phone(phone)
+      query.find_by_phone(phone)
+    end
+
     def sqlite?
       db_paths.any?
+    end
+
+    def schema_report
+      SchemaInspector.new(db_paths, root_path: @path).report
     end
 
     private

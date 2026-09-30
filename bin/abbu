@@ -4,6 +4,7 @@
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
+require 'json'
 require 'optparse'
 require 'abbu'
 
@@ -11,42 +12,66 @@ options = {
   format: nil,
   output: nil,
   dedupe: false,
+  email: nil,
+  json: false,
+  phone: nil,
+  search: nil,
+  schema: false,
   stats: false,
   strict: false
 }
 
-parser = OptionParser.new do |opts|
-  opts.banner = 'Usage: abbu <file.abbu> [options]'
+parser = OptionParser.new
+parser.banner = 'Usage: abbu <file.abbu> [options]'
 
-  opts.on('-f', '--format FORMAT', %w[csv json vcard], 'Export format (csv, json, vcard)') do |f|
-    options[:format] = f
-  end
+parser.on('-f', '--format FORMAT', %w[csv json vcard], 'Export format (csv, json, vcard)') do |f|
+  options[:format] = f
+end
 
-  opts.on('-o', '--output FILE', 'Output file (default: stdout)') do |o|
-    options[:output] = o
-  end
+parser.on('-o', '--output FILE', 'Output file (default: stdout)') do |o|
+  options[:output] = o
+end
 
-  opts.on('--stats', 'Print contact statistics') do
-    options[:stats] = true
-  end
+parser.on('--stats', 'Print contact statistics') do
+  options[:stats] = true
+end
 
-  opts.on('--dedupe', 'Find and print duplicate contacts') do
-    options[:dedupe] = true
-  end
+parser.on('--dedupe', 'Find and print duplicate contacts') do
+  options[:dedupe] = true
+end
 
-  opts.on('--strict', 'Raise on unsupported or corrupt optional data') do
-    options[:strict] = true
-  end
+parser.on('--search TERM', 'Find contacts by partial name or email') do |term|
+  options[:search] = term
+end
 
-  opts.on('-v', '--version', 'Print version') do
-    puts "abbu #{Abbu::VERSION}"
-    exit
-  end
+parser.on('--strict', 'Raise on unsupported or corrupt optional data') do
+  options[:strict] = true
+end
 
-  opts.on('-h', '--help', 'Print this help') do
-    puts opts
-    exit
-  end
+parser.on('--schema', 'Print SQLite schema diagnostics as JSON') do
+  options[:schema] = true
+end
+
+parser.on('--email ADDRESS', 'Find contacts by exact normalized email') do |address|
+  options[:email] = address
+end
+
+parser.on('--phone NUMBER', 'Find contacts by exact normalized phone number') do |number|
+  options[:phone] = number
+end
+
+parser.on('--json', 'Emit search results as structured JSON instead of TSV') do
+  options[:json] = true
+end
+
+parser.on('-v', '--version', 'Print version') do
+  puts "abbu #{Abbu::VERSION}"
+  exit
+end
+
+parser.on('-h', '--help', 'Print this help') do
+  puts parser
+  exit
 end
 
 parser.parse!
@@ -70,6 +95,47 @@ at_exit do
 end
 
 begin
+  if options[:schema]
+    puts JSON.pretty_generate(archive.schema_report)
+    exit
+  end
+
+  search_options = options.values_at(:search, :email, :phone).compact
+  if search_options.length > 1
+    warn 'Use only one of --search, --email, or --phone.'
+    exit 1
+  end
+
+  if options[:json] && search_options.empty?
+    warn '--json requires --search, --email, or --phone.'
+    exit 1
+  end
+
+  if search_options.any?
+    results = if options[:search]
+                archive.search(options[:search])
+              elsif options[:email]
+                archive.find_by_email(options[:email])
+              else
+                archive.find_by_phone(options[:phone])
+              end
+
+    if options[:json]
+      Abbu::Exporters::JsonExporter.new(results).to_stdout
+    else
+      results.each do |contact|
+        fields = [
+          contact.full_name,
+          contact.emails.filter_map { |email| email[:address] }.join(','),
+          contact.phones.filter_map { |phone| phone[:number] }.join(','),
+          contact.source&.fetch(:relative_path, nil)
+        ]
+        puts fields.map { |field| field.to_s.gsub(/[\t\r\n]/, ' ') }.join("\t")
+      end
+    end
+    exit(results.any? ? 0 : 1)
+  end
+
   if options[:stats]
     contacts = archive.contacts
     puts "Total contacts : #{contacts.count}"

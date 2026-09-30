@@ -15,7 +15,7 @@ RSpec.describe Abbu::Exporters::JsonExporter do
     c.phonetic_first_name = 'Stan'
     c.phonetic_middle_name = 'The Phony'
     c.phonetic_last_name = 'Karver'
-    c.emails     = [{ address: 'stan@example.com', label: 'Work' }]
+    c.emails     = [{ address: 'stan@example.com', label: 'Work', raw_label: '_$!<Work>!$_' }]
     c.phones     = [{ number: '555-1234', label: 'Mobile' }]
     c.company    = 'Acme'
     c.job_title  = 'Engineer'
@@ -71,6 +71,16 @@ RSpec.describe Abbu::Exporters::JsonExporter do
         expect(data['created_at']).to eq('2001-01-01T00:00:00Z')
         expect(data['modified_at']).to eq('2001-01-01T00:01:00Z')
         expect(data['source']['kind']).to eq('root')
+      end
+    end
+
+    it 'exports normalized and raw labels' do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, 'out.json')
+        exporter.to_file(path)
+        email = JSON.parse(File.read(path)).first['emails'].first
+
+        expect(email).to include('label' => 'Work', 'raw_label' => '_$!<Work>!$_')
       end
     end
   end
