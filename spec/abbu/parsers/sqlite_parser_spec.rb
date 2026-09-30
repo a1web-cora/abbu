@@ -243,22 +243,26 @@ RSpec.describe Abbu::Parsers::SqliteParser do
       end
     end
 
-    it 'returns empty groups when Z_ABCDCONTACTGROUP does not exist' do
+    it 'records one diagnostic per database and missing table across contacts' do
       Dir.mktmpdir do |dir|
         db_path = File.join(dir, 'AddressBook-v22.abcddb')
         db = SQLite3::Database.new(db_path)
         create_schema(db)
         db.execute('DROP TABLE Z_ABCDCONTACTGROUP')
         db.execute("INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME) VALUES (1, 14, 'Ghost')")
+        db.execute("INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME) VALUES (2, 14, 'Phantom')")
         db.close
 
         parser   = described_class.new(Pathname.new(db_path))
         contacts = parser.contacts
 
-        expect(contacts.first.groups).to eq([])
-        expect(parser.diagnostics.map(&:to_h)).to include(
+        expect(contacts.map(&:groups)).to eq([[], []])
+        diagnostics = parser.diagnostics.select do |diagnostic|
+          diagnostic.context[:table] == 'Z_ABCDCONTACTGROUP'
+        end
+        expect(diagnostics.map(&:to_h)).to contain_exactly(
           include(category: :missing_optional_data, parser: :sqlite,
-                  context: include(table: 'Z_ABCDCONTACTGROUP', record_id: 1))
+                  context: { table: 'Z_ABCDCONTACTGROUP' })
         )
       end
     end

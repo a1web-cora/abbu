@@ -37,7 +37,9 @@ module Abbu
         @db_paths = Array(db_paths)
         @root_path = root_path
         @diagnostics = diagnostics || []
+        @missing_optional_tables = {}
         @strict = strict
+        @table_presence = {}
       end
 
       def contacts
@@ -94,7 +96,10 @@ module Abbu
       end
 
       def table_exists?(db, table_name)
-        db.table_info(table_name).any?
+        key = [@active_db_path.to_s, table_name]
+        @table_presence.fetch(key) do
+          @table_presence[key] = db.table_info(table_name).any?
+        end
       end
 
       def groups_for(db, record_id)
@@ -146,18 +151,26 @@ module Abbu
       end
 
       def optional_rows(db, record_id, table, query)
-        return recover(optional_diagnostic(table, record_id), fallback: []) unless table_exists?(db, table)
+        return missing_optional_table(table) unless table_exists?(db, table)
 
         db.execute(query, record_id)
       end
 
-      def optional_diagnostic(table, record_id)
+      def missing_optional_table(table)
+        key = [@active_db_path.to_s, table]
+        return [] if @missing_optional_tables[key]
+
+        @missing_optional_tables[key] = true
+        recover(optional_diagnostic(table), fallback: [])
+      end
+
+      def optional_diagnostic(table)
         Diagnostic.new(
           category: :missing_optional_data,
           message: 'Optional SQLite table is unavailable',
           parser: :sqlite,
           source: @active_db_path,
-          context: { table: table, record_id: record_id }.freeze
+          context: { table: table }.freeze
         )
       end
 

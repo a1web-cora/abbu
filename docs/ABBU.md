@@ -134,6 +134,10 @@ parser, source path, non-PII context, and a stable message. Required contact
 schema failures still raise because no evidence-backed contact record can be
 recovered safely.
 
+An absent optional SQLite table produces one diagnostic per database and table,
+regardless of contact count. ABBU does not place record identifiers or raw image
+references in these schema- and image-level diagnostic contexts.
+
 Pass `strict: true` to `Abbu.open` or `--strict` to the CLI to raise
 `Abbu::ParseError` on the first recoverable condition. The CLI prints a
 diagnostic summary to standard error so exported data on standard output remains

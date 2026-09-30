@@ -94,7 +94,7 @@ module Abbu
         message: 'Referenced contact image was not found',
         parser: :archive,
         source: contact.source&.fetch(:path, @path.to_s) || @path.to_s,
-        context: { image_uri: contact.image_uri }.freeze
+        context: {}
       )
       diagnostics << diagnostic
       raise ParseError, diagnostic if @strict

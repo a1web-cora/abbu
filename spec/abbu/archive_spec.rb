@@ -149,8 +149,7 @@ RSpec.describe Abbu::Archive do
         archive = described_class.new(dir)
         expect(archive.contacts.first.image_path).to be_nil
         expect(archive.diagnostics.map(&:to_h)).to include(
-          include(category: :missing_image, parser: :archive,
-                  context: include(image_uri: 'stan-photo'))
+          include(category: :missing_image, parser: :archive, context: {})
         )
       end
     end
