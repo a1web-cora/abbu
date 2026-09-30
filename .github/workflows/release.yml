@@ -6,6 +6,12 @@ on:
     tags:
       - "v*"
 
+permissions: {}
+
+concurrency:
+  group: rubygems-release
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -20,18 +26,23 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Verify authorized source and reproducible build timestamp
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${GITHUB_REF_TYPE}" == "tag" ]]
+          [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)" >> "$GITHUB_ENV"
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
           bundler-cache: true
-
-      - name: Verify release package
-        run: |
-          bin/spec
-          bin/lint
-          bin/package
 
       - name: Verify tag matches gem version
         shell: bash
@@ -42,5 +53,11 @@ jobs:
             echo "Release tag ${GITHUB_REF_NAME} does not match gem version ${expected}" >&2
             exit 1
           fi
+
+      - name: Verify release package
+        run: |
+          bin/spec
+          bin/lint
+          bin/package
 
       - uses: rubygems/release-gem@v1
