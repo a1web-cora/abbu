@@ -13,6 +13,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Normalized Apple standard labels with the original source value preserved as
+  `raw_label` on labeled contact values
 - Chainable `Abbu::Query` and `Archive#where` APIs for contact filtering
 - Exact normalized email and phone lookup that returns all matches across sources
 - Case-insensitive partial name and email search through Ruby and tab-separated CLI output
@@ -27,6 +29,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- vCard anniversary export now prefers the original `raw_label` so Apple and
+  custom source representations survive parse-and-export round trips
 - Minimum supported Ruby and RuboCop target are now 3.3; CI covers Ruby 3.3,
   3.4, and 4.0, with Ruby 3.3 as the designated lint/tooling job
 - Agent guidance is consolidated in `AGENTS.md`; the redundant `CLAUDE.md` has

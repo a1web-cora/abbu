@@ -60,7 +60,7 @@ RSpec.describe Abbu::Exporters::VcardExporter do
         expect(content).to include('BDAY:1980-01-01')
         expect(content).to include('X-LUNAR-BDAY:1980-02-05')
         expect(content).to include('X-ABDATE;type=pref:2010-06-15')
-        expect(content).to include('X-ABLABEL:_$!<Anniversary>!$_')
+        expect(content).to include('X-ABLABEL:Anniversary')
         expect(content).to include('IMPP;TYPE=Work:skype:stan.carver')
         expect(content).to include('X-VERIFICATION-CODE:V123')
         expect(content).to include('PHOTO;VALUE=URI:file:///tmp/Contacts.abbu/Images/stan.jpg')
@@ -82,6 +82,16 @@ RSpec.describe Abbu::Exporters::VcardExporter do
       c.birthday = { year: -1, month: 12, day: 25 }
       exp = described_class.new([c])
       expect { exp.to_stdout }.to output(/BDAY:--12-25/).to_stdout
+    end
+  end
+
+  context 'when exporting anniversary labels' do
+    it 'preserves a custom source label' do
+      contact.anniversary = {
+        year: 2010, month: 6, day: 15, label: 'First met 🌟', raw_label: 'First met 🌟'
+      }
+
+      expect { exporter.to_stdout }.to output(/X-ABLABEL:First met 🌟/).to_stdout
     end
   end
 

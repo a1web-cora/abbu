@@ -11,6 +11,7 @@ require_relative 'abbu/exporters/csv_exporter'
 require_relative 'abbu/exporters/json_exporter'
 require_relative 'abbu/exporters/vcard_exporter'
 require_relative 'abbu/utils/deduplicator'
+require_relative 'abbu/utils/label_normalizer'
 
 module Abbu
   def self.open(path)

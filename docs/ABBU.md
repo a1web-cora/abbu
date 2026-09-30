@@ -125,6 +125,22 @@ Every parsed contact includes source provenance with the absolute source path, i
 relative to the `.abbu` root, and whether it came from the root bundle or a database under
 `Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
+### Labeled values
+
+The synthetic SQLite and plist fixtures include both custom labels and Apple's
+observed standard-label wrapper, such as `_$!<Work>!$_`. ABBU exposes the
+human-facing value as `label` (`Work`) and preserves the exact stored value as
+`raw_label`. Custom, blank, malformed, Unicode, and already-normalized labels
+are not otherwise rewritten. Direct plist keys such as `Birthday` have no
+stored label, so their normalized label is derived from the key and
+`raw_label` is `nil`.
+
+Normalization applies to email addresses, phone numbers, postal addresses,
+URLs, related names, date components, and instant-message handles. JSON keeps
+both values. Human-facing CSV uses normalized labels, while vCard anniversary
+labels prefer `raw_label` so Apple label wrappers and custom source values
+survive parse → model → interchange export.
+
 ### 2. Plist / `.abcdp` (legacy macOS)
 
 Older macOS versions stored contacts as separate plist files under `Records/`.
