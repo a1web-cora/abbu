@@ -13,6 +13,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Live CLI input uses distinct `--live` auto-discovery and `--live-path PATH` forms;
+  mixed modes and unexpected live positional arguments are rejected.
+
 - Deduplication recognizes international phone prefixes from trimmed raw input, not
   punctuation-stripped digits, keeping national-looking `(001)` values source-local.
 
@@ -23,7 +26,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ### Added
 
 - Explicit, read-only live Contacts access through `Abbu.open_live` and
-  `abbu --live [PATH]`, with root and `Sources/*` database discovery
+  `abbu --live` / `abbu --live-path PATH`, with root and `Sources/*` database discovery
 - Actionable live-store errors for missing databases, unsupported automatic
   discovery, and macOS Full Disk Access restrictions
 - Platform-independent synthetic coverage for live-store discovery, source

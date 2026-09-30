@@ -127,7 +127,13 @@ relative to the `.abbu` root, and whether it came from the root bundle or a data
 
 ### Opt-in live Contacts stores
 
-`Abbu.open_live` and the CLI's `--live` mode can read an AddressBook directory
+The CLI uses `--live` only for auto-discovery and `--live-path PATH` for an explicit
+store. These forms are mutually exclusive and accept no positional archive/path arguments.
+Option ordering does not change input selection. Synthetic WAL-mode and concurrent-writer
+validation remains a follow-up; read-only handles do not establish snapshot consistency
+across an actively changing Contacts store.
+
+`Abbu.open_live` and the CLI's live modes can read an AddressBook directory
 without first exporting an `.abbu` archive. This mode is deliberately separate from
 `Abbu.open`: archive validation and plist fallback do not apply to a live store.
 

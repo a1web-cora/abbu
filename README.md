@@ -158,7 +158,7 @@ abbu Contacts.abbu --dedupe
 abbu --live --stats
 
 # Read a caller-supplied AddressBook directory
-abbu --live /path/to/AddressBook -f json
+abbu --live-path /path/to/AddressBook -f json
 # Fail on the first corrupt or unsupported optional record/table.
 abbu Contacts.abbu --stats --strict
 
