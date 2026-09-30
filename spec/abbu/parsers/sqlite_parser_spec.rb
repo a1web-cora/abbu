@@ -279,20 +279,5 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         expect(parser.diagnostics.first.category).to eq(:required_schema)
       end
     end
-
-    it 'skips a malformed contact while recording non-PII context' do
-      Dir.mktmpdir do |dir|
-        db_path = File.join(dir, 'AddressBook-v22.abcddb')
-        build_test_db(db_path)
-        parser = described_class.new(db_path)
-        allow(parser).to receive(:assign_flat_fields).and_raise(TypeError)
-
-        expect(parser.contacts).to eq([])
-        expect(parser.diagnostics.map(&:to_h)).to include(
-          include(category: :malformed_record, parser: :sqlite,
-                  context: { record_id: 1 })
-        )
-      end
-    end
   end
 end

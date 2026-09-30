@@ -178,20 +178,6 @@ module Abbu
         assign_relational_fields(contact, db, row['Z_PK'])
         assign_metadata(contact, row, db_path)
         contact
-      rescue ParseError
-        raise
-      rescue StandardError
-        recover(malformed_record_diagnostic(row, db_path), fallback: nil)
-      end
-
-      def malformed_record_diagnostic(row, db_path)
-        Diagnostic.new(
-          category: :malformed_record,
-          message: 'Unable to parse SQLite contact record',
-          parser: :sqlite,
-          source: db_path,
-          context: { record_id: row['Z_PK'] }.freeze
-        )
       end
 
       def recover(diagnostic, fallback:)
@@ -211,7 +197,7 @@ module Abbu
         return if value.nil?
 
         Time.at(Float(value) + APPLE_EPOCH_OFFSET).utc
-      rescue ArgumentError, TypeError
+      rescue ArgumentError, RangeError, TypeError
         nil
       end
 

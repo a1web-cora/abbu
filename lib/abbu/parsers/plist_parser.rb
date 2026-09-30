@@ -58,7 +58,7 @@ module Abbu
         build_contact(data, file)
       rescue ParseError
         raise
-      rescue StandardError
+      rescue ArgumentError, EOFError, Plist::UnimplementedElementError, SystemCallError, TypeError
         recover(file)
       end
 
