@@ -11,6 +11,7 @@ require 'abbu'
 options = {
   format: nil,
   output: nil,
+  extract_images: nil,
   dedupe: false,
   email: nil,
   json: false,
@@ -30,6 +31,10 @@ end
 
 parser.on('-o', '--output FILE', 'Output file (default: stdout)') do |o|
   options[:output] = o
+end
+
+parser.on('--extract-images DIR', 'Copy contact images to DIR') do |dir|
+  options[:extract_images] = dir
 end
 
 parser.on('--stats', 'Print contact statistics') do
@@ -95,6 +100,15 @@ at_exit do
 end
 
 begin
+  if options[:extract_images]
+    result = archive.extract_images(options[:extract_images])
+    puts "Extracted #{result.files.count} image(s) to #{File.expand_path(options[:extract_images])}"
+    result.diagnostics.each do |diagnostic|
+      warn "Image #{diagnostic[:code]}: #{diagnostic[:contact_name]} (#{diagnostic[:image_uri]})"
+    end
+    exit unless options[:format] || options[:stats] || options[:dedupe]
+  end
+
   if options[:schema]
     puts JSON.pretty_generate(archive.schema_report)
     exit

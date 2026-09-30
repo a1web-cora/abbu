@@ -11,7 +11,21 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Image extraction exclusively creates destination files and reports `destination_exists`
+  rather than overwriting existing files, symlinks, or hard links. Output directory aliases
+  are resolved before extraction; extraction diagnostic privacy is documented.
+
 ### Added
+
+- `Archive#extract_images` and `Abbu::ImageExtractor` for copying contact photos to a
+  caller-selected directory with structured missing, unreadable, and unsupported-image
+  diagnostics
+- `--extract-images DIR` CLI support with content-aware JPEG, PNG, GIF, and HEIC extension
+  selection and safe, Unicode-preserving, collision-resistant filenames
+- Source-local resolution for duplicate image stems in nested account directories without
+  guessing when provenance cannot disambiguate candidates
 
 - Structured tolerant-parsing diagnostics with strict API/CLI mode for corrupt
   plist records, missing optional SQLite data, and unresolved image references

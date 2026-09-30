@@ -43,6 +43,11 @@ contacts.first.emails      # => [{ address: "stan@example.com", label: "Work", r
 contacts.first.phones      # => [{ number: "555-1234", label: "Mobile", raw_label: "Mobile" }]
 contacts.first.job_title   # => "Engineer"
 
+# Copy resolved photos using safe, content-derived filenames.
+result = archive.extract_images("exported-photos")
+result.files        # copied-file metadata, including source_path and media_type
+result.diagnostics  # image errors or destination_exists; may contain contact identifiers
+
 # Recover safe records and inspect non-fatal data loss.
 archive.diagnostics.each { |diagnostic| warn diagnostic.to_h }
 
@@ -105,6 +110,9 @@ abbu Contacts.abbu -f json | jq .
 
 # vCard export
 abbu Contacts.abbu -f vcard -o contacts.vcf
+
+# Copy contact photos to a selected directory
+abbu Contacts.abbu --extract-images exported-photos
 
 # Stats
 abbu Contacts.abbu --stats

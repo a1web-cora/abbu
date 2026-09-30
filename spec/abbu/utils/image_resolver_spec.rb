@@ -82,6 +82,29 @@ RSpec.describe Abbu::Utils::ImageResolver do
         expect(result.to_s).to include('Sources/Account1/Images/synced.jpg')
       end
     end
+
+    it 'uses source provenance to resolve duplicate stems in nested sources' do
+      Dir.mktmpdir do |dir|
+        write_image(dir, 'shared.jpg', 'root')
+        nested = File.join(dir, 'Sources', 'Account1')
+        write_image(nested, 'shared.png', 'nested')
+        resolver = described_class.new(dir)
+        source = { relative_path: 'Sources/Account1/AddressBook-v22.abcddb' }
+
+        result = resolver.resolve('shared', source: source)
+
+        expect(result.to_s).to end_with('Sources/Account1/Images/shared.png')
+      end
+    end
+
+    it 'does not guess when duplicate stems are ambiguous' do
+      Dir.mktmpdir do |dir|
+        write_image(dir, 'shared.jpg', 'root')
+        write_image(File.join(dir, 'Sources', 'Account1'), 'shared.png', 'nested')
+
+        expect(described_class.new(dir).resolve('shared')).to be_nil
+      end
+    end
   end
 
   describe '#each_image' do

@@ -182,6 +182,19 @@ RSpec.describe Abbu::Archive do
     end
   end
 
+  describe '#extract_images' do
+    it 'extracts resolved contact images through the public archive API' do
+      fixture = File.expand_path('../fixtures/TestContacts.abbu', __dir__)
+      Dir.mktmpdir do |dir|
+        result = described_class.new(fixture).extract_images(dir)
+
+        expect(result.files.count).to eq(1)
+        expect(result.files.first[:path]).to exist
+        expect(result.diagnostics).to be_empty
+      end
+    end
+  end
+
   private
 
   def create_empty_schema(db_path) # rubocop:disable Metrics/MethodLength

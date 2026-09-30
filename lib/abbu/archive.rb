@@ -3,6 +3,7 @@
 
 require 'pathname'
 require_relative 'diagnostic'
+require_relative 'image_extractor'
 require_relative 'parse_error'
 require_relative 'parsers/plist_parser'
 require_relative 'parsers/sqlite_parser'
@@ -49,6 +50,10 @@ module Abbu
       db_paths.any?
     end
 
+    def extract_images(output_dir)
+      ImageExtractor.new(contacts).extract(output_dir)
+    end
+
     def schema_report
       SchemaInspector.new(db_paths, root_path: @path).report
     end
@@ -83,7 +88,7 @@ module Abbu
       contacts.each do |contact|
         next unless contact.image_uri
 
-        contact.image_path = resolver.resolve(contact.image_uri)
+        contact.image_path = resolver.resolve(contact.image_uri, source: contact.source)
         record_missing_image(contact) unless contact.image_path
       end
     end

@@ -125,6 +125,42 @@ Every parsed contact includes source provenance with the absolute source path, i
 relative to the `.abbu` root, and whether it came from the root bundle or a database under
 `Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
+### Image resolution and extraction
+
+The synthetic SQLite fixture demonstrates a `ZIMAGEURI` value whose stem matches a file
+under an `Images/` directory. Resolution covers the root bundle and nested
+`Sources/<identifier>/Images/` directories. When duplicate stems exist, ABBU uses the
+contact's database provenance to select only an image beside that database; it does not
+guess when the available evidence remains ambiguous.
+
+`Archive#extract_images(output_dir)` and the CLI `--extract-images DIR` copy resolved
+images without changing `Contact#image_uri`, `Contact#image_path`, or `Contact#source`.
+Exported filenames combine a sanitized contact name, the original image identifier, and
+a stable provenance digest. Path separators, control characters, and reserved filename
+characters cannot create subdirectories or traverse outside the selected output directory.
+
+The selected output directory (including symlinked parents) is resolved to its canonical
+directory before copying; callers must control that directory and prevent concurrent
+directory replacement. Each image is created exclusively with owner-only permissions.
+Existing destinations are never overwritten, including regular files, hard links, and
+symlinks (even dangling ones). These collisions produce a `destination_exists` extraction
+diagnostic and no successful file record; other images continue. Repeating extraction
+into the same directory therefore reports collisions instead of replacing earlier output.
+Directory creation/resolution failures raise filesystem errors before extraction begins.
+
+Extraction diagnostics are a separate API from `archive.diagnostics`: they may contain
+contact names, raw image identifiers, source paths, and filesystem error details. Treat
+them and the CLI's image warnings as sensitive contact data, not safe-to-publish logs.
+
+ABBU recognizes JPEG, PNG, GIF, and common HEIF/HEIC-compatible brands from file
+signatures and chooses the exported extension from those bytes rather than the source
+extension. Unknown content is reported as a diagnostic instead of being relabeled. HEIC
+data is copied unchanged; ABBU does not transcode it.
+
+No repository fixture currently demonstrates a reliable Apple thumbnail-versus-full-size
+naming or selection rule. ABBU therefore exports the image resolved by the observed
+`ZIMAGEURI` relationship and does not infer size semantics from filenames or directories.
+
 ### Recovery and diagnostics
 
 By default, ABBU recovers from malformed individual plist records, missing
