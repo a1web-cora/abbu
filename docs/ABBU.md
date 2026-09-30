@@ -145,6 +145,97 @@ such semantics. Competing candidates and weak name/organization or source-local 
 matches remain ambiguous, and no contact is merged unless the caller supplies an explicit
 merge policy.
 
+### Image resolution and extraction
+
+The synthetic SQLite fixture demonstrates a `ZIMAGEURI` value whose stem matches a file
+under an `Images/` directory. Resolution covers the root bundle and nested
+`Sources/<identifier>/Images/` directories. When duplicate stems exist, ABBU uses the
+contact's database provenance to select only an image beside that database; it does not
+guess when the available evidence remains ambiguous.
+
+`Archive#extract_images(output_dir)` and the CLI `--extract-images DIR` copy resolved
+images without changing `Contact#image_uri`, `Contact#image_path`, or `Contact#source`.
+Exported filenames combine a sanitized contact name, the original image identifier, and
+a stable provenance digest. Path separators, control characters, and reserved filename
+characters cannot create subdirectories or traverse outside the selected output directory.
+
+The selected output directory (including symlinked parents) is resolved to its canonical
+directory before copying; callers must control that directory and prevent concurrent
+directory replacement. Each image is created exclusively with owner-only permissions.
+Existing destinations are never overwritten, including regular files, hard links, and
+symlinks (even dangling ones). These collisions produce a `destination_exists` extraction
+diagnostic and no successful file record; other images continue. Repeating extraction
+into the same directory therefore reports collisions instead of replacing earlier output.
+Directory creation/resolution failures raise filesystem errors before extraction begins.
+
+Extraction diagnostics are a separate API from `archive.diagnostics`: they may contain
+contact names, raw image identifiers, source paths, and filesystem error details. Treat
+them and the CLI's image warnings as sensitive contact data, not safe-to-publish logs.
+
+ABBU recognizes JPEG, PNG, GIF, and common HEIF/HEIC-compatible brands from file
+signatures and chooses the exported extension from those bytes rather than the source
+extension. Unknown content is reported as a diagnostic instead of being relabeled. HEIC
+data is copied unchanged; ABBU does not transcode it.
+
+No repository fixture currently demonstrates a reliable Apple thumbnail-versus-full-size
+naming or selection rule. ABBU therefore exports the image resolved by the observed
+`ZIMAGEURI` relationship and does not infer size semantics from filenames or directories.
+
+### Recovery and diagnostics
+
+By default, ABBU recovers from malformed individual plist records, missing
+optional SQLite relationship tables, and unresolved image references. Each
+recovery appends an `Abbu::Diagnostic` to `archive.diagnostics` with a category,
+parser, source path, non-PII context, and a stable message. Required contact
+schema failures still raise because no evidence-backed contact record can be
+recovered safely.
+
+An absent optional SQLite table produces one diagnostic per database and table,
+regardless of contact count. ABBU does not place record identifiers or raw image
+references in these schema- and image-level diagnostic contexts.
+
+Pass `strict: true` to `Abbu.open` or `--strict` to the CLI to raise
+`Abbu::ParseError` on the first recoverable condition. The CLI prints a
+diagnostic summary to standard error so exported data on standard output remains
+pipeable.
+
+### Schema diagnostics
+
+`Archive#schema_report` and `abbu Contacts.abbu --schema` inspect every discovered
+SQLite database and return deterministic schema metadata. Reports identify recognized
+and unrecognized tables and columns, recognized items that are absent, declared SQLite
+types, primary-key and nullability metadata, source provenance, and exact owner/contact-
+style column names that may represent contact links.
+
+These reports are research evidence, not parser mappings. In particular, a
+`contact_link_candidate` flag records only an exact column-name shape such as `ZOWNER`,
+`ZCONTACT`, or `Z_CONTACT`; it does not claim a foreign-key target or assign Apple
+Contacts semantics. Unknown tables and columns must be reproduced in a sanitized fixture
+or supported by documentation before ABBU uses them to populate contacts.
+
+Missing recognized tables and columns remain visible as diagnostic observations. The
+parser tolerates absent established email, phone, and postal-address tables by returning
+empty collections, while the schema report preserves the absence for compatibility
+research. If one of those tables exists but lacks an expected column, parsing raises the
+SQLite schema error instead of silently treating the contact as having no corresponding
+data. The core `ZABCDRECORD` table remains required for contact parsing.
+
+### Labeled values
+
+The synthetic SQLite and plist fixtures include both custom labels and Apple's
+observed standard-label wrapper, such as `_$!<Work>!$_`. ABBU exposes the
+human-facing value as `label` (`Work`) and preserves the exact stored value as
+`raw_label`. Custom, blank, malformed, Unicode, and already-normalized labels
+are not otherwise rewritten. Direct plist keys such as `Birthday` have no
+stored label, so their normalized label is derived from the key and
+`raw_label` is `nil`.
+
+Normalization applies to email addresses, phone numbers, postal addresses,
+URLs, related names, date components, and instant-message handles. JSON keeps
+both values. Human-facing CSV uses normalized labels, while vCard anniversary
+labels prefer `raw_label` so Apple label wrappers and custom source values
+survive parse → model → interchange export.
+
 ### 2. Plist / `.abcdp` (legacy macOS)
 
 Older macOS versions stored contacts as separate plist files under `Records/`.
@@ -163,6 +254,8 @@ supported semantics.
   Unicode near-collision identity evidence.
 - `spec/support/fixture_generator.rb` is the reproducible source for generated
   SQLite fixture structure and data.
+- `spec/abbu/schema_inspector_spec.rb` builds deterministic temporary SQLite
+  schemas for missing tables, unknown contact-link candidates, and column drift.
 
 These fixtures prove only the variations they contain. Table names, column
 names, entity numbers, UUIDs, and directory names alone are not sufficient

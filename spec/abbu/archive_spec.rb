@@ -80,6 +80,47 @@ RSpec.describe Abbu::Archive do
     end
   end
 
+  describe '#schema_report' do
+    it 'returns an empty database list for a plist-only bundle' do
+      Dir.mktmpdir('sample.abbu') do |dir|
+        report = described_class.new(dir).schema_report
+
+        expect(report).to eq({ archive_path: File.expand_path(dir), databases: [] })
+      end
+    end
+  end
+
+  describe 'querying' do
+    let(:contact) do
+      Abbu::Contact.new.tap do |record|
+        record.first_name = 'Stan'
+        record.last_name = 'Carver'
+        record.emails = [{ address: 'stan@example.com', label: 'Work' }]
+        record.phones = [{ number: '555-0100', label: 'Mobile' }]
+      end
+    end
+    let(:archive) do
+      described_class.new(Dir.mktmpdir('query.abbu')).tap do |instance|
+        allow(instance).to receive(:contacts).and_return([contact])
+      end
+    end
+
+    after do
+      FileUtils.rm_rf(archive.path)
+    end
+
+    it 'exposes the chainable query interface' do
+      expect(archive.query).to be_a(Abbu::Query)
+      expect(archive.where(last_name: 'Carver').to_a).to eq([contact])
+    end
+
+    it 'delegates search and exact identifier lookups to the query' do
+      expect(archive.search('stan').to_a).to eq([contact])
+      expect(archive.find_by_email('STAN@EXAMPLE.COM').to_a).to eq([contact])
+      expect(archive.find_by_phone('(555) 0100').to_a).to eq([contact])
+    end
+  end
+
   describe 'image attachment' do
     it 'attaches image_path to contacts whose ZIMAGEURI matches a file in Images/' do
       Dir.mktmpdir('sample.abbu') do |dir|
@@ -107,6 +148,21 @@ RSpec.describe Abbu::Archive do
 
         archive = described_class.new(dir)
         expect(archive.contacts.first.image_path).to be_nil
+        expect(archive.diagnostics.map(&:to_h)).to include(
+          include(category: :missing_image, parser: :archive, context: {})
+        )
+      end
+    end
+
+    it 'raises for an unresolved image in strict mode' do
+      Dir.mktmpdir('sample.abbu') do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        require 'sqlite3'
+        create_schema_with_image(db_path)
+        archive = described_class.new(dir, strict: true)
+
+        expect { archive.contacts }
+          .to raise_error(Abbu::ParseError, /Referenced contact image was not found/)
       end
     end
 
@@ -122,6 +178,19 @@ RSpec.describe Abbu::Archive do
         archive = described_class.new(dir)
         expect(archive.contacts.first.image_uri).to be_nil
         expect(archive.contacts.first.image_path).to be_nil
+      end
+    end
+  end
+
+  describe '#extract_images' do
+    it 'extracts resolved contact images through the public archive API' do
+      fixture = File.expand_path('../fixtures/TestContacts.abbu', __dir__)
+      Dir.mktmpdir do |dir|
+        result = described_class.new(fixture).extract_images(dir)
+
+        expect(result.files.count).to eq(1)
+        expect(result.files.first[:path]).to exist
+        expect(result.diagnostics).to be_empty
       end
     end
   end
@@ -194,6 +263,15 @@ RSpec.describe Abbu::Archive do
         Z_GROUP INTEGER
       )
     SQL
+    db.execute('CREATE TABLE ZABCDURLADDRESS (ZOWNER INTEGER, ZURL TEXT, ZLABEL TEXT)')
+    db.execute('CREATE TABLE ZABCDNOTE (ZCONTACT INTEGER, ZTEXT TEXT)')
+    db.execute('CREATE TABLE ZABCDRELATEDNAME (ZOWNER INTEGER, ZNAME TEXT, ZLABEL TEXT)')
+    db.execute('CREATE TABLE ZABCDSOCIALPROFILE (ZOWNER INTEGER, ZSERVICENAME TEXT, ZUSERNAME TEXT)')
+    db.execute(
+      'CREATE TABLE ZABCDDATECOMPONENTS ' \
+      '(ZOWNER INTEGER, ZYEAR INTEGER, ZMONTH INTEGER, ZDAY INTEGER, ZLABEL TEXT)'
+    )
+    db.execute('CREATE TABLE ZABCDMESSAGINGADDRESS (ZOWNER INTEGER, ZADDRESS TEXT, ZLABEL TEXT, ZSERVICENAME TEXT)')
     db.execute(<<-SQL)
       INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME, ZLASTNAME, ZIMAGEURI)
       VALUES (1, 14, 'Stan', 'Carver', 'stan-photo')

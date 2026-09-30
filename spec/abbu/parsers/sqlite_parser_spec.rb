@@ -91,7 +91,7 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         'Akme', 'he/him', 'Marimba', 'Ding', 'V123', 'stan-photo', 0.0, 60.5
       )
     SQL
-    db.execute("INSERT INTO ZABCDEMAILADDRESS VALUES (1, 1, 'stan@example.com', 'Work')")
+    db.execute("INSERT INTO ZABCDEMAILADDRESS VALUES (1, 1, 'stan@example.com', '_$!<Work>!$_')")
     db.execute("INSERT INTO ZABCDPHONENUMBER VALUES (1, 1, '555-1234', 'Mobile')")
     db.execute("INSERT INTO ZABCDURLADDRESS VALUES (1, 1, 'https://stancarver.com', 'homepage')")
     db.execute("INSERT INTO ZABCDNOTE VALUES (1, 1, 'Met at RubyConf')")
@@ -129,17 +129,28 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         expect(contact.ringtone).to eq('Marimba')
         expect(contact.texttone).to eq('Ding')
         # Relational fields
-        expect(contact.emails).to eq([{ address: 'stan@example.com', label: 'Work' }])
-        expect(contact.phones).to eq([{ number: '555-1234', label: 'Mobile' }])
-        expect(contact.urls).to eq([{ url: 'https://stancarver.com', label: 'homepage' }])
+        expect(contact.phones).to eq([{ number: '555-1234', label: 'Mobile', raw_label: 'Mobile' }])
+        expect(contact.urls).to eq([{ url: 'https://stancarver.com', label: 'homepage', raw_label: 'homepage' }])
         expect(contact.notes).to eq(['Met at RubyConf'])
-        expect(contact.related_names).to eq([{ name: 'John', label: 'brother' }])
+        expect(contact.related_names).to eq([{ name: 'John', label: 'brother', raw_label: 'brother' }])
         expect(contact.social_profiles).to eq([{ service: 'Twitter', username: '@scarver2' }])
-        expect(contact.instant_messages).to eq([{ address: 'stan.carver', label: 'Work', service: 'Skype' }])
+        expected_message = { address: 'stan.carver', service: 'Skype', label: 'Work', raw_label: 'Work' }
+        expect(contact.instant_messages).to eq([expected_message])
         expect(contact.verification_code).to eq('V123')
-        expect(contact.birthday).to eq({ year: 1980, month: 1, day: 1, label: '_$!<Birthday>!$_' })
-        expect(contact.anniversary).to eq({ year: 2010, month: 6, day: 15, label: '_$!<Anniversary>!$_' })
-        expect(contact.lunar_birthday).to eq({ year: 1980, month: 2, day: 5, label: '_$!<LunarBirthday>!$_' })
+      end
+    end
+
+    it 'normalizes standard labels while preserving raw labels' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        build_test_db(db_path)
+
+        contact = described_class.new(db_path).contacts.first
+
+        expect(contact.emails.first).to include(label: 'Work', raw_label: '_$!<Work>!$_')
+        expect(contact.birthday).to include(label: 'Birthday', raw_label: '_$!<Birthday>!$_')
+        expect(contact.anniversary).to include(label: 'Anniversary', raw_label: '_$!<Anniversary>!$_')
+        expect(contact.lunar_birthday).to include(label: 'LunarBirthday', raw_label: '_$!<LunarBirthday>!$_')
       end
     end
 
@@ -232,7 +243,31 @@ RSpec.describe Abbu::Parsers::SqliteParser do
       end
     end
 
-    it 'returns empty groups when Z_ABCDCONTACTGROUP does not exist' do
+    it 'records one diagnostic per database and missing table across contacts' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        db = SQLite3::Database.new(db_path)
+        create_schema(db)
+        db.execute('DROP TABLE Z_ABCDCONTACTGROUP')
+        db.execute("INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME) VALUES (1, 14, 'Ghost')")
+        db.execute("INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME) VALUES (2, 14, 'Phantom')")
+        db.close
+
+        parser   = described_class.new(Pathname.new(db_path))
+        contacts = parser.contacts
+
+        expect(contacts.map(&:groups)).to eq([[], []])
+        diagnostics = parser.diagnostics.select do |diagnostic|
+          diagnostic.context[:table] == 'Z_ABCDCONTACTGROUP'
+        end
+        expect(diagnostics.map(&:to_h)).to contain_exactly(
+          include(category: :missing_optional_data, parser: :sqlite,
+                  context: { table: 'Z_ABCDCONTACTGROUP' })
+        )
+      end
+    end
+
+    it 'raises for missing optional data in strict mode' do
       Dir.mktmpdir do |dir|
         db_path = File.join(dir, 'AddressBook-v22.abcddb')
         db = SQLite3::Database.new(db_path)
@@ -241,10 +276,53 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         db.execute("INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME) VALUES (1, 14, 'Ghost')")
         db.close
 
-        parser   = described_class.new(Pathname.new(db_path))
-        contacts = parser.contacts
+        parser = described_class.new(db_path, strict: true)
 
-        expect(contacts.first.groups).to eq([])
+        expect { parser.contacts }
+          .to raise_error(Abbu::ParseError, /Optional SQLite table is unavailable/)
+      end
+    end
+
+    it 'raises a structured error when the required contact table is absent' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        SQLite3::Database.new(db_path).close
+        parser = described_class.new(db_path)
+
+        expect { parser.contacts }
+          .to raise_error(Abbu::ParseError, /Required SQLite contact schema is unavailable/)
+        expect(parser.diagnostics.first.category).to eq(:required_schema)
+      end
+    end
+
+    it 'tolerates missing optional relational tables' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        db = SQLite3::Database.new(db_path)
+        db.execute('CREATE TABLE ZABCDRECORD (Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, ZFIRSTNAME TEXT)')
+        db.execute("INSERT INTO ZABCDRECORD VALUES (1, 14, 'Ghost')")
+        db.close
+
+        contact = described_class.new(db_path).contacts.first
+
+        expect(contact.first_name).to eq('Ghost')
+        expect(contact.emails).to eq([])
+        expect(contact.phones).to eq([])
+        expect(contact.addresses).to eq([])
+      end
+    end
+
+    it 'raises when a present optional table is missing an expected column' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        db = SQLite3::Database.new(db_path)
+        db.execute('CREATE TABLE ZABCDRECORD (Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, ZFIRSTNAME TEXT)')
+        db.execute('CREATE TABLE ZABCDEMAILADDRESS (ZOWNER INTEGER, ZADDRESSNORMALIZED TEXT)')
+        db.execute("INSERT INTO ZABCDRECORD VALUES (1, 14, 'Ghost')")
+        db.close
+
+        expect { described_class.new(db_path).contacts }
+          .to raise_error(SQLite3::SQLException, /ZLABEL/)
       end
     end
   end

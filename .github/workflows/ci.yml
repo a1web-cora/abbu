@@ -1,7 +1,14 @@
 # .github/workflows/ci.yml
 name: CI
 
-on: [push, pull_request]
+# Pull requests validate proposed commits. Pushes validate only the canonical
+# branch after integration, avoiding duplicate push + pull_request matrices for
+# feature branches with an open PR.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   test:
