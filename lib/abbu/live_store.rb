@@ -15,7 +15,7 @@ module Abbu
     class PermissionError < Error; end
     class UnsupportedPlatformError < Error; end
 
-    attr_reader :path
+    attr_reader :diagnostics, :path
 
     def self.default_path(home: Dir.home, platform: RUBY_PLATFORM)
       unless platform.include?('darwin')
@@ -26,13 +26,17 @@ module Abbu
       Pathname.new(home).join(DEFAULT_RELATIVE_PATH)
     end
 
-    def initialize(path = nil)
+    def initialize(path = nil, strict: false)
+      @strict = strict
+      @diagnostics = []
       @path = Pathname.new(path || self.class.default_path).expand_path
       validate!
     end
 
     def contacts
-      @contacts ||= Parsers::SqliteParser.new(database_paths, root_path: @path, readonly: true).contacts
+      @contacts ||= Parsers::SqliteParser.new(
+        database_paths, root_path: @path, readonly: true, diagnostics: diagnostics, strict: @strict
+      ).contacts
     rescue SQLite3::CantOpenException, Errno::EACCES => e
       raise permission_error(e.message)
     end

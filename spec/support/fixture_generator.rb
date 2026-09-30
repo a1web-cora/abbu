@@ -94,7 +94,7 @@ module FixtureGenerator # rubocop:disable Metrics/ModuleLength
     SQL
     db.execute <<-SQL
       INSERT INTO ZABCDEMAILADDRESS (ZOWNER, ZADDRESSNORMALIZED, ZLABEL)
-      VALUES (1, 'john@example.com', 'Work')
+      VALUES (1, 'john@example.com', '_$!<Work>!$_')
     SQL
     db.execute <<-SQL
       INSERT INTO ZABCDPHONENUMBER (ZOWNER, ZFULLNUMBER, ZLABEL)

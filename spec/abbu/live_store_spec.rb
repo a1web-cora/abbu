@@ -115,6 +115,7 @@ RSpec.describe Abbu::LiveStore do
       source_contact = contacts.find { |contact| contact.first_name == 'Homer' }
 
       expect(contacts.map(&:first_name)).to contain_exactly('Stan', 'Homer', 'Collin')
+      expect(store.diagnostics.map(&:category)).to include(:missing_optional_data)
       expect(source_contact.source).to include(
         relative_path: 'Sources/TestAccount/AddressBook-v22.abcddb',
         kind: 'source',
@@ -132,6 +133,13 @@ RSpec.describe Abbu::LiveStore do
 
       expect(SQLite3::Database).to have_received(:new).with(root_database, readonly: true)
       expect(SQLite3::Database).to have_received(:new).with(source_database, readonly: true)
+    end
+
+    it 'supports strict parser diagnostics through the public live entry point' do
+      store = Abbu.open_live(fixture_path, strict: true)
+
+      expect { store.contacts }.to raise_error(Abbu::ParseError)
+      expect(store.diagnostics.map(&:category)).to eq([:missing_optional_data])
     end
 
     it 'turns SQLite access failures into actionable Full Disk Access guidance' do

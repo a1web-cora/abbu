@@ -110,15 +110,19 @@ Feature checklist organized by release version.
 - [x] Support JPEG, PNG, HEIC formats (case-insensitive)
 - [x] Image resolution across nested `Sources/<account>/Images/` directories
 - [x] CSV / JSON / vCard export of image paths
-- [ ] Detect ambiguous duplicate image stems across nested source directories
-- [ ] CLI: `--extract-images` flag to export photos alongside contacts
-- [ ] Thumbnail vs. full-size image handling
+- [x] Detect ambiguous duplicate image stems across nested source directories
+- [x] CLI: `--extract-images` flag to export photos alongside contacts
+- [x] Content-aware image extensions, safe Unicode filenames, and extraction diagnostics
+- [ ] Thumbnail vs. full-size image handling (awaiting reproducible format evidence)
 - [ ] vCard PHOTO base64 embedding (currently references absolute path)
 
 ---
 
 ## v0.4.0 — Fuzzy Deduplication
 
+- [x] Provenance-aware identity evidence and ambiguous match suggestions
+- [x] International-aware phone comparison without assuming national numbers are global
+- [x] Explicit merge-policy boundary preserving original source records
 - [ ] Levenshtein distance matching for name-based deduplication
 - [ ] Phone number normalization (strip formatting, compare digits)
 - [ ] Configurable similarity thresholds
@@ -140,12 +144,15 @@ Feature checklist organized by release version.
 
 ## v0.6.0 — Filtering & Querying
 
-- [ ] `Archive#where(field: value)` query API
+- [x] `Archive#where(field: value)` query API
+- [x] Exact normalized email and phone lookup
+- [x] Case-insensitive partial name and email search
+- [x] CLI search with tab-separated, provenance-aware output
 - [ ] Filter by region (state, city, country)
 - [ ] Filter by group membership
 - [ ] Filter by date range (created, modified)
 - [ ] CLI: `--filter` flag with key=value syntax
-- [ ] Chainable query interface
+- [x] Chainable query interface
 
 ---
 

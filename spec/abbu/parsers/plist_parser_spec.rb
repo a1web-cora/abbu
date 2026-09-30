@@ -39,7 +39,7 @@ RSpec.describe Abbu::Parsers::PlistParser do
       'Note' => 'Met at RubyConf',
       'Email' => {
         'values' => [
-          { 'value' => 'stan@example.com', 'label' => 'Work' }
+          { 'value' => 'stan@example.com', 'label' => '_$!<Work>!$_' }
         ]
       },
       'Phone' => {
@@ -102,33 +102,49 @@ RSpec.describe Abbu::Parsers::PlistParser do
         expect(contact.nickname).to   eq('Stretch')
         expect(contact.prefix).to     eq('Honorable')
         expect(contact.suffix).to     eq('II')
-        expect(contact.birthday).to eq({ year: 1980, month: 1, day: 1, label: '_$!<Birthday>!$_' })
-        expect(contact.lunar_birthday).to eq({ year: 1980, month: 2, day: 5, label: '_$!<LunarBirthday>!$_' })
-        expect(contact.anniversary).to eq({ year: 2010, month: 6, day: 15, label: '_$!<Anniversary>!$_' })
+        expect(contact.birthday).to eq({ year: 1980, month: 1, day: 1, label: 'Birthday', raw_label: nil })
+        expect(contact.lunar_birthday).to eq({ year: 1980, month: 2, day: 5, label: 'LunarBirthday', raw_label: nil })
+        expect(contact.anniversary).to eq({ year: 2010, month: 6, day: 15, label: 'Anniversary',
+                                            raw_label: '_$!<Anniversary>!$_' })
 
         # Emails & phones (hash-based, same shape as SQLite parser)
-        expect(contact.emails).to eq([{ address: 'stan@example.com', label: 'Work' }])
-        expect(contact.phones).to eq([{ number: '555-1234', label: 'Mobile' }])
+        expect(contact.emails).to eq([{ address: 'stan@example.com', label: 'Work',
+                                        raw_label: '_$!<Work>!$_' }])
+        expect(contact.phones).to eq([{ number: '555-1234', label: 'Mobile', raw_label: 'Mobile' }])
 
         # Addresses
         expect(contact.addresses).to eq([{
                                           street: '123 Main St', city: 'Austin', state: 'TX',
-                                          zip: '78701', country: 'USA', label: 'Home'
+                                          zip: '78701', country: 'USA', label: 'Home', raw_label: 'Home'
                                         }])
 
         # URLs
-        expect(contact.urls).to eq([{ url: 'https://stancarver.com', label: 'homepage' }])
+        expect(contact.urls).to eq([{ url: 'https://stancarver.com', label: 'homepage', raw_label: 'homepage' }])
 
         # Notes
         expect(contact.notes).to eq(['Met at RubyConf'])
 
         # Related names
-        expect(contact.related_names).to eq([{ name: 'John', label: 'brother' }])
+        expect(contact.related_names).to eq([{ name: 'John', label: 'brother', raw_label: 'brother' }])
 
         # Social profiles
         expect(contact.social_profiles).to eq([{ service: 'Twitter', username: '@scarver2' }])
-        expect(contact.instant_messages).to eq([{ address: 'stan.carver', label: 'Work', service: 'Skype' }])
+        expected_message = { address: 'stan.carver', service: 'Skype', label: 'Work', raw_label: 'Work' }
+        expect(contact.instant_messages).to eq([expected_message])
         expect(contact.verification_code).to eq('V123')
+      end
+    end
+
+    it 'preserves the raw Apple anniversary label through vCard export' do
+      Dir.mktmpdir do |dir|
+        write_plist(dir, 'stan.abcdp', build_stan_plist)
+        contact = described_class.new(dir).contacts.first
+        exporter = Abbu::Exporters::VcardExporter.new([contact])
+
+        expect(contact.anniversary).to include(
+          label: 'Anniversary', raw_label: '_$!<Anniversary>!$_'
+        )
+        expect { exporter.to_stdout }.to output(/X-ABLABEL:_\$!<Anniversary>!\$_/).to_stdout
       end
     end
 
@@ -204,6 +220,41 @@ RSpec.describe Abbu::Parsers::PlistParser do
 
         expect(contact.birthday).to be_nil
         expect(contact.dates).to eq([])
+      end
+    end
+
+    it 'recovers valid contacts and records a diagnostic for a malformed record' do
+      Dir.mktmpdir do |dir|
+        write_plist(dir, 'good.abcdp', { 'First' => 'Stan' })
+        File.write(File.join(dir, 'bad.abcdp'), 'not a plist')
+        parser = described_class.new(dir)
+
+        expect(parser.contacts.map(&:first_name)).to eq(['Stan'])
+        expect(parser.diagnostics.map(&:to_h)).to include(
+          include(category: :malformed_record, parser: :plist, source: end_with('bad.abcdp'))
+        )
+      end
+    end
+
+    it 'raises on a malformed record in strict mode' do
+      Dir.mktmpdir do |dir|
+        File.write(File.join(dir, 'bad.abcdp'), 'not a plist')
+        parser = described_class.new(dir, strict: true)
+
+        expect { parser.contacts }
+          .to raise_error(Abbu::ParseError, /Unable to parse plist contact record/)
+      end
+    end
+
+    it 'records parser exceptions without exposing record contents' do
+      Dir.mktmpdir do |dir|
+        write_plist(dir, 'broken.abcdp', { 'First' => 'Private Name' })
+        allow(Plist).to receive(:parse_xml).and_raise(ArgumentError)
+        parser = described_class.new(dir)
+
+        expect(parser.contacts).to eq([])
+        expect(parser.diagnostics.first.message).to eq('Unable to parse plist contact record')
+        expect(parser.diagnostics.first.message).not_to include('Private Name')
       end
     end
   end
