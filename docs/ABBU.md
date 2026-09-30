@@ -125,6 +125,27 @@ Every parsed contact includes source provenance with the absolute source path, i
 relative to the `.abbu` root, and whether it came from the root bundle or a database under
 `Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
+### Schema diagnostics
+
+`Archive#schema_report` and `abbu Contacts.abbu --schema` inspect every discovered
+SQLite database and return deterministic schema metadata. Reports identify recognized
+and unrecognized tables and columns, recognized items that are absent, declared SQLite
+types, primary-key and nullability metadata, source provenance, and exact owner/contact-
+style column names that may represent contact links.
+
+These reports are research evidence, not parser mappings. In particular, a
+`contact_link_candidate` flag records only an exact column-name shape such as `ZOWNER`,
+`ZCONTACT`, or `Z_CONTACT`; it does not claim a foreign-key target or assign Apple
+Contacts semantics. Unknown tables and columns must be reproduced in a sanitized fixture
+or supported by documentation before ABBU uses them to populate contacts.
+
+Missing recognized tables and columns remain visible as diagnostic observations. The
+parser tolerates absent established email, phone, and postal-address tables by returning
+empty collections, while the schema report preserves the absence for compatibility
+research. If one of those tables exists but lacks an expected column, parsing raises the
+SQLite schema error instead of silently treating the contact as having no corresponding
+data. The core `ZABCDRECORD` table remains required for contact parsing.
+
 ### Labeled values
 
 The synthetic SQLite and plist fixtures include both custom labels and Apple's
@@ -157,6 +178,8 @@ supported semantics.
   plist behavior.
 - `spec/support/fixture_generator.rb` is the reproducible source for generated
   SQLite fixture structure and data.
+- `spec/abbu/schema_inspector_spec.rb` builds deterministic temporary SQLite
+  schemas for missing tables, unknown contact-link candidates, and column drift.
 
 These fixtures prove only the variations they contain. Table names, column
 names, entity numbers, UUIDs, and directory names alone are not sufficient

@@ -35,6 +35,19 @@ RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
     expect(output).to include('Total contacts : 2')
   end
 
+  it 'prints deterministic SQLite schema diagnostics as JSON' do
+    fixture = File.expand_path('fixtures/TestContacts.abbu', __dir__)
+    output = `#{bin} "#{fixture}" --schema 2>&1`
+    report = JSON.parse(output)
+
+    expect(report.fetch('databases').size).to eq(2)
+    expect(report.fetch('databases').first).to include(
+      'relative_path' => 'AddressBook-v22.abcddb',
+      'missing_required_tables' => [],
+      'schema_drift' => true
+    )
+  end
+
   it 'prints tab-separated partial search results with source provenance' do
     fixture = File.expand_path('fixtures/TestContacts.abbu', __dir__)
     output = `#{bin} "#{fixture}" --search GLOBEX`

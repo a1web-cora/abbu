@@ -36,6 +36,7 @@ require "abbu"
 
 archive = Abbu.open("Contacts.abbu")
 contacts = archive.contacts
+schema = archive.schema_report # Evidence-only SQLite schema diagnostics
 
 contacts.first.full_name   # => "Honorable Stan \"Stretch\" Carver II"
 contacts.first.emails      # => [{ address: "stan@example.com", label: "Work", raw_label: "_$!<Work>!$_" }]
@@ -104,6 +105,9 @@ abbu Contacts.abbu --stats
 
 # Find duplicates
 abbu Contacts.abbu --dedupe
+
+# Inspect each SQLite schema without inferring undocumented semantics
+abbu Contacts.abbu --schema
 
 # Tab-separated search output: name, emails, phones, source-relative path
 abbu Contacts.abbu --search stan

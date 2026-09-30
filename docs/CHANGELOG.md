@@ -13,6 +13,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Evidence-safe SQLite schema diagnostics through `Archive#schema_report` and
+  `abbu <archive> --schema`, including unknown tables/columns, absent recognized
+  schema elements, and owner/contact-style relationship candidates
+- Deterministic schema-variation coverage for missing optional tables, unknown
+  contact-linked tables, and column drift
 - Normalized Apple standard labels with the original source value preserved as
   `raw_label` on labeled contact values
 - Chainable `Abbu::Query` and `Archive#where` APIs for contact filtering
@@ -29,6 +34,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- SQLite parsing now tolerates absent established email, phone, and postal-address
+  tables and returns empty collections while retaining the variation in schema diagnostics;
+  unexpected column drift and other SQL errors on present tables continue to surface
 - vCard anniversary export now prefers the original `raw_label` so Apple and
   custom source representations survive parse-and-export round trips
 - Minimum supported Ruby and RuboCop target are now 3.3; CI covers Ruby 3.3,

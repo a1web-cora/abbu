@@ -258,5 +258,36 @@ RSpec.describe Abbu::Parsers::SqliteParser do
         expect(contacts.first.groups).to eq([])
       end
     end
+
+    it 'tolerates missing optional relational tables' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        db = SQLite3::Database.new(db_path)
+        db.execute('CREATE TABLE ZABCDRECORD (Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, ZFIRSTNAME TEXT)')
+        db.execute("INSERT INTO ZABCDRECORD VALUES (1, 14, 'Ghost')")
+        db.close
+
+        contact = described_class.new(db_path).contacts.first
+
+        expect(contact.first_name).to eq('Ghost')
+        expect(contact.emails).to eq([])
+        expect(contact.phones).to eq([])
+        expect(contact.addresses).to eq([])
+      end
+    end
+
+    it 'raises when a present optional table is missing an expected column' do
+      Dir.mktmpdir do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        db = SQLite3::Database.new(db_path)
+        db.execute('CREATE TABLE ZABCDRECORD (Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, ZFIRSTNAME TEXT)')
+        db.execute('CREATE TABLE ZABCDEMAILADDRESS (ZOWNER INTEGER, ZADDRESSNORMALIZED TEXT)')
+        db.execute("INSERT INTO ZABCDRECORD VALUES (1, 14, 'Ghost')")
+        db.close
+
+        expect { described_class.new(db_path).contacts }
+          .to raise_error(SQLite3::SQLException, /ZLABEL/)
+      end
+    end
   end
 end

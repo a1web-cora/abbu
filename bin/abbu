@@ -4,6 +4,7 @@
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
+require 'json'
 require 'optparse'
 require 'abbu'
 
@@ -15,6 +16,7 @@ options = {
   json: false,
   phone: nil,
   search: nil,
+  schema: false,
   stats: false
 }
 
@@ -39,6 +41,10 @@ end
 
 parser.on('--search TERM', 'Find contacts by partial name or email') do |term|
   options[:search] = term
+end
+
+parser.on('--schema', 'Print SQLite schema diagnostics as JSON') do
+  options[:schema] = true
 end
 
 parser.on('--email ADDRESS', 'Find contacts by exact normalized email') do |address|
@@ -73,6 +79,11 @@ if file.nil?
 end
 
 archive = Abbu.open(file)
+
+if options[:schema]
+  puts JSON.pretty_generate(archive.schema_report)
+  exit
+end
 
 search_options = options.values_at(:search, :email, :phone).compact
 if search_options.length > 1

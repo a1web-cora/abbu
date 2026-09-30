@@ -56,6 +56,8 @@ module Abbu
       end
 
       def emails_for(db, record_id)
+        return [] unless table_exists?(db, 'ZABCDEMAILADDRESS')
+
         db.execute(
           'SELECT ZADDRESSNORMALIZED, ZLABEL FROM ZABCDEMAILADDRESS WHERE ZOWNER = ?',
           record_id
@@ -63,6 +65,8 @@ module Abbu
       end
 
       def phones_for(db, record_id)
+        return [] unless table_exists?(db, 'ZABCDPHONENUMBER')
+
         db.execute(
           'SELECT ZFULLNUMBER, ZLABEL FROM ZABCDPHONENUMBER WHERE ZOWNER = ?',
           record_id
@@ -70,6 +74,8 @@ module Abbu
       end
 
       def addresses_for(db, record_id) # rubocop:disable Metrics/MethodLength
+        return [] unless table_exists?(db, 'ZABCDPOSTALADDRESS')
+
         db.execute(
           'SELECT ZSTREET, ZCITY, ZSTATE, ZZIPCODE, ZCOUNTRYNAME, ZLABEL FROM ZABCDPOSTALADDRESS WHERE ZOWNER = ?',
           record_id
@@ -83,6 +89,10 @@ module Abbu
             **label_fields(row['ZLABEL'])
           }
         end
+      end
+
+      def table_exists?(db, table_name)
+        db.table_info(table_name).any?
       end
 
       def groups_for(db, record_id)

@@ -80,6 +80,16 @@ RSpec.describe Abbu::Archive do
     end
   end
 
+  describe '#schema_report' do
+    it 'returns an empty database list for a plist-only bundle' do
+      Dir.mktmpdir('sample.abbu') do |dir|
+        report = described_class.new(dir).schema_report
+
+        expect(report).to eq({ archive_path: File.expand_path(dir), databases: [] })
+      end
+    end
+  end
+
   describe 'querying' do
     let(:contact) do
       Abbu::Contact.new.tap do |record|
