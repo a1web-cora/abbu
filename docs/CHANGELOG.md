@@ -13,6 +13,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Evidence-safe SQLite schema diagnostics through `Archive#schema_report` and
+  `abbu <archive> --schema`, including unknown tables/columns, absent recognized
+  schema elements, and owner/contact-style relationship candidates
+- Deterministic schema-variation coverage for missing optional tables, unknown
+  contact-linked tables, and column drift
 - Contact creation and modification timestamps from optional SQLite `ZCREATIONDATE` and `ZMODIFICATIONDATE` columns
 - Provenance metadata identifying each contact's source database or plist and its location within the ABBU bundle
 - Creation, modification, and source metadata in JSON exports
@@ -23,6 +28,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- SQLite parsing now tolerates absent established email, phone, and postal-address
+  tables and returns empty collections while retaining the variation in schema diagnostics
 - Minimum supported Ruby and RuboCop target are now 3.3; CI covers Ruby 3.3,
   3.4, and 4.0, with Ruby 3.3 as the designated lint/tooling job
 - Agent guidance is consolidated in `AGENTS.md`; the redundant `CLAUDE.md` has

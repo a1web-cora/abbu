@@ -59,6 +59,8 @@ module Abbu
           'SELECT ZADDRESSNORMALIZED, ZLABEL FROM ZABCDEMAILADDRESS WHERE ZOWNER = ?',
           record_id
         ).map { |row| { address: row['ZADDRESSNORMALIZED'], label: row['ZLABEL'] } }
+      rescue SQLite3::SQLException
+        []
       end
 
       def phones_for(db, record_id)
@@ -66,6 +68,8 @@ module Abbu
           'SELECT ZFULLNUMBER, ZLABEL FROM ZABCDPHONENUMBER WHERE ZOWNER = ?',
           record_id
         ).map { |row| { number: row['ZFULLNUMBER'], label: row['ZLABEL'] } }
+      rescue SQLite3::SQLException
+        []
       end
 
       def addresses_for(db, record_id) # rubocop:disable Metrics/MethodLength
@@ -82,6 +86,8 @@ module Abbu
             label: row['ZLABEL']
           }
         end
+      rescue SQLite3::SQLException
+        []
       end
 
       def groups_for(db, record_id)

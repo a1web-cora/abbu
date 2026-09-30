@@ -2,8 +2,9 @@
 # frozen_string_literal: true
 
 require 'pathname'
-require_relative 'parsers/sqlite_parser'
 require_relative 'parsers/plist_parser'
+require_relative 'parsers/sqlite_parser'
+require_relative 'schema_inspector'
 require_relative 'utils/image_resolver'
 
 module Abbu
@@ -21,6 +22,10 @@ module Abbu
 
     def sqlite?
       db_paths.any?
+    end
+
+    def schema_report
+      SchemaInspector.new(db_paths, root_path: @path).report
     end
 
     private
