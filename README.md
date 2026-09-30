@@ -105,11 +105,15 @@ abbu Contacts.abbu --dedupe
 abbu Contacts.abbu --search stan
 abbu Contacts.abbu --email stan@example.com
 abbu Contacts.abbu --phone '(555) 123-4567'
+
+# Stable structured search output using the regular contact JSON schema
+abbu Contacts.abbu --search stan --json | jq .
 ```
 
-CLI search exits successfully when at least one contact matches and exits with
-status 1 without output when no contact matches, making it suitable for shell
-conditionals and pipelines.
+CLI search defaults to tab-separated output and exits successfully when at least
+one contact matches. A search with no matches exits with status 1; TSV mode emits
+no output, while `--json` emits a valid empty array. This makes both modes
+suitable for shell conditionals, pipelines, and agent integrations.
 
 ## Rake Tasks
 

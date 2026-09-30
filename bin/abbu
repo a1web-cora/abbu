@@ -12,6 +12,7 @@ options = {
   output: nil,
   dedupe: false,
   email: nil,
+  json: false,
   phone: nil,
   search: nil,
   stats: false
@@ -48,6 +49,10 @@ parser.on('--phone NUMBER', 'Find contacts by exact normalized phone number') do
   options[:phone] = number
 end
 
+parser.on('--json', 'Emit search results as structured JSON instead of TSV') do
+  options[:json] = true
+end
+
 parser.on('-v', '--version', 'Print version') do
   puts "abbu #{Abbu::VERSION}"
   exit
@@ -75,6 +80,11 @@ if search_options.length > 1
   exit 1
 end
 
+if options[:json] && search_options.empty?
+  warn '--json requires --search, --email, or --phone.'
+  exit 1
+end
+
 if search_options.any?
   results = if options[:search]
               archive.search(options[:search])
@@ -84,14 +94,18 @@ if search_options.any?
               archive.find_by_phone(options[:phone])
             end
 
-  results.each do |contact|
-    fields = [
-      contact.full_name,
-      contact.emails.filter_map { |email| email[:address] }.join(','),
-      contact.phones.filter_map { |phone| phone[:number] }.join(','),
-      contact.source&.fetch(:relative_path, nil)
-    ]
-    puts fields.map { |field| field.to_s.gsub(/[\t\r\n]/, ' ') }.join("\t")
+  if options[:json]
+    Abbu::Exporters::JsonExporter.new(results).to_stdout
+  else
+    results.each do |contact|
+      fields = [
+        contact.full_name,
+        contact.emails.filter_map { |email| email[:address] }.join(','),
+        contact.phones.filter_map { |phone| phone[:number] }.join(','),
+        contact.source&.fetch(:relative_path, nil)
+      ]
+      puts fields.map { |field| field.to_s.gsub(/[\t\r\n]/, ' ') }.join("\t")
+    end
   end
   exit(results.any? ? 0 : 1)
 end
