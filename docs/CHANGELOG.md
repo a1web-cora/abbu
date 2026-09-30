@@ -13,11 +13,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Deduplication recognizes international phone prefixes from trimmed raw input, not
+  punctuation-stripped digits, keeping national-looking `(001)` values source-local.
+
 - Image extraction exclusively creates destination files and reports `destination_exists`
   rather than overwriting existing files, symlinks, or hard links. Output directory aliases
   are resolved before extraction; extraction diagnostic privacy is documented.
 
 ### Added
+
+- Provenance-aware `Utils::Deduplicator#matches` suggestions with normalized email,
+  international/source-local phone, Unicode name, and organization evidence
+- Match confidence, ambiguity status, original source records, and raw evidence, plus an
+  explicit callable merge-policy boundary that never silently collapses contacts
 
 - `Archive#extract_images` and `Abbu::ImageExtractor` for copying contact photos to a
   caller-selected directory with structured missing, unreadable, and unsupported-image

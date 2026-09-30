@@ -99,6 +99,23 @@ dupes.each do |email, contacts|
 end
 ```
 
+For provenance-aware suggestions, use `#matches`. Results preserve both contacts,
+their source records, raw and normalized evidence, confidence, and ambiguity:
+
+```ruby
+matches = Abbu::Utils::Deduplicator.new(archive.contacts).matches
+matches.each do |match|
+  puts "#{match.confidence}: #{match.left.full_name} / #{match.right.full_name}"
+  pp match.sources
+  pp match.evidence
+end
+
+# Matching never mutates or collapses contacts. Merging requires a caller policy:
+merged = matches.first.merge(policy: ->(left, right, evidence:) {
+  MyContactMerge.call(left, right, evidence: evidence)
+})
+```
+
 ## CLI
 
 ```bash
