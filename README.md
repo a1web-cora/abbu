@@ -43,6 +43,23 @@ contacts.first.phones      # => [{ number: "555-1234", label: "Mobile" }]
 contacts.first.job_title   # => "Engineer"
 ```
 
+### Search and identifier lookup
+
+```ruby
+# Exact lookup normalizes email case/whitespace and phone punctuation.
+archive.find_by_email("STAN@EXAMPLE.COM").each { |contact| puts contact.full_name }
+archive.find_by_phone("(555) 123-4567").each { |contact| puts contact.full_name }
+
+# Name and email search is case-insensitive and can be chained with `where`.
+archive.where(company: "Acme Corp").search("stan").each do |contact|
+  puts [contact.full_name, contact.source[:relative_path]].join("\t")
+end
+```
+
+Lookup methods return every match as an `Abbu::Query`; they never silently pick
+one contact when the same identifier appears in multiple sources. Returned
+contacts retain their parser-provided source provenance.
+
 ### Export
 
 ```ruby
@@ -83,7 +100,16 @@ abbu Contacts.abbu --stats
 
 # Find duplicates
 abbu Contacts.abbu --dedupe
+
+# Tab-separated search output: name, emails, phones, source-relative path
+abbu Contacts.abbu --search stan
+abbu Contacts.abbu --email stan@example.com
+abbu Contacts.abbu --phone '(555) 123-4567'
 ```
+
+CLI search exits successfully when at least one contact matches and exits with
+status 1 without output when no contact matches, making it suitable for shell
+conditionals and pipelines.
 
 ## Rake Tasks
 

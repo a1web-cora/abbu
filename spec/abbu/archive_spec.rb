@@ -80,6 +80,37 @@ RSpec.describe Abbu::Archive do
     end
   end
 
+  describe 'querying' do
+    let(:contact) do
+      Abbu::Contact.new.tap do |record|
+        record.first_name = 'Stan'
+        record.last_name = 'Carver'
+        record.emails = [{ address: 'stan@example.com', label: 'Work' }]
+        record.phones = [{ number: '555-0100', label: 'Mobile' }]
+      end
+    end
+    let(:archive) do
+      described_class.new(Dir.mktmpdir('query.abbu')).tap do |instance|
+        allow(instance).to receive(:contacts).and_return([contact])
+      end
+    end
+
+    after do
+      FileUtils.rm_rf(archive.path)
+    end
+
+    it 'exposes the chainable query interface' do
+      expect(archive.query).to be_a(Abbu::Query)
+      expect(archive.where(last_name: 'Carver').to_a).to eq([contact])
+    end
+
+    it 'delegates search and exact identifier lookups to the query' do
+      expect(archive.search('stan').to_a).to eq([contact])
+      expect(archive.find_by_email('STAN@EXAMPLE.COM').to_a).to eq([contact])
+      expect(archive.find_by_phone('(555) 0100').to_a).to eq([contact])
+    end
+  end
+
   describe 'image attachment' do
     it 'attaches image_path to contacts whose ZIMAGEURI matches a file in Images/' do
       Dir.mktmpdir('sample.abbu') do |dir|
