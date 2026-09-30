@@ -88,6 +88,12 @@ Project-local commands are authoritative:
 CI must call these commands instead of recreating their implementation. Add a
 new canonical workflow under `bin/` before teaching CI a separate sequence.
 
+CI event policy is also intentional: `pull_request` validates proposed branch
+commits, while `push` runs only for canonical `main` after integration. Do not
+restore unrestricted feature-branch `push` CI alongside `pull_request`; that
+runs the same Ruby matrix twice for ordinary PR commits without adding a distinct
+gate.
+
 ## Tests And Fixtures
 
 - Use RSpec 3 and keep full-suite SimpleCov line coverage at 100%.

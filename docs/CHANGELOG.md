@@ -34,6 +34,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- CI now runs the Ruby matrix once for pull requests and on pushes to canonical `main`, avoiding duplicate feature-branch push and pull-request runs
 - SQLite parsing now tolerates absent established email, phone, and postal-address
   tables and returns empty collections while retaining the variation in schema diagnostics;
   unexpected column drift and other SQL errors on present tables continue to surface
