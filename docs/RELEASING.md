@@ -6,6 +6,10 @@ ABBU publishes RubyGems releases from GitHub Actions using RubyGems.org Trusted
 Publishing. The release workflow intentionally contains no long-lived RubyGems
 API key.
 
+Workflow-level permissions default to `{}`. The release job grants only
+`contents: read` for checkout/source inspection and `id-token: write` for OIDC.
+It has no GitHub repository write permission; the version tag must already exist.
+
 ## One-time RubyGems.org setup
 
 As a RubyGems owner for `abbu`, configure a Trusted Publisher with:
