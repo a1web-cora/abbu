@@ -3,6 +3,8 @@
 
 require 'plist'
 require_relative '../contact'
+require_relative '../diagnostic'
+require_relative '../parse_error'
 require_relative '../utils/label_normalizer'
 require_relative '../utils/source_descriptor'
 
@@ -23,9 +25,13 @@ module Abbu
       }.freeze
 
       # Accepts either a directory path (scans for *.abcdp) or an array of file paths
-      def initialize(paths, root_path: nil)
+      attr_reader :diagnostics
+
+      def initialize(paths, root_path: nil, diagnostics: nil, strict: false)
         @paths = resolve_paths(paths)
         @root_path = root_path
+        @diagnostics = diagnostics || []
+        @strict = strict
       end
 
       def contacts
@@ -48,9 +54,25 @@ module Abbu
 
       def parse_file(file)
         data = Plist.parse_xml(file.to_s)
-        return nil unless data
+        return recover(file) unless data.is_a?(Hash)
 
         build_contact(data, file)
+      rescue ParseError
+        raise
+      rescue ArgumentError, EOFError, Plist::UnimplementedElementError, SystemCallError, TypeError
+        recover(file)
+      end
+
+      def recover(file)
+        diagnostic = Diagnostic.new(
+          category: :malformed_record,
+          message: 'Unable to parse plist contact record',
+          parser: :plist,
+          source: file,
+          context: {}
+        )
+        diagnostics << diagnostic
+        raise ParseError, diagnostic if @strict
       end
 
       def build_contact(data, file)

@@ -125,6 +125,24 @@ Every parsed contact includes source provenance with the absolute source path, i
 relative to the `.abbu` root, and whether it came from the root bundle or a database under
 `Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
+### Recovery and diagnostics
+
+By default, ABBU recovers from malformed individual plist records, missing
+optional SQLite relationship tables, and unresolved image references. Each
+recovery appends an `Abbu::Diagnostic` to `archive.diagnostics` with a category,
+parser, source path, non-PII context, and a stable message. Required contact
+schema failures still raise because no evidence-backed contact record can be
+recovered safely.
+
+An absent optional SQLite table produces one diagnostic per database and table,
+regardless of contact count. ABBU does not place record identifiers or raw image
+references in these schema- and image-level diagnostic contexts.
+
+Pass `strict: true` to `Abbu.open` or `--strict` to the CLI to raise
+`Abbu::ParseError` on the first recoverable condition. The CLI prints a
+diagnostic summary to standard error so exported data on standard output remains
+pipeable.
+
 ### Schema diagnostics
 
 `Archive#schema_report` and `abbu Contacts.abbu --schema` inspect every discovered

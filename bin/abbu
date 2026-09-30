@@ -17,7 +17,8 @@ options = {
   phone: nil,
   search: nil,
   schema: false,
-  stats: false
+  stats: false,
+  strict: false
 }
 
 parser = OptionParser.new
@@ -41,6 +42,10 @@ end
 
 parser.on('--search TERM', 'Find contacts by partial name or email') do |term|
   options[:search] = term
+end
+
+parser.on('--strict', 'Raise on unsupported or corrupt optional data') do
+  options[:strict] = true
 end
 
 parser.on('--schema', 'Print SQLite schema diagnostics as JSON') do
@@ -78,82 +83,96 @@ if file.nil?
   exit 1
 end
 
-archive = Abbu.open(file)
+archive = Abbu.open(file, strict: options[:strict])
 
-if options[:schema]
-  puts JSON.pretty_generate(archive.schema_report)
-  exit
-end
+at_exit do
+  next if archive.diagnostics.empty?
 
-search_options = options.values_at(:search, :email, :phone).compact
-if search_options.length > 1
-  warn 'Use only one of --search, --email, or --phone.'
-  exit 1
-end
-
-if options[:json] && search_options.empty?
-  warn '--json requires --search, --email, or --phone.'
-  exit 1
-end
-
-if search_options.any?
-  results = if options[:search]
-              archive.search(options[:search])
-            elsif options[:email]
-              archive.find_by_email(options[:email])
-            else
-              archive.find_by_phone(options[:phone])
-            end
-
-  if options[:json]
-    Abbu::Exporters::JsonExporter.new(results).to_stdout
-  else
-    results.each do |contact|
-      fields = [
-        contact.full_name,
-        contact.emails.filter_map { |email| email[:address] }.join(','),
-        contact.phones.filter_map { |phone| phone[:number] }.join(','),
-        contact.source&.fetch(:relative_path, nil)
-      ]
-      puts fields.map { |field| field.to_s.gsub(/[\t\r\n]/, ' ') }.join("\t")
-    end
+  warn "Diagnostics: #{archive.diagnostics.count}"
+  archive.diagnostics.each do |diagnostic|
+    warn "- #{diagnostic.category}: #{diagnostic.message} [#{diagnostic.source}]"
   end
-  exit(results.any? ? 0 : 1)
 end
 
-if options[:stats]
-  contacts = archive.contacts
-  puts "Total contacts : #{contacts.count}"
-  puts "With email     : #{contacts.count { |c| c.emails.any? }}"
-  puts "With phone     : #{contacts.count { |c| c.phones.any? }}"
-  exit
-end
-
-if options[:dedupe]
-  require 'abbu/utils/deduplicator'
-  dupes = Abbu::Utils::Deduplicator.new(archive.contacts).duplicates
-  if dupes.empty?
-    puts 'No duplicates found.'
-  else
-    dupes.each do |email, contacts|
-      puts "Duplicate: #{email}"
-      contacts.each { |c| puts "  - #{c.full_name}" }
-    end
+begin
+  if options[:schema]
+    puts JSON.pretty_generate(archive.schema_report)
+    exit
   end
-  exit
-end
 
-case options[:format]
-when 'csv'
-  exporter = Abbu::Exporters::CsvExporter.new(archive.contacts)
-  options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
-when 'json'
-  exporter = Abbu::Exporters::JsonExporter.new(archive.contacts)
-  options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
-when 'vcard'
-  exporter = Abbu::Exporters::VcardExporter.new(archive.contacts)
-  options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
-else
-  puts parser
-  exit 1
+  search_options = options.values_at(:search, :email, :phone).compact
+  if search_options.length > 1
+    warn 'Use only one of --search, --email, or --phone.'
+    exit 1
+  end
+
+  if options[:json] && search_options.empty?
+    warn '--json requires --search, --email, or --phone.'
+    exit 1
+  end
+
+  if search_options.any?
+    results = if options[:search]
+                archive.search(options[:search])
+              elsif options[:email]
+                archive.find_by_email(options[:email])
+              else
+                archive.find_by_phone(options[:phone])
+              end
+
+    if options[:json]
+      Abbu::Exporters::JsonExporter.new(results).to_stdout
+    else
+      results.each do |contact|
+        fields = [
+          contact.full_name,
+          contact.emails.filter_map { |email| email[:address] }.join(','),
+          contact.phones.filter_map { |phone| phone[:number] }.join(','),
+          contact.source&.fetch(:relative_path, nil)
+        ]
+        puts fields.map { |field| field.to_s.gsub(/[\t\r\n]/, ' ') }.join("\t")
+      end
+    end
+    exit(results.any? ? 0 : 1)
+  end
+
+  if options[:stats]
+    contacts = archive.contacts
+    puts "Total contacts : #{contacts.count}"
+    puts "With email     : #{contacts.count { |c| c.emails.any? }}"
+    puts "With phone     : #{contacts.count { |c| c.phones.any? }}"
+    exit
+  end
+
+  if options[:dedupe]
+    require 'abbu/utils/deduplicator'
+    dupes = Abbu::Utils::Deduplicator.new(archive.contacts).duplicates
+    if dupes.empty?
+      puts 'No duplicates found.'
+    else
+      dupes.each do |email, contacts|
+        puts "Duplicate: #{email}"
+        contacts.each { |c| puts "  - #{c.full_name}" }
+      end
+    end
+    exit
+  end
+
+  case options[:format]
+  when 'csv'
+    exporter = Abbu::Exporters::CsvExporter.new(archive.contacts)
+    options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+  when 'json'
+    exporter = Abbu::Exporters::JsonExporter.new(archive.contacts)
+    options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+  when 'vcard'
+    exporter = Abbu::Exporters::VcardExporter.new(archive.contacts)
+    options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+  else
+    puts parser
+    exit 1
+  end
+rescue Abbu::ParseError => e
+  warn "abbu: #{e.message}"
+  exit 2
 end

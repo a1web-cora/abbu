@@ -13,6 +13,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Structured tolerant-parsing diagnostics with strict API/CLI mode for corrupt
+  plist records, missing optional SQLite data, and unresolved image references
+- Missing optional SQLite tables emit one non-PII diagnostic per database and
+  table instead of repeating schema-level warnings for every contact
 - Evidence-safe SQLite schema diagnostics through `Archive#schema_report` and
   `abbu <archive> --schema`, including unknown tables/columns, absent recognized
   schema elements, and owner/contact-style relationship candidates

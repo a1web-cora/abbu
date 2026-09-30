@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'open3'
 require 'tmpdir'
 
 RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
@@ -33,6 +34,30 @@ RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
     fixture = File.expand_path('fixtures/PlistContacts.abbu', __dir__)
     output = `#{bin} "#{fixture}" --stats 2>&1`
     expect(output).to include('Total contacts : 2')
+  end
+
+  it 'prints a non-fatal diagnostic summary for skipped records' do
+    Dir.mktmpdir('sample.abbu') do |dir|
+      File.write(File.join(dir, 'bad.abcdp'), 'not a plist')
+
+      output = `#{bin} "#{dir}" --stats 2>&1`
+
+      expect(output).to include('Total contacts : 0')
+      expect(output).to include('Diagnostics: 1')
+      expect(output).to include('malformed_record: Unable to parse plist contact record')
+      expect($CHILD_STATUS.exitstatus).to eq(0)
+    end
+  end
+
+  it 'exits non-zero on the first recoverable condition in strict mode' do
+    Dir.mktmpdir('sample.abbu') do |dir|
+      File.write(File.join(dir, 'bad.abcdp'), 'not a plist')
+
+      output = `#{bin} "#{dir}" --stats --strict 2>&1`
+
+      expect(output).to include('abbu: Unable to parse plist contact record')
+      expect($CHILD_STATUS.exitstatus).to eq(2)
+    end
   end
 
   it 'prints deterministic SQLite schema diagnostics as JSON' do
@@ -99,10 +124,11 @@ RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
 
   it 'exits non-zero when search has no matches' do
     fixture = File.expand_path('fixtures/TestContacts.abbu', __dir__)
-    output = `#{bin} "#{fixture}" --search nobody 2>&1`
+    stdout, stderr, status = Open3.capture3(bin, fixture, '--search', 'nobody')
 
-    expect(output).to be_empty
-    expect($CHILD_STATUS.exitstatus).to eq(1)
+    expect(stdout).to be_empty
+    expect(stderr).to include('Diagnostics:')
+    expect(status.exitstatus).to eq(1)
   end
 
   it 'rejects multiple search modes' do

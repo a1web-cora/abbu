@@ -222,5 +222,40 @@ RSpec.describe Abbu::Parsers::PlistParser do
         expect(contact.dates).to eq([])
       end
     end
+
+    it 'recovers valid contacts and records a diagnostic for a malformed record' do
+      Dir.mktmpdir do |dir|
+        write_plist(dir, 'good.abcdp', { 'First' => 'Stan' })
+        File.write(File.join(dir, 'bad.abcdp'), 'not a plist')
+        parser = described_class.new(dir)
+
+        expect(parser.contacts.map(&:first_name)).to eq(['Stan'])
+        expect(parser.diagnostics.map(&:to_h)).to include(
+          include(category: :malformed_record, parser: :plist, source: end_with('bad.abcdp'))
+        )
+      end
+    end
+
+    it 'raises on a malformed record in strict mode' do
+      Dir.mktmpdir do |dir|
+        File.write(File.join(dir, 'bad.abcdp'), 'not a plist')
+        parser = described_class.new(dir, strict: true)
+
+        expect { parser.contacts }
+          .to raise_error(Abbu::ParseError, /Unable to parse plist contact record/)
+      end
+    end
+
+    it 'records parser exceptions without exposing record contents' do
+      Dir.mktmpdir do |dir|
+        write_plist(dir, 'broken.abcdp', { 'First' => 'Private Name' })
+        allow(Plist).to receive(:parse_xml).and_raise(ArgumentError)
+        parser = described_class.new(dir)
+
+        expect(parser.contacts).to eq([])
+        expect(parser.diagnostics.first.message).to eq('Unable to parse plist contact record')
+        expect(parser.diagnostics.first.message).not_to include('Private Name')
+      end
+    end
   end
 end

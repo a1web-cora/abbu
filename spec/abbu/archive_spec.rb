@@ -148,6 +148,21 @@ RSpec.describe Abbu::Archive do
 
         archive = described_class.new(dir)
         expect(archive.contacts.first.image_path).to be_nil
+        expect(archive.diagnostics.map(&:to_h)).to include(
+          include(category: :missing_image, parser: :archive, context: {})
+        )
+      end
+    end
+
+    it 'raises for an unresolved image in strict mode' do
+      Dir.mktmpdir('sample.abbu') do |dir|
+        db_path = File.join(dir, 'AddressBook-v22.abcddb')
+        require 'sqlite3'
+        create_schema_with_image(db_path)
+        archive = described_class.new(dir, strict: true)
+
+        expect { archive.contacts }
+          .to raise_error(Abbu::ParseError, /Referenced contact image was not found/)
       end
     end
 
@@ -235,6 +250,15 @@ RSpec.describe Abbu::Archive do
         Z_GROUP INTEGER
       )
     SQL
+    db.execute('CREATE TABLE ZABCDURLADDRESS (ZOWNER INTEGER, ZURL TEXT, ZLABEL TEXT)')
+    db.execute('CREATE TABLE ZABCDNOTE (ZCONTACT INTEGER, ZTEXT TEXT)')
+    db.execute('CREATE TABLE ZABCDRELATEDNAME (ZOWNER INTEGER, ZNAME TEXT, ZLABEL TEXT)')
+    db.execute('CREATE TABLE ZABCDSOCIALPROFILE (ZOWNER INTEGER, ZSERVICENAME TEXT, ZUSERNAME TEXT)')
+    db.execute(
+      'CREATE TABLE ZABCDDATECOMPONENTS ' \
+      '(ZOWNER INTEGER, ZYEAR INTEGER, ZMONTH INTEGER, ZDAY INTEGER, ZLABEL TEXT)'
+    )
+    db.execute('CREATE TABLE ZABCDMESSAGINGADDRESS (ZOWNER INTEGER, ZADDRESS TEXT, ZLABEL TEXT, ZSERVICENAME TEXT)')
     db.execute(<<-SQL)
       INSERT INTO ZABCDRECORD (Z_PK, Z_ENT, ZFIRSTNAME, ZLASTNAME, ZIMAGEURI)
       VALUES (1, 14, 'Stan', 'Carver', 'stan-photo')

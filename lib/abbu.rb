@@ -3,6 +3,8 @@
 
 require_relative 'abbu/version'
 require_relative 'abbu/contact'
+require_relative 'abbu/diagnostic'
+require_relative 'abbu/parse_error'
 require_relative 'abbu/archive'
 require_relative 'abbu/query'
 require_relative 'abbu/schema_inspector'
@@ -15,7 +17,7 @@ require_relative 'abbu/utils/deduplicator'
 require_relative 'abbu/utils/label_normalizer'
 
 module Abbu
-  def self.open(path)
-    Archive.new(path)
+  def self.open(path, strict: false)
+    Archive.new(path, strict: strict)
   end
 end
