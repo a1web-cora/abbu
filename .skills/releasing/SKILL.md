@@ -29,6 +29,24 @@ verification does not imply release approval.
 - When package or release behavior changes, update the command, CI or workflow,
   and documentation together rather than adding an ad hoc release path.
 
+## Trusted Publishing Standard
+
+For GitHub-hosted RubyGems, publish through GitHub Actions Trusted Publishing by
+default rather than from a maintainer workstation or a long-lived API key.
+
+- Use `.github/workflows/release.yml` with a `v*` tag trigger.
+- Use the protected GitHub environment `release`.
+- Grant `id-token: write` only to the release job so RubyGems can exchange
+  GitHub's OIDC identity for a short-lived publishing token.
+- Use `rubygems/release-gem@v1`; do not add `RUBYGEMS_API_KEY` when Trusted
+  Publishing is available.
+- Configure RubyGems.org once to trust the repository, `release.yml` workflow,
+  and `release` environment. That external trust registration is an owner
+  action and must not be simulated with repository credentials.
+- Verify the pushed tag exactly equals `v#{VERSION}` before publication.
+- The workflow is an execution mechanism only. Tag creation/push and protected
+  environment approval remain subject to the Sheriff authority boundary above.
+
 ## Release Invariants
 
 - Release only reviewed commits reachable from current `origin/main`.

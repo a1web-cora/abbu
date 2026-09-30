@@ -130,6 +130,14 @@ gate.
 - Never create or push a release tag, publish or yank a gem, approve a protected
   release environment, or otherwise authorize publication without explicit
   Sheriff approval for that specific release.
+- GitHub-hosted RubyGems publish through GitHub Actions Trusted Publishing by
+  default. Use a tag-triggered `.github/workflows/release.yml`, the protected
+  `release` environment, RubyGems OIDC, and `rubygems/release-gem@v1`; do not
+  introduce a long-lived `RUBYGEMS_API_KEY` when Trusted Publishing is
+  available.
+- A release workflow executes prior authorization; it never grants it. Creating
+  or pushing the release tag remains Sheriff-gated, and the workflow must verify
+  that the tag exactly matches the gem version before publishing.
 
 ## Repository Skills
 
