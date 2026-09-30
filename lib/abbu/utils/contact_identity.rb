@@ -72,8 +72,8 @@ module Abbu
         extension = raw[/\b(?:ext\.?|x)\s*(\d+)\z/i, 1]
         core = raw.sub(/\b(?:ext\.?|x)\s*\d+\z/i, '')
         digits = core.gsub(/\D/, '')
-        international = international?(core, digits)
-        digits = digits.delete_prefix('00') if international
+        international = international?(core)
+        digits = digits.delete_prefix('00') if core.start_with?('00')
         return unless valid_phone_length?(digits, international)
 
         prefix = international ? '+' : 'national:'
@@ -85,8 +85,8 @@ module Abbu
         international ? digits.length.between?(8, 15) : digits.length >= 7
       end
 
-      def international?(raw, digits)
-        raw.start_with?('+') || digits.start_with?('00')
+      def international?(raw)
+        raw.start_with?('+', '00')
       end
 
       def phone_type(normalized)

@@ -135,7 +135,10 @@ evidence, normalized comparison values, confidence, and ambiguity status.
 Email comparison trims surrounding whitespace and applies Unicode-aware case folding.
 Names and organizations use Unicode NFKC normalization, case folding, and whitespace or
 punctuation normalization without transliterating distinct characters. Explicit `+` and
-`00` phone forms are compared as international numbers. National-format numbers remain
+`00` phone forms are compared as international numbers. The trimmed raw value must start
+with a literal ASCII `+` or contiguous `00`; punctuation removal never establishes an
+international prefix. For example, `(001) 512-555-0100` remains national-format evidence.
+National-format numbers remain
 source-local evidence because ABBU has no country or numbering-plan evidence with which
 to infer a global identity.
 

@@ -69,8 +69,8 @@ RSpec.describe Abbu::Utils::Deduplicator do
     end
 
     it 'matches explicit international phone forms across sources with medium confidence' do
-      first = build_contact('First', nil, phones: ['+44 20 7946 0958'])
-      second = build_contact('Second', nil, phones: ['00 44 20 7946 0958'])
+      first = build_contact('First', nil, phones: ['+44 20 7946 0958'], source: { relative_path: 'root' })
+      second = build_contact('Second', nil, phones: [' 00 44 20 7946 0958 '], source: { relative_path: 'cloud' })
 
       match = described_class.new([first, second]).identity_matches.first
 
@@ -89,6 +89,24 @@ RSpec.describe Abbu::Utils::Deduplicator do
       )
 
       expect(described_class.new([first, second]).matches).to be_empty
+    end
+
+    ['(001) 512-555-0100', '0 01 512-555-0100', '＋0015125550100'].each do |phone|
+      it "keeps #{phone.inspect} source-local without rewriting its raw value" do
+        first = build_contact('First', nil, phones: [phone], source: { relative_path: 'root' })
+        second = build_contact('Second', nil, phones: [phone], source: { relative_path: 'cloud' })
+        international = build_contact('Third', nil, phones: ['+15125550100'])
+
+        expect(described_class.new([first, second, international]).matches).to be_empty
+
+        second.source = first.source
+        match = described_class.new([first, second]).matches.first
+        expect(match).to be_ambiguous
+        expect(match.evidence.first).to include(
+          type: :source_local_phone, normalized: 'national:0015125550100', left_raw: phone, right_raw: phone
+        )
+        expect(first.phones).to eq([phone])
+      end
     end
 
     it 'reports source-local phone evidence as ambiguous rather than collapsing contacts' do
