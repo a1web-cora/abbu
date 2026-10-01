@@ -80,8 +80,11 @@ Live inputs expose parser `diagnostics` and accept `strict: true` (CLI `--strict
 The live CLI supports stats, deduplication, and exports; archive-only search, schema,
 and image-extraction options are rejected explicitly.
 
-Live access does not write Contacts databases. WAL/concurrent-writer consistency
-remains unverified ([#28](https://github.com/scarver2/abbu/issues/28)).
+Live access does not write Contacts databases. Synthetic WAL tests verify committed
+data visibility and read-only access, but a read is **not an atomic snapshot**:
+separate contact/relationship queries can observe different commits, and databases
+are read independently. A LiveStore caches its first contact result; reopen it to
+refresh. See [live-store consistency evidence](docs/ABBU.md#wal-and-concurrent-writer-evidence).
 
 Labeled values expose a normalized `label` for display and retain the source
 value in `raw_label`. For example, `_$!<Mobile>!$_` becomes `Mobile` while the
