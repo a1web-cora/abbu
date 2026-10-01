@@ -9,7 +9,7 @@ module Abbu
     class VcardDocument
       TYPES = {
         'EMAIL' => %w[INTERNET X400 PREF],
-        'TEL' => %w[HOME WORK PREF VOICE FAX MSG CELL PAGER BBS MODEM CAR ISDN VIDEO],
+        'TEL' => %w[HOME WORK PREF VOICE FAX MSG CELL PAGER BBS MODEM CAR ISDN VIDEO PCS],
         'ADR' => %w[DOM INTL POSTAL PARCEL HOME WORK PREF],
         'IMPP' => %w[PERSONAL BUSINESS HOME WORK MOBILE PREF]
       }.transform_values(&:freeze).freeze
@@ -45,6 +45,8 @@ module Abbu
         return unless label.to_s.match?(/\A[A-Za-z0-9-]+\z/)
 
         type = label.upcase
+        return 'INTERNET,PREF' if property == 'EMAIL' && type == 'PREF'
+
         type if TYPES.fetch(property, []).include?(type)
       end
     end

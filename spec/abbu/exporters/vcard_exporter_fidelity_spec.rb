@@ -121,8 +121,19 @@ RSpec.describe Abbu::Exporters::VcardExporter do
                       { address: 'preferred@example.test', label: 'pref' }]
     lines = logical_lines(export([contact]))
     expect(lines).to include('item1.EMAIL;TYPE=X400:legacy@example.test',
-                             'item2.EMAIL;TYPE=PREF:preferred@example.test')
+                             'item2.EMAIL;TYPE=INTERNET,PREF:preferred@example.test')
     expect(labels_for(lines, 'EMAIL')).to eq(%w[X400 pref])
+  end
+
+  it 'recognizes PCS telephone labels without accepting near-matches as standard types' do
+    contact = Abbu::Contact.new
+    labels = ['PCS', 'pcs', 'Pcs', ' PCS ', 'PCS-Office', 'PCſ']
+    contact.phones = labels.map { |label| { number: '123', label: label, raw_label: label } }
+    lines = logical_lines(export([contact]))
+    phones = lines.grep(/\.TEL;/)
+    expect(phones.first(3)).to all(include('TEL;TYPE=PCS:123'))
+    expect(phones.drop(3)).to all(include('TEL;TYPE=VOICE:123'))
+    expect(labels_for(lines, 'TEL')).to eq(labels)
   end
 
   it 'rejects unsafe service parameters, invalid UTF-8 and unsupported controls before file writes' do

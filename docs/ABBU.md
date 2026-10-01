@@ -408,6 +408,11 @@ leave an existing output file untouched. Filesystem failures after opening can
 still leave partial files. Exports contain sensitive contact values and photo
 paths; callers must choose appropriate destinations and permissions.
 
+Email preference uses `TYPE=INTERNET,PREF`, retaining the default address type
+as required by RFC 2426's email parameter grammar; TEL includes the standard
+`PCS` token. Unknown extension/registered type names are preserved as labels,
+not asserted to be registered by ABBU's deliberately bounded built-in list.
+
 These are standards-backed serialization guarantees and synthetic regression
 observations, not a full-fidelity ABBU backup or certification against a specific
 macOS/Contacts build. A sanitized real Apple export/import corpus remains a
