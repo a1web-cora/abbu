@@ -166,6 +166,9 @@ Contacts databases is not part of the roadmap.
 
 ## v1.0.0 — Future Stable API
 
+The [API stability gate](API_STABILITY.md) defines the evidence required below;
+its existence does not mean those checks are complete or authorize a 1.0 release.
+
 - [ ] Complete the API-stability checklist and acceptance evidence before promising stability
 - [ ] Comprehensive public API documentation
 - [ ] Benchmarks for large archives (10k+ contacts)
