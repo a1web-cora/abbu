@@ -10,9 +10,9 @@ module Abbu
     end
 
     def groups
-      memberships.group_by { |contact, membership| [contact.source[:path], membership[:record_id]] }
-                 .values.map { |entries| build_group(entries) }
-                        .sort_by { |group| [group.source[:relative_path], group.record_id] }.freeze
+      entries_by_key = memberships.group_by { |contact, membership| [contact.source[:path], membership[:record_id]] }
+      groups = entries_by_key.values.map { |entries| build_group(entries) }
+      groups.sort_by { |group| [group.source[:relative_path], group.record_id] }.freeze
     end
 
     private
