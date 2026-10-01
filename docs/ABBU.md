@@ -140,8 +140,7 @@ remains nil even for a directory named `iCloud`. Container paths are local ident
 within that opened input, not globally stable IDs across moved archives or snapshots.
 Contacts link through their original file-level `source[:path]`; the source hash
 is neither replaced nor enriched with speculative provider metadata. `group_names`
-reports distinct membership strings only; first-class group identity and empty-group
-enumeration remain [#32](https://github.com/scarver2/abbu/issues/32).
+reports distinct membership strings only; the group API below preserves identity.
 
 `spec/abbu/source_spec.rb` copies the existing deterministic root database into
 root, `Sources/iCloud`, and `Sources/Équipe`, including two database filenames in
@@ -149,6 +148,36 @@ one container and colliding contact IDs across containers. These fixtures verify
 grouping, provenance preservation and unknown-provider behavior, not an Apple
 account schema. Source listing parses/caches contacts and retains the existing
 strict/tolerant diagnostics and live consistency limitations below.
+
+### Group membership evidence
+
+The existing synthetic fixture joins `Z_ABCDCONTACTGROUP.Z_GROUP` to
+`ZABCDRECORD.Z_PK` and filters memberships by `Z_CONTACT`. The group parser now
+retains that joined key alongside the exact `ZFIRSTNAME` value instead of discarding
+the key. `Contact#group_memberships` preserves every returned join row; the existing
+`Contact#groups` label array and exporters are unchanged. No label normalization
+or inference from other column names is introduced.
+
+`Archive#groups`, `LiveStore#groups`, and `Source#groups` aggregate this evidence by
+absolute database path and record key. Keys are file-local, not global Apple IDs.
+`Group#source` is file provenance; its `identifier` connects to the observed source
+container. Group contacts retain original object identities with repeated joins
+collapsed only in the navigable contact set, not in raw membership evidence.
+Reverse lookup uses `groups_for(contact)` on the input or source; `Query#in_group`
+intersects the caller's contacts with that snapshot without name-based matching.
+
+`spec/abbu/group_spec.rb` extends the deterministic fixture with duplicate joins,
+same-name/different-key groups, null and Unicode names, and repeated keys in root
+and multiple files under `Sources/Équipe`. These establish collision boundaries
+and name preservation through model and JSON output, not a new Apple schema.
+No Apple version is asserted for this synthetic variation.
+
+Only joined groups with parsed contacts are represented. Empty/unreferenced rows,
+dangling joins, and plist group relationships remain unsupported; their semantics
+need separate evidence. Missing membership tables retain existing diagnostics and
+strict-mode behavior. Building groups adds no database reads beyond contact parsing
+and makes no stronger live snapshot guarantee. JSON listings expose raw names and
+file paths and must be treated as sensitive.
 
 ### Opt-in live Contacts stores
 

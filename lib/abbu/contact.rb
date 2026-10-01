@@ -4,7 +4,7 @@
 module Abbu
   class Contact
     attr_accessor :first_name, :middle_name, :last_name, :emails,
-                  :phones, :company, :addresses, :groups, :nickname,
+                  :phones, :company, :addresses, :groups, :group_memberships, :nickname,
                   :prefix, :suffix, :job_title, :department, :maiden_name,
                   :phonetic_first_name, :phonetic_middle_name, :phonetic_last_name,
                   :phonetic_company, :pronouns, :ringtone, :texttone,
@@ -14,11 +14,12 @@ module Abbu
                   :image_uri, :image_path,
                   :created_at, :modified_at, :source
 
-    def initialize
+    def initialize # rubocop:disable Metrics/MethodLength
       @emails = []
       @phones = []
       @addresses = []
       @groups = []
+      @group_memberships = []
       @urls = []
       @notes = []
       @related_names = []

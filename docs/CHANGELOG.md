@@ -11,6 +11,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.7.0
+
+- First-class observed groups scoped by file provenance and SQLite record key,
+  with source/input enumeration, reverse membership lookup, and chainable
+  `Query#in_group` filtering without merging same-name groups.
+- Lossless `Contact#group_memberships` evidence alongside unchanged legacy group
+  labels and contact exports; immutable group snapshots and public RBS.
+- JSON-only `--groups` listing for archives and read-only live stores, preserving
+  raw names, nulls, diagnostics, and explicit unsupported empty/plist-group boundaries.
+
 ### Added — planned 0.6.0
 
 - Read-only source containers through `Archive#sources` and `LiveStore#sources`,

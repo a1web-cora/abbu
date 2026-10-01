@@ -1,13 +1,14 @@
 # lib/abbu/source.rb
 # frozen_string_literal: true
 
+require_relative 'group_catalog'
 require_relative 'query'
 
 module Abbu
   # An observed input container, not an inferred Apple account or provider.
   # Metadata and membership are frozen; contacts retain their existing mutability.
   class Source
-    attr_reader :path, :relative_path, :kind, :identifier, :files, :contacts, :group_names
+    attr_reader :path, :relative_path, :kind, :identifier, :files, :contacts, :group_names, :groups
 
     def initialize(path:, relative_path:, identifier:, files:, contacts:)
       @path = copy_string(path)
@@ -17,12 +18,17 @@ module Abbu
       @files = snapshot_files(files)
       @contacts = Query.new(contacts.to_a.dup).freeze
       @group_names = snapshot_group_names
+      @groups = GroupCatalog.new(@contacts).groups
       freeze
     end
 
     # No currently supported evidence identifies an account provider.
     def provider
       nil
+    end
+
+    def groups_for(contact)
+      groups.select { |group| group.include?(contact) }
     end
 
     def to_h

@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.6.0 adds read-only source containers alongside timestamp
+Development version 0.7.0 adds source-scoped groups alongside source containers, timestamp
 queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
@@ -78,7 +78,7 @@ live_contacts = Abbu.open_live("/path/to/AddressBook").contacts
 Live databases are opened with SQLite's read-only mode. The process may require
 Full Disk Access under **System Settings → Privacy & Security → Full Disk Access**.
 Live inputs expose parser `diagnostics` and accept `strict: true` (CLI `--strict`).
-The live CLI supports source listing, stats, deduplication, and exports; archive-only search, schema,
+The live CLI supports source/group listing, stats, deduplication, and exports; archive-only search, schema,
 and image-extraction options are rejected explicitly.
 
 Live access does not write Contacts databases. Synthetic WAL tests verify committed
@@ -183,6 +183,53 @@ strict parse failures exit 2, live input/access failures exit 1, and diagnostics
 stay on stderr. Only `--strict` and `--json` may accompany this operation besides
 input selection. Paths, raw identifiers, and group names may be sensitive;
 do not publish source listings as sanitized logs.
+
+### Groups
+
+```ruby
+group = archive.groups.first # Frozen Array<Abbu::Group>
+group.record_id              # Observed SQLite group key, local to group.source[:path]
+group.name                   # Original name, including whitespace/Unicode; may be nil
+group.source                 # Frozen file-level provenance, including source identifier
+group.contacts.search('stan') # Query over the original mutable contacts
+archive.groups_for(archive.contacts.first) # Reverse lookup, without changing Contact#groups
+archive.sources.first.groups # Same objects, scoped to that source
+archive.query.where(company: 'Acme Corp').in_group(group)
+Abbu.open_live('/path/to/AddressBook').groups # Same API, read-only
+```
+
+Groups are identified by database path plus observed record key, never by name.
+Same-name groups within a file and repeated keys across files/sources remain
+distinct. `Contact#groups` remains the original array of labels (including duplicate
+or null names); `Contact#group_memberships` additionally retains `{ record_id:, name: }`
+for each observed join row, including duplicates. Group contacts list each original
+contact once. Existing contact JSON/CSV/vCard output is unchanged.
+
+Only groups reached by supported contact membership joins are listed. Empty or
+unreferenced groups, dangling joins, and legacy plist group relationships are not
+enumerated; no semantics are inferred for them. Missing optional membership tables
+retain tolerant diagnostics and strict-mode errors. Ordering is source relative
+path, file relative path, then numeric record key; contacts retain parser order.
+
+Metadata and membership snapshots are frozen when sources/groups are first built;
+contacts themselves remain mutable. Later edits to contact labels/evidence do not
+rewrite these snapshots. `groups_for` and `Query#in_group` use original contact
+object identity: a contact freshly parsed by another input instance does not
+belong to this snapshot, even for the same path. Reopen to refresh; live reads
+retain the consistency limitations described above.
+
+```bash
+abbu Contacts.abbu --groups
+abbu --live-path /path/to/AddressBook --groups --json
+```
+
+`--groups` emits a JSON array of `record_id` (integer), `name` (string or null),
+`source` (the four-key file provenance hash), and `contact_count` (integer).
+`Group#to_h` uses the same schema. Names are never normalized. Empty results exit 0;
+strict failures and conflicting operations exit 2; live access failures exit 1.
+Only input selection, `--strict`, and optional `--json` may accompany this mode;
+`--sources` and `--groups` cannot be combined. Diagnostics stay on stderr.
+Group names, IDs and source paths may be sensitive; this is not sanitized logging.
 
 ### Export
 
