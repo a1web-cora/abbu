@@ -54,6 +54,13 @@ even though source metadata and membership snapshots are frozen.
 
 ## Internal and experimental boundaries
 
+The 0.8.0 development vCard fidelity extension retains the exporter signatures
+and adds their RBS contract. Wire output now uses CRLF, escapes/folding and grouped
+raw labels; custom TYPE injection and fabricated preferences are removed. See
+the [export migration](../README.md#export) and [evidence audit](ABBU.md#vcard-serialization-evidence).
+`VcardDocument` and `VcardEncoding` are internal serialization helpers, not
+public extension points. No claim of a complete Apple import round-trip is made.
+
 The 0.7.0 development extension adds `Group` construction/readers, `include?`,
 `to_h`, `Contact#group_memberships`, `Source#groups`, input `groups`, source/input
 `groups_for`, `Query#in_group`, and `--groups`. See the [group API](../README.md#groups)

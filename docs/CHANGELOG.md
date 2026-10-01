@@ -11,6 +11,23 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.8.0
+
+- vCard fidelity layer with raw-label-preserving grouped repeated properties,
+  public exporter RBS, and deterministic SQLite/plist-to-vCard regression tests.
+
+### Changed — planned 0.8.0
+
+- vCard output now uses CRLF, escaped TEXT/structured components, UTF-8-safe
+  75-octet folding, and URI-specific encoding. Consumers must unfold and decode
+  rather than parse ungrouped literal output lines.
+- Custom labels use grouped `X-ABLABEL` rather than arbitrary TYPE parameters;
+  only standard exact ASCII labels become TYPE. Removed invented anniversary
+  preference and unlabeled-address HOME. Existing method signatures remain.
+- Invalid text/control bytes and unsafe service tokens/schemes fail before
+  output rather than emitting malformed records. Apple-specific support limits
+  and migration guidance are explicit; no Contacts import certification claimed.
+
 ### Added — planned 0.7.0
 
 - First-class observed groups scoped by file provenance and SQLite record key,

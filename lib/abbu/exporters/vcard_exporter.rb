@@ -3,6 +3,8 @@
 
 require 'uri'
 
+require_relative 'vcard_document'
+
 module Abbu
   module Exporters
     class VcardExporter
@@ -11,21 +13,21 @@ module Abbu
       end
 
       def to_file(path)
-        File.write(path, generate)
+        File.binwrite(path, generate)
       end
 
       def to_stdout
-        puts generate
+        print generate
       end
 
       private
 
       def generate
-        @contacts.map { |c| vcard_for(c) }.join("\n")
+        @contacts.map { |c| vcard_for(c) }.join
       end
 
       def vcard_for(contact) # rubocop:disable Metrics/MethodLength
-        lines = ['BEGIN:VCARD', 'VERSION:3.0']
+        lines = VcardDocument.new
 
         append_name_fields(lines, contact)
         append_emails(lines, contact)
@@ -39,13 +41,12 @@ module Abbu
         append_notes(lines, contact)
         append_photo(lines, contact)
 
-        lines << 'END:VCARD'
-        lines.join("\n")
+        lines.to_s
       end
 
       def append_name_fields(lines, contact)
-        lines << "FN:#{contact.full_name}"
-        lines << "N:#{name_components(contact).join(';')}"
+        lines << "FN:#{VcardEncoding.text(contact.full_name)}"
+        lines << "N:#{VcardEncoding.structured(name_components(contact))}"
         append_nickname(lines, contact)
         append_company(lines, contact)
         append_title(lines, contact)
@@ -57,25 +58,26 @@ module Abbu
       end
 
       def append_nickname(lines, contact)
-        lines << "NICKNAME:#{contact.nickname}" if contact.nickname
+        lines << "NICKNAME:#{VcardEncoding.text(contact.nickname)}" if contact.nickname
       end
 
       def append_company(lines, contact)
-        lines << "ORG:#{contact.company}" if contact.company
+        lines << "ORG:#{VcardEncoding.text(contact.company)}" if contact.company
       end
 
       def append_title(lines, contact)
-        lines << "TITLE:#{contact.job_title}" if contact.job_title
+        lines << "TITLE:#{VcardEncoding.text(contact.job_title)}" if contact.job_title
       end
 
       def append_phonetic_names(lines, contact)
-        lines << "X-PHONETIC-FIRST-NAME:#{contact.phonetic_first_name}" if contact.phonetic_first_name
-        lines << "X-PHONETIC-MIDDLE-NAME:#{contact.phonetic_middle_name}" if contact.phonetic_middle_name
-        lines << "X-PHONETIC-LAST-NAME:#{contact.phonetic_last_name}" if contact.phonetic_last_name
+        %i[first middle last].each do |part|
+          value = contact.public_send(:"phonetic_#{part}_name")
+          lines << "X-PHONETIC-#{part.upcase}-NAME:#{VcardEncoding.text(value)}" if value
+        end
       end
 
       def append_verification_code(lines, contact)
-        lines << "X-VERIFICATION-CODE:#{contact.verification_code}" if contact.verification_code
+        lines << "X-VERIFICATION-CODE:#{VcardEncoding.text(contact.verification_code)}" if contact.verification_code
       end
 
       def append_photo(lines, contact)
@@ -90,46 +92,47 @@ module Abbu
       end
 
       def append_notes(lines, contact)
-        contact.notes.each { |n| lines << "NOTE:#{n}" }
+        contact.notes.each { |n| lines << "NOTE:#{VcardEncoding.text(n)}" }
       end
 
       def append_emails(lines, contact)
         contact.emails.each do |e|
-          label = e[:label] || 'INTERNET'
-          lines << "EMAIL;TYPE=#{label}:#{e[:address]}"
+          lines.labeled('EMAIL', VcardEncoding.text(e[:address]), e, default_type: 'INTERNET')
         end
       end
 
       def append_phones(lines, contact)
         contact.phones.each do |p|
-          label = p[:label] || 'VOICE'
-          lines << "TEL;TYPE=#{label}:#{p[:number]}"
+          lines.labeled('TEL', VcardEncoding.text(p[:number]), p, default_type: 'VOICE')
         end
       end
 
       def append_addresses(lines, contact)
         contact.addresses.each do |a|
-          label = a[:label] || 'HOME'
-          lines << "ADR;TYPE=#{label}:;;#{a[:street]};#{a[:city]};#{a[:state]};#{a[:zip]};#{a[:country]}"
+          value = VcardEncoding.structured([nil, nil, a[:street], a[:city], a[:state], a[:zip], a[:country]])
+          lines.labeled('ADR', value, a)
         end
       end
 
       def append_urls(lines, contact)
         contact.urls.each do |u|
-          lines << "URL:#{u[:url]}"
+          lines.labeled('URL', VcardEncoding.uri(u[:url]), u)
         end
       end
 
       def append_social_profiles(lines, contact)
         contact.social_profiles.each do |sp|
-          lines << "X-SOCIALPROFILE;TYPE=#{sp[:service]}:#{sp[:username]}"
+          type = sp[:service] ? ";TYPE=#{VcardEncoding.token(sp[:service])}" : ''
+          lines << "X-SOCIALPROFILE#{type}:#{VcardEncoding.text(sp[:username])}"
         end
       end
 
       def append_instant_messages(lines, contact)
         contact.instant_messages.each do |im|
           service = im[:service]&.downcase || 'unknown'
-          lines << "IMPP;TYPE=#{im[:label]}:#{service}:#{im[:address]}"
+          raise ArgumentError, 'IM service must be a URI scheme' unless service.match?(/\A[a-z][a-z0-9+.-]*\z/)
+
+          lines.labeled('IMPP', "#{service}:#{VcardEncoding.uri(im[:address])}", im)
         end
       end
 
@@ -138,12 +141,8 @@ module Abbu
         lines << "X-LUNAR-BDAY:#{format_vcard_date(contact.lunar_birthday)}" if contact.lunar_birthday
         return unless contact.anniversary
 
-        lines << "X-ABDATE;type=pref:#{format_vcard_date(contact.anniversary)}"
-        lines << "X-ABLABEL:#{anniversary_label(contact.anniversary)}"
-      end
-
-      def anniversary_label(anniversary)
-        anniversary[:raw_label] || anniversary[:label] || 'Anniversary'
+        entry = { label: 'Anniversary' }.merge(contact.anniversary.compact)
+        lines.labeled('X-ABDATE', format_vcard_date(contact.anniversary), entry)
       end
 
       def format_vcard_date(date)
