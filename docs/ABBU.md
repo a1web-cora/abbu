@@ -129,9 +129,8 @@ relative to the `.abbu` root, and whether it came from the root bundle or a data
 
 The CLI uses `--live` only for auto-discovery and `--live-path PATH` for an explicit
 store. These forms are mutually exclusive and accept no positional archive/path arguments.
-Option ordering does not change input selection. Synthetic WAL-mode and concurrent-writer
-validation remains a follow-up; read-only handles do not establish snapshot consistency
-across an actively changing Contacts store.
+Option ordering does not change input selection. Read-only handles do not establish
+snapshot consistency across an actively changing Contacts store.
 
 `Abbu.open_live` and the CLI's live modes can read an AddressBook directory
 without first exporting an `.abbu` archive. This mode is deliberately separate from
@@ -156,6 +155,41 @@ automatic discovery without a caller-supplied path raises
 
 The repository verifies live-store behavior only with deterministic synthetic SQLite
 fixtures. It does not inspect or commit a developer's real Contacts store.
+
+### WAL and concurrent-writer evidence
+
+`spec/abbu/live_store_wal_spec.rb` copies the existing synthetic root database into
+a temporary directory and opens a separate writer connection in WAL mode. No
+real Contacts data or macOS privacy permission is required. The tests deliberately
+keep the writer open, disable its automatic checkpoint, and interleave operations
+at known boundaries instead of using sleeps or timing races.
+
+The fixture demonstrates that ABBU reads committed WAL changes while the writer
+remains connected. Its database and WAL bytes stay unchanged across the read,
+all ABBU connections use `readonly: true`, and traced statements contain no writes
+or checkpoint requests. An uncommitted writer transaction is not visible. After
+commit, a new LiveStore sees the new value; an existing store retains its cached
+contacts.
+
+There is an important consistency limit: the parser does not enclose all queries
+in a read transaction. A commit between the contact-row SELECT and an email SELECT
+can produce an old name with a new email from the same database. SQLite's snapshot
+isolation applies within a read transaction, not across ABBU's independent
+statements. Multiple database files are also read independently; there is no
+cross-database snapshot guarantee. These tests characterize existing behavior,
+not a new snapshot API or a guarantee for every Contacts/SQLite version.
+
+SQLite uses `-wal` and `-shm` sidecars for WAL operation. Read-only database access
+does not promise that shared-memory lock/index state is byte-for-byte unchanged;
+the tests intentionally do not make that claim. Do not remove sidecars, checkpoint
+a live Contacts database, or copy only its main file to try to obtain a snapshot.
+Use an independently verified consistent export/backup for snapshot-sensitive work.
+Missing/inaccessible sidecar and filesystem-lock behavior remain deployment-specific
+limitations, not behavior established by the writable temporary fixture.
+
+References: [SQLite WAL](https://www.sqlite.org/wal.html) and
+[SQLite isolation](https://www.sqlite.org/isolation.html).
+
 ### Provenance-aware identity evidence
 
 ABBU treats deduplication as a suggestion boundary rather than proof that two records are
