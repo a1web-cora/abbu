@@ -1,15 +1,15 @@
 # lib/abbu/exporters/vcard_exporter.rb
 # frozen_string_literal: true
 
-require 'uri'
-
 require_relative 'vcard_document'
+require_relative 'vcard_photo'
 
 module Abbu
   module Exporters
     class VcardExporter
-      def initialize(contacts)
+      def initialize(contacts, photo_mode: :uri)
         @contacts = contacts
+        @photo = VcardPhoto.new(photo_mode)
       end
 
       def to_file(path)
@@ -81,14 +81,8 @@ module Abbu
       end
 
       def append_photo(lines, contact)
-        return unless contact.image_path
-
-        lines << "PHOTO;VALUE=URI:#{file_uri(contact.image_path)}"
-      end
-
-      def file_uri(path)
-        escaped_path = URI::DEFAULT_PARSER.escape(path.to_s)
-        URI::Generic.build(scheme: 'file', path: escaped_path)
+        property = @photo.property(contact)
+        lines << property if property
       end
 
       def append_notes(lines, contact)
