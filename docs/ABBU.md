@@ -420,6 +420,12 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- Embedded vCard PHOTO follows [RFC 2426 §3.1.4](https://www.rfc-editor.org/rfc/rfc2426#section-3.1.4)
+  binary/base64 serialization with existing CRLF folding. Synthetic signature
+  regressions prove byte preservation, not image decodability or Apple import
+  certification. JPEG/PNG/GIF are supported; HEIC embedding is explicitly rejected.
+  This introduces no new Apple image lookup or private-schema assumptions.
+
 - [Compatibility regression matrix](FORMAT_COMPATIBILITY.md): always-on XML,
   sparse/complete SQLite, root/source/mixed layout profiles and their explicit
   historical evidence gaps. Filename suffixes are not macOS version guarantees.

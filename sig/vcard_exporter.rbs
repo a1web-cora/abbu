@@ -2,7 +2,7 @@
 module Abbu
   module Exporters
     class VcardExporter
-      def initialize: (Enumerable[Contact] contacts) -> void
+      def initialize: (Enumerable[Contact] contacts, ?photo_mode: :uri | :embedded) -> void
       def to_file: (String | Pathname path) -> Integer
       def to_stdout: () -> nil
     end

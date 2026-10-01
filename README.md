@@ -370,6 +370,19 @@ synthetic shapes from unverified macOS/Contacts releases.
 
 ## Roadmap
 
+### Portable vCard Photos
+
+Use `abbu Contacts.abbu --format vcard --photo-mode embedded --output contacts.vcf`
+or `Abbu::Exporters::VcardExporter.new(contacts, photo_mode: :embedded)` to embed
+JPEG, PNG or GIF bytes. The default `:uri` mode is unchanged. Embedded mode uses
+content signatures, not filename extensions, and preserves original bytes and
+contact provenance. It does not decode, validate image integrity, or transcode.
+HEIC and unknown formats are rejected until import compatibility is evidenced.
+Missing/unreadable/unsupported photos raise `ArgumentError` (CLI exit 2) before
+writing output; contacts with no photo evidence omit PHOTO. Export is buffered
+in memory, including base64 expansion. Do not embed untrusted or oversized files.
+
+
 See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature checklist.
 The [pre-1.0 API stability gate](docs/API_STABILITY.md) inventories supported
 surfaces, evidence gaps, compatibility policy, and required release-readiness checks.
