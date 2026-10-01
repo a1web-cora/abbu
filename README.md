@@ -370,6 +370,10 @@ synthetic shapes from unverified macOS/Contacts releases.
 
 ## Roadmap
 
+ABBU remains read-only for source archives and live stores. The
+[writer research decision](docs/WRITER_DECISION.md) explains why generating
+Apple-private bundles is not supported and what evidence could change that.
+
 See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature checklist.
 The [pre-1.0 API stability gate](docs/API_STABILITY.md) inventories supported
 surfaces, evidence gaps, compatibility policy, and required release-readiness checks.

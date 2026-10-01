@@ -420,6 +420,10 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [Writer decision](WRITER_DECISION.md): current evidence does not justify
+  constructing Apple-private archives. Read compatibility is not import proof;
+  future proposals require isolated, version-attributed import evidence.
+
 - [Compatibility regression matrix](FORMAT_COMPATIBILITY.md): always-on XML,
   sparse/complete SQLite, root/source/mixed layout profiles and their explicit
   historical evidence gaps. Filename suffixes are not macOS version guarantees.
