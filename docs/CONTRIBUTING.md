@@ -26,6 +26,12 @@ This runs RSpec and RuboCop automatically on file changes.
 bin/spec
 ```
 
+Keep the [format compatibility matrix](FORMAT_COMPATIBILITY.md) passing when
+changing parsers, discovery, models or exporters. Add evidence-backed synthetic
+variations without replacing legacy fixtures. Run the focused matrix with
+`bin/spec spec/abbu/archive_compatibility_spec.rb`; the full suite remains
+authoritative for the 100% coverage gate.
+
 ## Linting
 
 ```bash

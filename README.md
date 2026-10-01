@@ -336,6 +336,10 @@ rake abbu:stats[Contacts.abbu]
 See [`docs/ABBU.md`](docs/ABBU.md) for a full explanation of the archive structure,
 SQLite table schema, and format history.
 
+The [compatibility regression matrix](docs/FORMAT_COMPATIBILITY.md) protects
+legacy XML and varied SQLite layouts in every CI run, and distinguishes tested
+synthetic shapes from unverified macOS/Contacts releases.
+
 ## Roadmap
 
 See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature checklist.
