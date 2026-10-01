@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Version 0.4.0 adds querying, diagnostics, identity evidence, and safe image extraction
+Version 0.5.0 adds timestamp queries to querying, diagnostics, identity evidence, and safe image extraction
 alongside CSV, JSON, and vCard export. The public API remains pre-1.0.
 
 ## Features
@@ -103,6 +103,36 @@ end
 Lookup methods return every match as an `Abbu::Query`; they never silently pick
 one contact when the same identifier appears in multiple sources. Returned
 contacts retain their parser-provided source provenance.
+
+### Timestamp queries
+
+```ruby
+archive.query.modified_since('2026-09-01T00:00:00Z').search('stan')
+archive.query.date_range(:created_at, since: '2026-09-01T00:00:00Z',
+                         before: '2026-10-01T00:00:00Z')
+# Also works with explicitly opened live data:
+Abbu::Query.new(Abbu.open_live.contacts).created_since(Time.utc(2026, 9, 1))
+```
+
+Bounds accept `Time` or full ISO 8601 strings with seconds and an explicit `Z`
+or numeric offset. Start (`since`) is inclusive; end (`before`) is exclusive.
+At least one bound is required, and start must precede end. Invalid bounds raise
+`ArgumentError`, including on empty queries. Missing timestamps never match.
+Filters preserve source records and compose with other Query criteria. These are
+observed storage timestamps, not proof of human edits or a complete change feed;
+deletions and changes without timestamps cannot be discovered this way.
+
+```bash
+abbu Contacts.abbu --modified-since 2026-09-01T00:00:00Z --json
+abbu Contacts.abbu --created-since 2026-09-01T00:00:00Z --created-before 2026-10-01T00:00:00Z --search stan --json
+```
+
+All four `--created-since`, `--created-before`, `--modified-since`, and
+`--modified-before` filters can be combined (AND). They use existing search
+TSV/JSON output: status 0 for matches, 1 for no matches, and 2 for invalid bounds
+or incompatible output options. Diagnostics stay on stderr. CLI timestamp queries
+are archive-only, like existing search; use the Ruby Query API for live inputs.
+Do not combine timestamp queries with export, stats, schema, dedupe, or extraction.
 
 ### Export
 

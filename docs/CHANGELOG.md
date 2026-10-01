@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.5.0
+
+- Chainable created/modified-since and half-open timestamp range queries with
+  timezone-explicit ISO 8601 bounds, missing-timestamp exclusion, and Query RBS.
+- Archive CLI timestamp filters with existing TSV/JSON results and exit contracts.
+
 ## [0.4.0] - 2026-09-30
 
 ### Fixed

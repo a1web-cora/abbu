@@ -71,6 +71,17 @@ parser.on('--json', 'Emit search results as structured JSON instead of TSV') do
   options[:json] = true
 end
 
+timestamp_bounds = %w[since before]
+%w[created modified].each do |kind|
+  timestamp_bounds.each do |bound|
+    parser.on("--#{kind}-#{bound} TIMESTAMP", "Filter #{kind} timestamp (ISO 8601 with timezone)") do |value|
+      options[:date_filters] ||= {}
+      options[:date_filters][:"#{kind}_at"] ||= {}
+      options[:date_filters][:"#{kind}_at"][bound.to_sym] = value
+    end
+  end
+end
+
 parser.on('-v', '--version', 'Print version') do
   puts "abbu #{Abbu::VERSION}"
   exit
@@ -123,9 +134,16 @@ at_exit do
 end
 
 begin
-  if live_mode && options.values_at(:extract_images, :schema, :search, :email, :phone, :json).any?
+  if live_mode && options.values_at(:extract_images, :schema, :search, :email, :phone, :json, :date_filters).any?
     warn '--live supports --stats, --dedupe, --format, and --strict; archive-only options are not supported.'
     exit 1
+  end
+  if options[:date_filters]
+    if options.values_at(:extract_images, :schema, :stats, :dedupe, :format, :output).any?
+      raise ArgumentError, 'timestamp filters cannot be combined with export, stats, schema, dedupe, or extraction'
+    end
+
+    options[:date_filters].each { |field, bounds| Abbu::TimestampRange.new(field, **bounds) }
   end
   archive = live_mode ? Abbu.open_live(live_path, strict: options[:strict]) : Abbu.open(file, strict: options[:strict])
 
@@ -149,19 +167,25 @@ begin
     exit 1
   end
 
-  if options[:json] && search_options.empty?
-    warn '--json requires --search, --email, or --phone.'
+  if options[:json] && search_options.empty? && !options[:date_filters]
+    warn '--json requires --search, --email, or --phone (or a timestamp filter).'
     exit 1
   end
 
-  if search_options.any?
+  if search_options.any? || options[:date_filters]
     results = if options[:search]
                 archive.search(options[:search])
               elsif options[:email]
                 archive.find_by_email(options[:email])
-              else
+              elsif options[:phone]
                 archive.find_by_phone(options[:phone])
+              else
+                archive.query
               end
+
+    options.fetch(:date_filters, {}).each do |field, bounds|
+      results = results.date_range(field, **bounds)
+    end
 
     if options[:json]
       Abbu::Exporters::JsonExporter.new(results).to_stdout
@@ -218,7 +242,7 @@ begin
 rescue Abbu::LiveStore::Error => e
   warn "abbu: #{e.message}"
   exit 1
-rescue Abbu::ParseError => e
+rescue Abbu::ParseError, ArgumentError => e
   warn "abbu: #{e.message}"
   exit 2
 end
