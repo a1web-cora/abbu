@@ -43,6 +43,15 @@ identical schemas: the current JSON exporter omits nil top-level values, retains
 empty collections, serializes timestamps as ISO 8601, and adds the display `name`.
 Do not generate a JSON schema simply by enumerating Contact accessors.
 
+### Source extension (0.6.0 development)
+
+Add `Archive#sources`, `LiveStore#sources`, and `Source` construction/readers,
+`provider`, and `to_h` to the public inventory. Source JSON and `--sources` are
+public contracts; see the [source API](../README.md#sources). `SourceCatalog`
+is an internal adapter, not an extension point. File/container provenance must
+remain distinct, and provider inference is unsupported. Contacts remain mutable
+even though source metadata and membership snapshots are frozen.
+
 ## Internal and experimental boundaries
 
 Parser SQL/plist mappings, image-resolution heuristics, identity weights,

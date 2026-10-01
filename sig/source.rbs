@@ -1,0 +1,25 @@
+# sig/source.rbs
+module Abbu
+  class Source
+    attr_reader path: String
+    attr_reader relative_path: String
+    attr_reader kind: String
+    attr_reader identifier: String?
+    attr_reader files: Array[Hash[Symbol, String?]]
+    attr_reader contacts: Query
+    attr_reader group_names: Array[String]
+
+    def initialize: (path: String, relative_path: String, identifier: String?,
+                     files: Array[Hash[Symbol, String?]], contacts: Enumerable[Contact]) -> void
+    def provider: () -> nil
+    def to_h: () -> Hash[Symbol, untyped]
+  end
+
+  class Archive
+    def sources: () -> Array[Source]
+  end
+
+  class LiveStore
+    def sources: () -> Array[Source]
+  end
+end

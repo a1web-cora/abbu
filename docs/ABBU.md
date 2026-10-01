@@ -125,6 +125,31 @@ Every parsed contact includes source provenance with the absolute source path, i
 relative to the `.abbu` root, and whether it came from the root bundle or a database under
 `Sources/<identifier>/`. Legacy plist contacts receive the same file-level provenance.
 
+### Source container evidence
+
+`Archive#sources` and `LiveStore#sources` group the existing `SourceDescriptor`
+file evidence into root (`.`) and observed `Sources/<identifier>` containers.
+This is ABBU's grouping convention over input paths, not discovery of Apple's
+private account/container tables. It introduces no new storage-column inference.
+Every selected input file appears, including databases with no contacts; files
+in the same observed container are retained individually. Legacy plist files
+outside `Sources/` belong to root. Parser selection and discovery scope are unchanged.
+
+`Source#identifier` preserves the observed directory spelling, while `provider`
+remains nil even for a directory named `iCloud`. Container paths are local identities
+within that opened input, not globally stable IDs across moved archives or snapshots.
+Contacts link through their original file-level `source[:path]`; the source hash
+is neither replaced nor enriched with speculative provider metadata. `group_names`
+reports distinct membership strings only; first-class group identity and empty-group
+enumeration remain [#32](https://github.com/scarver2/abbu/issues/32).
+
+`spec/abbu/source_spec.rb` copies the existing deterministic root database into
+root, `Sources/iCloud`, and `Sources/Équipe`, including two database filenames in
+one container and colliding contact IDs across containers. These fixtures verify
+grouping, provenance preservation and unknown-provider behavior, not an Apple
+account schema. Source listing parses/caches contacts and retains the existing
+strict/tolerant diagnostics and live consistency limitations below.
+
 ### Opt-in live Contacts stores
 
 The CLI uses `--live` only for auto-discovery and `--live-path PATH` for an explicit

@@ -3,8 +3,9 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Version 0.5.0 adds timestamp queries to querying, diagnostics, identity evidence, and safe image extraction
-alongside CSV, JSON, and vCard export. The public API remains pre-1.0.
+Development version 0.6.0 adds read-only source containers alongside timestamp
+queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
+The public API remains pre-1.0.
 
 ## Features
 
@@ -77,7 +78,7 @@ live_contacts = Abbu.open_live("/path/to/AddressBook").contacts
 Live databases are opened with SQLite's read-only mode. The process may require
 Full Disk Access under **System Settings → Privacy & Security → Full Disk Access**.
 Live inputs expose parser `diagnostics` and accept `strict: true` (CLI `--strict`).
-The live CLI supports stats, deduplication, and exports; archive-only search, schema,
+The live CLI supports source listing, stats, deduplication, and exports; archive-only search, schema,
 and image-extraction options are rejected explicitly.
 
 Live access does not write Contacts databases. Synthetic WAL tests verify committed
@@ -136,6 +137,52 @@ TSV/JSON output: status 0 for matches, 1 for no matches, and 2 for invalid bound
 or incompatible output options. Diagnostics stay on stderr. CLI timestamp queries
 are archive-only, like existing search; use the Ruby Query API for live inputs.
 Do not combine timestamp queries with export, stats, schema, dedupe, or extraction.
+
+### Sources
+
+```ruby
+sources = archive.sources # Frozen Array<Abbu::Source>, sorted by relative_path
+source = sources.first
+source.relative_path # "." for root, or "Sources/<observed identifier>"
+source.identifier    # Raw directory identifier, or nil for root
+source.provider      # nil: never inferred from paths or identifier spelling
+source.files         # Frozen file-level provenance descriptors
+source.contacts.search('stan') # Query over original contacts, no automatic deduplication
+source.group_names   # Sorted unique observed membership labels, not group identities
+source.to_h          # Metadata, files, contact_count, group_names; no contact payload
+
+Abbu.open_live('/path/to/AddressBook').sources # Same API, read-only connections
+```
+
+Sources are observed input containers, not verified Apple account identities.
+Existing `contact.source` hashes are unchanged. Membership is based on the exact
+file provenance path; repeated contact IDs and filenames in different sources
+never merge. Files from the same observed source directory form one container.
+An empty discovered database still appears; an empty archive returns `[]`.
+Plist records outside `Sources/` form the root container. Archives retain their
+existing SQLite-first parser selection: ignored plist files are not listed.
+
+Source metadata, file descriptors, membership arrays, and group-name strings are
+frozen snapshots. Contacts remain the original mutable objects. `sources` eagerly
+parses contacts, honors diagnostics/strict mode, and is cached; reopen the input to
+refresh. It does not add live-store atomic snapshot guarantees. Group names cover
+observed contact memberships only, not empty groups or same-name group identity.
+
+```bash
+abbu Contacts.abbu --sources
+abbu --live-path /path/to/AddressBook --sources --json
+```
+
+`--sources` always emits a JSON array to stdout; `--json` is optional. Each object
+has `path`, `relative_path`, `kind`, `identifier`, `provider`, `files`,
+`contact_count`, and `group_names`; unknown `provider` and root `identifier` are
+explicit JSON nulls. `files` uses the existing four-key contact provenance schema.
+Source/file ordering is by relative path; contact order is parser order within
+those sorted files. Listings exit 0 even when empty. Conflicting operations or
+strict parse failures exit 2, live input/access failures exit 1, and diagnostics
+stay on stderr. Only `--strict` and `--json` may accompany this operation besides
+input selection. Paths, raw identifiers, and group names may be sensitive;
+do not publish source listings as sanitized logs.
 
 ### Export
 
