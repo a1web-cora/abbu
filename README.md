@@ -212,6 +212,8 @@ SQLite table schema, and format history.
 ## Roadmap
 
 See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature checklist.
+The [pre-1.0 API stability gate](docs/API_STABILITY.md) inventories supported
+surfaces, evidence gaps, compatibility policy, and required release-readiness checks.
 
 ## Ruby Compatibility
 
