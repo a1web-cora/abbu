@@ -22,8 +22,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-GEM_HOME="$isolated_gem_home" run_tool gem install "$gem_file" --local --no-document
-GEM_HOME="$isolated_gem_home" run_tool ruby -e '
+# Bundler may install dependencies outside RubyGems' default search path (CI).
+# Only ABBU is isolated; dependencies must come from the verified bundle.
+dependency_gem_path="$(bundle_exec ruby -e 'puts Gem.path.join(File::PATH_SEPARATOR)')"
+GEM_HOME="$isolated_gem_home" GEM_PATH="$dependency_gem_path" \
+  run_tool gem install "$gem_file" --local --ignore-dependencies --no-document
+GEM_HOME="$isolated_gem_home" GEM_PATH="$dependency_gem_path" run_tool ruby -e '
   gem "abbu", ARGV.fetch(0)
   require "abbu"
   spec = Gem.loaded_specs.fetch("abbu")

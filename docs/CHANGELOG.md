@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed — planned 0.8.1
+
+- Package verification reuses Bundler-installed dependency paths in CI while
+  loading the built ABBU gem from an isolated installation. CI now exercises
+  this check before a release tag is created.
+
 ## [0.8.0] - 2026-10-01
 
 This release includes the previously unreleased 0.5.0–0.7.0 development milestones.

@@ -49,6 +49,12 @@ This builds the current gem, verifies its metadata, installs it into an isolated
 gem home, and loads that installed copy. A successful package check is evidence
 only; it does not authorize a release tag or RubyGems publication.
 
+Run `bundle install` through the project toolchain first. Package verification
+installs ABBU without resolving dependencies again, then loads that installed
+copy using Bundler's dependency search paths. Missing runtime dependencies still
+fail the load check. Only ABBU is isolated, not the dependency set. The CI Ruby
+matrix runs this same command with its Bundler-managed installation paths.
+
 ## Pull Request Guidelines
 
 - Base branch: `main`
