@@ -9,6 +9,7 @@ require_relative 'parsers/plist_parser'
 require_relative 'parsers/sqlite_parser'
 require_relative 'query'
 require_relative 'schema_inspector'
+require_relative 'source_catalog'
 require_relative 'utils/image_resolver'
 
 module Abbu
@@ -56,6 +57,11 @@ module Abbu
 
     def schema_report
       SchemaInspector.new(db_paths, root_path: @path).report
+    end
+
+    # Enumerate only the files selected by this archive's existing parser mode.
+    def sources
+      @sources ||= SourceCatalog.new(sqlite? ? db_paths : plist_paths, root_path: @path, contacts: contacts).sources
     end
 
     private

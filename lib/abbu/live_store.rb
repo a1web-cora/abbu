@@ -4,6 +4,7 @@
 require 'pathname'
 require 'sqlite3'
 require_relative 'parsers/sqlite_parser'
+require_relative 'source_catalog'
 
 module Abbu
   class LiveStore
@@ -45,6 +46,10 @@ module Abbu
       @database_paths ||= discover_database_paths.tap do |paths|
         raise NotFoundError, missing_database_message if paths.empty?
       end
+    end
+
+    def sources
+      @sources ||= SourceCatalog.new(database_paths, root_path: @path, contacts: contacts).sources
     end
 
     private

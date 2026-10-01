@@ -59,6 +59,10 @@ parser.on('--schema', 'Print SQLite schema diagnostics as JSON') do
   options[:schema] = true
 end
 
+parser.on('--sources', 'List observed source containers as JSON (archive or live)') do
+  options[:sources] = true
+end
+
 parser.on('--email ADDRESS', 'Find contacts by exact normalized email') do |address|
   options[:email] = address
 end
@@ -67,7 +71,7 @@ parser.on('--phone NUMBER', 'Find contacts by exact normalized phone number') do
   options[:phone] = number
 end
 
-parser.on('--json', 'Emit search results as structured JSON instead of TSV') do
+parser.on('--json', 'Emit search results as JSON (optional for --sources)') do
   options[:json] = true
 end
 
@@ -134,8 +138,14 @@ at_exit do
 end
 
 begin
-  if live_mode && options.values_at(:extract_images, :schema, :search, :email, :phone, :json, :date_filters).any?
-    warn '--live supports --stats, --dedupe, --format, and --strict; archive-only options are not supported.'
+  if options[:sources] && options.values_at(:extract_images, :schema, :search, :email, :phone,
+                                            :date_filters, :stats, :dedupe, :format, :output).any?
+    raise ArgumentError, '--sources cannot be combined with other operations; only --json and --strict are supported'
+  end
+
+  if live_mode && !options[:sources] &&
+     options.values_at(:extract_images, :schema, :search, :email, :phone, :json, :date_filters).any?
+    warn '--live supports --sources, --stats, --dedupe, --format, and --strict; archive-only options are not supported.'
     exit 1
   end
   if options[:date_filters]
@@ -146,6 +156,11 @@ begin
     options[:date_filters].each { |field, bounds| Abbu::TimestampRange.new(field, **bounds) }
   end
   archive = live_mode ? Abbu.open_live(live_path, strict: options[:strict]) : Abbu.open(file, strict: options[:strict])
+
+  if options[:sources]
+    puts JSON.pretty_generate(archive.sources.map(&:to_h))
+    exit 0
+  end
 
   if options[:extract_images]
     result = archive.extract_images(options[:extract_images])

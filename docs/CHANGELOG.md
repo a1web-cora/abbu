@@ -11,6 +11,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.6.0
+
+- Read-only source containers through `Archive#sources` and `LiveStore#sources`,
+  preserving raw file provenance, unknown providers, queryable contacts, and
+  observed group membership labels without conflating source-local identifiers.
+- JSON-only `--sources` listing for archive/live inputs, including empty sources;
+  public RBS, immutable metadata and deterministic source/file ordering.
+
 ### Added — planned 0.5.0
 
 - Chainable created/modified-since and half-open timestamp range queries with
