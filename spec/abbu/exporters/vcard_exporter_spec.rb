@@ -1,8 +1,9 @@
 # spec/abbu/exporters/vcard_exporter_spec.rb
 # frozen_string_literal: true
 
-require 'tmpdir'
+require 'spec_helper'
 require 'pathname'
+require 'tmpdir'
 
 RSpec.describe Abbu::Exporters::VcardExporter do
   let(:contact) do
@@ -51,17 +52,17 @@ RSpec.describe Abbu::Exporters::VcardExporter do
         expect(content).to include('X-PHONETIC-FIRST-NAME:Stan')
         expect(content).to include('X-PHONETIC-MIDDLE-NAME:The Phony')
         expect(content).to include('X-PHONETIC-LAST-NAME:Karver')
-        expect(content).to include('EMAIL;TYPE=Work:stan@example.com')
-        expect(content).to include('TEL;TYPE=Mobile:555-1234')
-        expect(content).to include('ADR;TYPE=Home:;;123 Main;Dallas;TX;75001;USA')
+        expect(content).to include('EMAIL;TYPE=INTERNET:stan@example.com')
+        expect(content).to include('TEL;TYPE=VOICE:555-1234')
+        expect(content).to include('ADR;TYPE=HOME:;;123 Main;Dallas;TX;75001;USA')
         expect(content).to include('URL:https://stancarver.com')
         expect(content).to include('NOTE:Great guy')
         expect(content).to include('X-SOCIALPROFILE;TYPE=Twitter:@scarver2')
         expect(content).to include('BDAY:1980-01-01')
         expect(content).to include('X-LUNAR-BDAY:1980-02-05')
-        expect(content).to include('X-ABDATE;type=pref:2010-06-15')
+        expect(content).to include('X-ABDATE:2010-06-15')
         expect(content).to include('X-ABLABEL:Anniversary')
-        expect(content).to include('IMPP;TYPE=Work:skype:stan.carver')
+        expect(content).to include('IMPP;TYPE=WORK:skype:stan.carver')
         expect(content).to include('X-VERIFICATION-CODE:V123')
         expect(content).to include('PHOTO;VALUE=URI:file:///tmp/Contacts.abbu/Images/stan.jpg')
         expect(content).to include('END:VCARD')
@@ -127,7 +128,7 @@ RSpec.describe Abbu::Exporters::VcardExporter do
       contact.image_path = Pathname.new('/tmp/My Contacts/stan#100%-résumé.jpg')
 
       expect { exporter.to_stdout }
-        .to output(%r{PHOTO;VALUE=URI:file:///tmp/My%20Contacts/stan%23100%25-r%C3%A9sum%C3%A9\.jpg}).to_stdout
+        .to output(%r{PHOTO;VALUE=URI:file:///tmp/My%20Contacts/stan%23100%25-r%C3%A9sum%C3%A9\.jp\r\n g}).to_stdout
     end
   end
 end

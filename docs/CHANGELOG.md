@@ -11,7 +11,28 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added — planned 0.7.0
+## [0.8.0] - 2026-10-01
+
+This release includes the previously unreleased 0.5.0–0.7.0 development milestones.
+
+### Added — vCard fidelity
+
+- vCard fidelity layer with raw-label-preserving grouped repeated properties,
+  public exporter RBS, and deterministic SQLite/plist-to-vCard regression tests.
+
+### Changed — vCard fidelity
+
+- vCard output now uses CRLF, escaped TEXT/structured components, UTF-8-safe
+  75-octet folding, and URI-specific encoding. Consumers must unfold and decode
+  rather than parse ungrouped literal output lines.
+- Custom labels use grouped `X-ABLABEL` rather than arbitrary TYPE parameters;
+  only standard exact ASCII labels become TYPE. Removed invented anniversary
+  preference and unlabeled-address HOME. Existing method signatures remain.
+- Invalid text/control bytes and unsafe service tokens/schemes fail before
+  output rather than emitting malformed records. Apple-specific support limits
+  and migration guidance are explicit; no Contacts import certification claimed.
+
+### Added — groups
 
 - First-class observed groups scoped by file provenance and SQLite record key,
   with source/input enumeration, reverse membership lookup, and chainable
@@ -21,7 +42,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - JSON-only `--groups` listing for archives and read-only live stores, preserving
   raw names, nulls, diagnostics, and explicit unsupported empty/plist-group boundaries.
 
-### Added — planned 0.6.0
+### Added — sources
 
 - Read-only source containers through `Archive#sources` and `LiveStore#sources`,
   preserving raw file provenance, unknown providers, queryable contacts, and
@@ -29,7 +50,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - JSON-only `--sources` listing for archive/live inputs, including empty sources;
   public RBS, immutable metadata and deterministic source/file ordering.
 
-### Added — planned 0.5.0
+### Added — timestamp queries
 
 - Chainable created/modified-since and half-open timestamp range queries with
   timezone-explicit ISO 8601 bounds, missing-timestamp exclusion, and Query RBS.
