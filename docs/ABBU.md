@@ -420,6 +420,9 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [Compatibility regression matrix](FORMAT_COMPATIBILITY.md): always-on XML,
+  sparse/complete SQLite, root/source/mixed layout profiles and their explicit
+  historical evidence gaps. Filename suffixes are not macOS version guarantees.
 - `spec/fixtures/TestContacts.abbu/` exercises the supported synthetic SQLite,
   nested source, and image-resolution behavior.
 - `spec/fixtures/PlistContacts.abbu/` exercises the supported synthetic legacy
