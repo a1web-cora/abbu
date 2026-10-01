@@ -1,0 +1,10 @@
+# sig/vcard_exporter.rbs
+module Abbu
+  module Exporters
+    class VcardExporter
+      def initialize: (Enumerable[Contact] contacts) -> void
+      def to_file: (String | Pathname path) -> Integer
+      def to_stdout: () -> nil
+    end
+  end
+end

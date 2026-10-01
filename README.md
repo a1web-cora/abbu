@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.7.0 adds source-scoped groups alongside source containers, timestamp
+Development version 0.8.0 strengthens vCard serialization alongside source-scoped groups, timestamp
 queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
@@ -243,6 +243,34 @@ Abbu::Exporters::JsonExporter.new(archive.contacts).to_file("contacts.json")
 # vCard
 Abbu::Exporters::VcardExporter.new(archive.contacts).to_file("contacts.vcf")
 ```
+
+vCard output uses UTF-8, CRLF endings (including the final line), escaped TEXT
+values, and folding at no more than 75 bytes without splitting UTF-8 characters.
+Repeated fields retain order. `N` and `ADR` escape each component independently.
+Text newline variants become vCard `\\n`; URL/IM URI values use percent encoding
+instead of TEXT escaping. Empty contact input emits no bytes.
+
+Labeled emails, phones, addresses, URLs, IM handles, and anniversaries pair with
+`itemN.X-ABLABEL` using the same per-card `itemN` group. The original `raw_label`
+wins over the display `label`, including empty strings. Custom labels no longer
+become arbitrary `TYPE` parameters. Only exact ASCII standard type names are
+recognized, case-insensitively; email/phone defaults are `INTERNET`/`VOICE`.
+For example, `Mobile` is preserved as a label, not guessed to mean `CELL`.
+No preference is invented for anniversaries. Existing photo file URIs remain;
+embedded photos are separate work.
+
+Migration from 0.7: consumers must unfold CRLF continuations before parsing,
+decode TEXT escapes, and accept grouped property names rather than matching
+literal lines such as `EMAIL;TYPE=Work`. The exporter signatures are unchanged.
+Unsupported controls, invalid UTF-8, unsafe social-service parameter tokens,
+or invalid IM service schemes fail explicitly before writing output; export
+does not sanitize or mutate Contact evidence. Other encoding conversions may
+raise Ruby encoding errors. Existing files are overwritten on a successful
+`to_file`, as before; this is not an atomic/no-clobber writer.
+
+See [vCard evidence and compatibility limits](docs/ABBU.md#vcard-serialization-evidence)
+for the standards basis and Apple-specific audit. Synthetic round-trip tests
+are not proof of import fidelity in every Apple Contacts release.
 
 ### Duplicate Detection
 

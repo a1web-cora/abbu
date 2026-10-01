@@ -366,6 +366,58 @@ normalizes into the same contact model used by the SQLite parser. Additional
 plist keys or layouts require fixture evidence before they are treated as
 supported semantics.
 
+### vCard serialization evidence
+
+The 0.8.0 exporter implements TEXT escaping and structured components from
+[RFC 2426 §§2.3–2.6](https://www.rfc-editor.org/rfc/rfc2426), and CRLF/grouping
+and unfolding from [RFC 2425 §5.8.1](https://www.rfc-editor.org/rfc/rfc2425).
+ABBU folds conservatively at 75 **octets**, including the continuation space,
+without splitting a UTF-8 code point. Escaping happens before folding; decoding
+must unfold first. Commas, semicolons and backslashes are escaped in TEXT;
+CRLF, bare CR and LF become the logical newline escape. This preserves logical
+text, not the original newline byte convention. Input Contact values are unchanged.
+URI properties use percent encoding, preserving existing escapes and URI
+delimiters rather than applying TEXT rules. This is not a general URI validator.
+
+`spec/abbu/exporters/vcard_exporter_fidelity_spec.rb` contains deterministic
+inline wire fixtures and an independent fixture-only decoder. It exercises
+repeated properties, injection-shaped input, structured names/addresses,
+multiline notes, UTF-8 folding boundaries, per-card group numbering, and both
+SQLite/plist → Contact → vCard label preservation. The temporary SQLite fixture
+only varies an already supported `ZLABEL`; the plist fixture uses the existing
+`Email.values[].label` mapping. Neither adds guessed Apple storage semantics.
+
+The reviewed extension audit is deliberately bounded:
+
+| Surface | Implemented rule / evidence limit |
+| --- | --- |
+| `itemN`, `X-ABLABEL` | Standard group syntax pairs repeated properties with ABBU's existing raw-label extension. Labels remain exact after TEXT decoding; numbering is local to each card, not a stored Apple ID. No Apple import validation is claimed. |
+| `X-ABDATE` | Existing anniversary mapping retained, now grouped with its label. Removed the fabricated `type=pref`. Other date collections remain unsupported by this exporter. |
+| `TYPE`, `PREF` | Only exact ASCII names from RFC 2426's EMAIL/TEL/ADR lists and RFC 4770's IMPP list are recognized from display labels. No whitespace trimming, Unicode folding, custom-label tokenization, or Mobile→CELL guess. Raw labels remain separately available. Explicit `PREF` is recognized; no priority is inferred from row order. |
+| `UID` | Not generated: SQLite keys and source paths are not demonstrated global contact identifiers. |
+| `IMPP` | URI-valued property per [RFC 4770](https://www.rfc-editor.org/rfc/rfc4770). Existing service-to-scheme convention retained with scheme syntax checks and address encoding. A syntactically valid scheme does not prove service interoperability; absent service retains legacy `unknown:`. |
+| `X-SOCIALPROFILE` | Existing service/username extension retained; parameter service must be an ASCII token and username is escaped TEXT. No provider URL or Apple import semantics are inferred. |
+| `ADR` | Seven components, each independently escaped. No new PO box/extended-address storage mapping. Missing label no longer fabricates HOME. |
+| Partial/lunar dates, phonetic names, verification code | Existing extensions retained, not certified as standard vCard 3.0 date forms or Apple alternate-calendar semantics. |
+| `PHOTO` | Existing local file URI retained; portable embedding belongs to #30. |
+
+Unsafe parameter values and control characters fail rather than create extra
+properties or silently discard evidence. Serialization completes before file
+opening/stdout emission, so validation failures produce no partial export and
+leave an existing output file untouched. Filesystem failures after opening can
+still leave partial files. Exports contain sensitive contact values and photo
+paths; callers must choose appropriate destinations and permissions.
+
+Email preference uses `TYPE=INTERNET,PREF`, retaining the default address type
+as required by RFC 2426's email parameter grammar; TEL includes the standard
+`PCS` token. Unknown extension/registered type names are preserved as labels,
+not asserted to be registered by ABBU's deliberately bounded built-in list.
+
+These are standards-backed serialization guarantees and synthetic regression
+observations, not a full-fidelity ABBU backup or certification against a specific
+macOS/Contacts build. A sanitized real Apple export/import corpus remains a
+separate compatibility gate before broader claims.
+
 ## Repository Evidence
 
 - `spec/fixtures/TestContacts.abbu/` exercises the supported synthetic SQLite,
