@@ -35,3 +35,6 @@ jobs:
 
       - name: Run RSpec
         run: bin/spec
+
+      - name: Verify isolated package with bundled dependencies
+        run: bin/package
