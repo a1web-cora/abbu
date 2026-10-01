@@ -105,12 +105,14 @@ module Abbu
 
       def groups_for(db, record_id)
         query = <<-SQL
-          SELECT g.ZFIRSTNAME
+          SELECT g.Z_PK, g.ZFIRSTNAME
           FROM Z_ABCDCONTACTGROUP j
           JOIN ZABCDRECORD g ON j.Z_GROUP = g.Z_PK
           WHERE j.Z_CONTACT = ?
         SQL
-        optional_rows(db, record_id, 'Z_ABCDCONTACTGROUP', query).map { |row| row['ZFIRSTNAME'] }
+        optional_rows(db, record_id, 'Z_ABCDCONTACTGROUP', query).map do |row|
+          { record_id: row['Z_PK'], name: row['ZFIRSTNAME'] }
+        end
       end
 
       def urls_for(db, record_id)
@@ -237,7 +239,8 @@ module Abbu
         contact.emails           = emails_for(db, record_id)
         contact.phones           = phones_for(db, record_id)
         contact.addresses        = addresses_for(db, record_id)
-        contact.groups           = groups_for(db, record_id)
+        contact.group_memberships = groups_for(db, record_id)
+        contact.groups           = contact.group_memberships.map { |membership| membership[:name] }
         contact.urls             = urls_for(db, record_id)
         contact.notes            = notes_for(db, record_id)
         contact.related_names    = related_names_for(db, record_id)

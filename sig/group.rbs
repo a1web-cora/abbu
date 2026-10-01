@@ -1,0 +1,36 @@
+# sig/group.rbs
+module Abbu
+  class Contact
+    attr_accessor group_memberships: Array[{ record_id: Integer, name: String? }]
+  end
+
+  class Group
+    attr_reader record_id: Integer
+    attr_reader name: String?
+    attr_reader source: Hash[Symbol, String?]
+    attr_reader contacts: Query
+    def initialize: (record_id: Integer, name: String?, source: Hash[Symbol, String?],
+                     contacts: Enumerable[Contact]) -> void
+    def include?: (Contact contact) -> bool
+    def to_h: () -> Hash[Symbol, untyped]
+  end
+
+  class Source
+    attr_reader groups: Array[Group]
+    def groups_for: (Contact contact) -> Array[Group]
+  end
+
+  class Archive
+    def groups: () -> Array[Group]
+    def groups_for: (Contact contact) -> Array[Group]
+  end
+
+  class LiveStore
+    def groups: () -> Array[Group]
+    def groups_for: (Contact contact) -> Array[Group]
+  end
+
+  class Query
+    def in_group: (Group group) -> Query
+  end
+end

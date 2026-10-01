@@ -64,6 +64,14 @@ module Abbu
       @sources ||= SourceCatalog.new(sqlite? ? db_paths : plist_paths, root_path: @path, contacts: contacts).sources
     end
 
+    def groups
+      @groups ||= sources.flat_map(&:groups).freeze
+    end
+
+    def groups_for(contact)
+      groups.select { |group| group.include?(contact) }
+    end
+
     private
 
     def validate!

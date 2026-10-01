@@ -51,6 +51,10 @@ module Abbu
       @contacts.dup
     end
 
+    def in_group(group)
+      self.class.new(select { |contact| group.include?(contact) })
+    end
+
     def modified_since(value)
       date_range(:modified_at, since: value)
     end

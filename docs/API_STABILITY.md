@@ -54,6 +54,13 @@ even though source metadata and membership snapshots are frozen.
 
 ## Internal and experimental boundaries
 
+The 0.7.0 development extension adds `Group` construction/readers, `include?`,
+`to_h`, `Contact#group_memberships`, `Source#groups`, input `groups`, source/input
+`groups_for`, `Query#in_group`, and `--groups`. See the [group API](../README.md#groups)
+for snapshot identity, JSON schema, ordering, and unsupported group boundaries.
+`GroupCatalog` is internal. Existing `Contact#groups` and contact exporter schemas
+are unchanged; raw membership keys are available in the model and group listings.
+
 Parser SQL/plist mappings, image-resolution heuristics, identity weights,
 schema-inspection constants, private helpers, and `Utils::ContactIdentity` are
 implementation details, not supported extension points. Prefer the entry points
