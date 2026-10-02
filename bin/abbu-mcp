@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# bin/abbu-mcp
+# frozen_string_literal: true
+
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+
+require 'optparse'
+require 'abbu'
+
+options = {}
+parser = OptionParser.new do |config|
+  config.banner = 'Usage: abbu-mcp ARCHIVE | abbu-mcp --live-path DIRECTORY [--strict]'
+  config.on('--live-path PATH', 'Explicit opt-in live store (read-only)') { |path| options[:live_path] = path }
+  config.on('--strict', 'Fail on unsupported or corrupt optional input') { options[:strict] = true }
+  config.on('-h', '--help', 'Show help, without opening Contacts data') do
+    puts config
+    exit
+  end
+end
+
+begin
+  parser.parse!
+  if options[:live_path] ? ARGV.any? : ARGV.length != 1
+    raise ArgumentError, 'Select exactly one archive or explicit live path'
+  end
+
+  require 'abbu/mcp'
+  Abbu::Mcp::Server.new(path: options[:live_path] || ARGV.first,
+                        live: !options[:live_path].nil?, strict: options[:strict] || false).open
+rescue LoadError
+  warn 'abbu-mcp: install the optional mcp SDK (~> 1.6.1) in the same Ruby environment.'
+  exit 2
+rescue OptionParser::ParseError, ArgumentError, Abbu::LiveStore::Error, SystemCallError
+  warn 'abbu-mcp: invalid configuration or unavailable input; check --help and local permissions.'
+  exit 2
+end

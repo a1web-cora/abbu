@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.10.0 adds a first-class machine JSON contract alongside source-scoped groups, timestamp
+Development version 0.11.0 adds an optional read-only MCP adapter alongside source-scoped groups, timestamp
 queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
@@ -300,6 +300,9 @@ merged = matches.first.merge(policy: ->(left, right, evidence:) {
 ```
 
 ## CLI
+
+An opt-in [MCP adapter](docs/MCP.md) exposes public read APIs to a trusted local
+agent host. It requires a separately installed SDK; ordinary ABBU use does not.
 
 For shell and agent integrations, see the [machine JSON contract](docs/MACHINE_JSON.md),
 including structured diagnostics, identity suggestions, exit codes, and privacy.

@@ -11,6 +11,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.11.0
+
+- Optional `abbu-mcp` stdio executable and `require 'abbu/mcp'` adapter, using
+  the separately installed official MCP Ruby SDK. Core `abbu` has no MCP runtime
+  dependency and never loads the SDK automatically.
+- Five read-only tools for bounded contact queries, statistics, sources/groups
+  and explicit diagnostics, bound to one operator-selected archive or live path.
+  No arbitrary path tool argument, file export, Contacts mutation, default
+  contact logging, or unevidenced My Card detection.
+
 ### Added — planned 0.10.0
 
 - First-class `--json` for contacts, statistics, schema, sources/groups, duplicate

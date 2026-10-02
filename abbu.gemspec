@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir[
     "bin/abbu",
+    "bin/abbu-mcp",
     "docs/**/*",
     "examples/**/*.rb",
     "lib/**/*.rb",
@@ -36,7 +37,7 @@ Gem::Specification.new do |spec|
   ]
 
   spec.bindir        = "bin"
-  spec.executables   = ["abbu"]
+  spec.executables   = ["abbu", "abbu-mcp"]
   spec.require_paths = ["lib"]
 
   spec.add_dependency "sqlite3", "~> 2.0"
