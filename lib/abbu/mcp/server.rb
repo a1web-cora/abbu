@@ -58,6 +58,8 @@ module Abbu
       private
 
       def configuration
+        # SDK 1.6.1 validates successful structured content; isError results are
+        # deliberately exempt. Real stdio regressions protect both error paths.
         ::MCP::Configuration.new(exception_reporter: ->(_exception, _context) {}, validate_tool_call_results: true)
       end
 

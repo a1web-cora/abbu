@@ -69,6 +69,16 @@ path. The operator chooses the input before server startup. My Card is omitted
 until evidence establishes it. Image extraction, export, merging, writing,
 tagging, releases, shell execution and arbitrary filesystem access have no tool.
 
+Output validation remains enabled. In the pinned SDK 1.6.1,
+[`validate_tool_call_result!`](https://github.com/modelcontextprotocol/ruby-sdk/blob/v1.6.1/lib/mcp/server.rb#L1539-L1545)
+validates successful results against the declared `{data: ...}` schema and
+deliberately skips that success schema for `isError: true`. Adapter failures use
+the separately documented `{error: ...}` envelope. Real stdio regressions exercise
+both semantic invalid-query and strict-parser failures, asserting their exact
+structured/text error payloads, absence of JSON-RPC protocol errors, and empty
+stderr. They do not merely call tool handlers directly. The adapter configuration
+test also asserts that result validation stays enabled.
+
 Example tool calls (through a host that has already established its SDK session):
 
 ```json

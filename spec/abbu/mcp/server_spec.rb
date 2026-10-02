@@ -15,6 +15,7 @@ RSpec.describe Abbu::Mcp::Server do
   end
 
   it 'defines only read tools with bounded input and structured output schemas' do
+    expect(adapter.server.configuration.validate_tool_call_results?).to be(true)
     expect(adapter.server.tools.keys).to contain_exactly(
       'abbu_query', 'abbu_stats', 'abbu_sources', 'abbu_groups', 'abbu_diagnostics'
     )
