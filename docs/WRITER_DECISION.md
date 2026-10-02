@@ -52,9 +52,10 @@ meet the import-evidence requirement.
 | Unsupported fields | Every omission has an explicit loss report; unknown private fields cannot silently disappear behind a “lossless” claim. |
 
 Current vCard output does not reconstruct sources/groups/private provenance or
-every date collection. URI photos depend on external paths. Optional embedding
-is separately tracked by [#30](https://github.com/scarver2/abbu/issues/30); it does
-not establish whole-archive fidelity. Retain original bytes and use available
+every date collection. URI photos depend on external paths. Optional embedded
+JPEG/PNG/GIF vCard photos are available, with the documented content-signature,
+memory and unsupported-HEIC limits; embedding does not establish whole-archive
+fidelity. Retain original bytes and use available
 JSON evidence for inspection, not as an assumed reconstruction format.
 
 ## Gate for a Future Proposal
