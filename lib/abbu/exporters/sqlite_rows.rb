@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'pathname'
 require 'time'
 
 require_relative 'sqlite_schema'
@@ -18,14 +19,22 @@ module Abbu
 
       def write(contact, id)
         source_id = source(contact.source)
-        fields = SqliteSchema::CONTACT_FIELDS.map { |field| contact.public_send(field)&.to_s }
-        insert(:contacts, [id, source_id, *fields, timestamp(contact.created_at), timestamp(contact.modified_at)])
+        fields = flat_fields(contact)
+        times = [timestamp(contact.created_at), timestamp(contact.modified_at)]
+        insert(:contacts, [id, source_id, *fields.values.map { |value| value&.to_s }, *times, evidence(fields)])
         collections(contact, id)
         dates(contact, id)
         groups(contact, id, source_id)
       end
 
       private
+
+      def flat_fields(contact)
+        SqliteSchema::CONTACT_FIELDS.to_h do |field|
+          value = contact.public_send(field)
+          [field, value.is_a?(Pathname) ? value.to_s : value]
+        end
+      end
 
       def insert(table, values)
         placeholders = Array.new(values.length, '?').join(', ')
@@ -68,8 +77,12 @@ module Abbu
             insert(field, [id, position, *entry.values_at(*columns), evidence(entry)])
           end
         end
-        contact.notes.each_with_index { |value, position| insert(:notes, [id, position, value]) }
-        contact.groups.each_with_index { |value, position| insert(:group_labels, [id, position, value]) }
+        scalar_values(:notes, contact.notes, id)
+        scalar_values(:group_labels, contact.groups, id)
+      end
+
+      def scalar_values(table, values, id)
+        values.each_with_index { |value, position| insert(table, [id, position, value&.to_s, evidence(value)]) }
       end
 
       def dates(contact, id)

@@ -4,6 +4,7 @@
 require 'spec_helper'
 require 'json'
 require 'pathname'
+require 'plist'
 require 'sqlite3'
 require 'tmpdir'
 
@@ -120,9 +121,36 @@ RSpec.describe Abbu::Exporters::SqliteExporter do
       end
       SQLite3::Database.new(path) do |db|
         db.execute('PRAGMA foreign_keys = ON')
-        expect { db.execute('INSERT INTO notes VALUES (?, ?, ?)', [999, 0, 'orphan']) }
+        expect { db.execute('INSERT INTO notes VALUES (?, ?, ?, ?)', [999, 0, 'orphan', '"orphan"']) }
           .to raise_error(SQLite3::ConstraintException)
       end
+    end
+  end
+
+  it 'preserves primitive representations from legacy plist through the model and SQLite evidence' do
+    Dir.mktmpdir do |directory|
+      source = File.join(directory, 'Legacy.abbu')
+      Dir.mkdir(source)
+      File.write(File.join(source, 'example.abcdp'), { 'First' => 42, 'Note' => 123 }.to_plist)
+      parsed = Abbu.open(source).contacts.first
+      parsed.groups = [7, false, nil]
+      parsed.image_path = Pathname.new('/synthetic/photo.png')
+      expect(parsed.first_name).to eq(42)
+      expect(parsed.notes).to eq([123])
+      path = File.join(directory, 'contacts.sqlite')
+      original = Marshal.dump(parsed)
+      described_class.new([parsed]).to_file(path)
+      read_database(path) do |db|
+        row = db.get_first_row('SELECT * FROM contacts')
+        expect(row['first_name']).to eq('42')
+        raw = JSON.parse(row['evidence_json'])
+        expect(raw['first_name']).to eq(42)
+        expect(raw['image_path']).to eq('/synthetic/photo.png')
+        expect(JSON.parse(db.get_first_value('SELECT evidence_json FROM notes'))).to eq(123)
+        labels = db.execute('SELECT evidence_json FROM group_labels ORDER BY position')
+        expect(labels.map { |entry| JSON.parse(entry['evidence_json']) }).to eq([7, false, nil])
+      end
+      expect(Marshal.dump(parsed)).to eq(original)
     end
   end
 

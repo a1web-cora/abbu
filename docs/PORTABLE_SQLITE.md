@@ -25,7 +25,7 @@ in-place migration command; recreate derived artifacts from retained inputs.
 | Table | Queryable facts and relationships |
 | --- | --- |
 | `metadata` | `schema_version`, `generator_version` |
-| `contacts` | Sequential `id`, nullable `source_id`, all supported flat name/organization/phonetic/pronoun/tone/verification/image fields, `created_at`, `modified_at` |
+| `contacts` | Sequential `id`, nullable `source_id`, all supported flat name/organization/phonetic/pronoun/tone/verification/image fields, `created_at`, `modified_at`, flat-field `evidence_json` |
 | `sources` | File-level observed `path`, `relative_path`, `kind`, `identifier`, complete `evidence_json` |
 | `emails` | `contact_id`, `position`, `address`, `label`, `raw_label`, `evidence_json` |
 | `phones` | Same identity/order columns, `number`, labels, evidence |
@@ -34,7 +34,7 @@ in-place migration command; recreate derived artifacts from retained inputs.
 | `related_names` | Same identity/order columns, `name`, labels, evidence |
 | `social_profiles` | Same identity/order columns, `service`, `username`, evidence |
 | `instant_messages` | Same identity/order columns, `address`, `service`, labels, evidence |
-| `notes`, `group_labels` | `contact_id`, `position`, nullable original `value`, including duplicates |
+| `notes`, `group_labels` | `contact_id`, `position`, nullable display `value`, original `evidence_json`, including duplicates |
 | `dates` | `contact_id`, `field`, `position`, `year`, `month`, `day`, labels, evidence |
 | `groups` | Sequential `id`, nullable `source_id`, observed `record_id`, raw `name`, evidence |
 | `group_memberships` | `contact_id`, `position`, `group_id`, retaining duplicate observations |
@@ -52,7 +52,12 @@ name components remain separate, rather than hiding queryable facts in JSON.
 unknown extra keys, nulls, raw labels and nested primitive data. It distinguishes
 missing keys from explicit nulls where fixed relational columns cannot. Hash keys
 are canonically sorted; array order is preserved. Source date/calendar evidence
-is copied without interpreting it or fabricating missing years.
+is copied without interpreting it or fabricating missing years. Flat fields,
+notes and group-label values also retain original JSON primitives in evidence:
+their TEXT columns are query/display conveniences, not authoritative original
+types. For example, a plist integer name/note remains an integer in evidence
+even though its text column is a string. Pathname objects are represented by
+their path strings; arbitrary Ruby object serialization is not promised.
 
 `dates.field` distinguishes `birthday`, `anniversary`, `lunar_birthday`, and
 `dates`. Direct fields and collection entries are intentionally both retained;

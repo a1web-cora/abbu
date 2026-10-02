@@ -27,6 +27,7 @@ module Abbu
                    'identifier TEXT, evidence_json TEXT NOT NULL)')
         create_contacts(db)
         create_collections(db)
+        create_scalar_collections(db)
         create_dates(db)
         create_groups(db)
       end
@@ -35,7 +36,7 @@ module Abbu
         fields = CONTACT_FIELDS.map { |name| "#{name} TEXT" }.join(', ')
         db.execute('CREATE TABLE contacts (id INTEGER PRIMARY KEY, source_id INTEGER REFERENCES sources(id), ' \
                    "#{fields}, " \
-                   'created_at TEXT, modified_at TEXT)')
+                   'created_at TEXT, modified_at TEXT, evidence_json TEXT NOT NULL)')
         db.execute('CREATE INDEX contacts_source ON contacts(source_id)')
       end
 
@@ -46,9 +47,13 @@ module Abbu
                      "position INTEGER NOT NULL, #{fields}, evidence_json TEXT NOT NULL, " \
                      'PRIMARY KEY(contact_id, position))')
         end
+      end
+
+      def create_scalar_collections(db)
         %w[notes group_labels].each do |table|
           db.execute("CREATE TABLE #{table} (contact_id INTEGER NOT NULL REFERENCES contacts(id), " \
-                     'position INTEGER NOT NULL, value TEXT, PRIMARY KEY(contact_id, position))')
+                     'position INTEGER NOT NULL, value TEXT, evidence_json TEXT NOT NULL, ' \
+                     'PRIMARY KEY(contact_id, position))')
         end
       end
 
