@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.10.0
+
+- Immutable merge-plan previews with explicit union, timestamp, source and
+  completeness policies. Conflicts and original provenance remain reviewable;
+  materialization requires an explicit policy and never writes source stores.
+  `--merge-preview` provides a JSON-only preview, never an apply operation.
+
 ### Added — planned 0.9.0
 
 - Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and

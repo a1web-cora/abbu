@@ -301,6 +301,19 @@ merged = matches.first.merge(policy: ->(left, right, evidence:) {
 
 ## CLI
 
+### Safe Merge Plans
+
+```ruby
+plan = Abbu::MergePlan.new(left, right, policy: :prefer_newer)
+pp plan.to_h # detached inputs, selected fields, alternatives, conflicts and reasons
+merged = plan.materialize # raises without a policy or with unresolved conflicts
+```
+
+`abbu Contacts.abbu --merge-preview` emits exact-evidence candidate plans as JSON
+without applying them. Optional `--merge-policy prefer_source --prefer-source
+Sources/Example/AddressBook-v22.abcddb` previews an explicit preference. See
+[merge-plan boundaries](docs/MERGE_PLANS.md) before materializing derived contacts.
+
 ```bash
 # Export to CSV
 abbu Contacts.abbu -f csv -o contacts.csv
