@@ -144,7 +144,7 @@ Version assignments below 1.0 are intentionally deferred until scopes are accept
 - [ ] [#33](https://github.com/scarver2/abbu/issues/33): evidence-backed My Card identification
 - [ ] [#34](https://github.com/scarver2/abbu/issues/34): modified-since and date-range queries
 - [ ] [#35](https://github.com/scarver2/abbu/issues/35): evidence-backed save/edit history
-- [ ] [#36](https://github.com/scarver2/abbu/issues/36): alternate-calendar and lunar metadata research
+- [x] [#36](https://github.com/scarver2/abbu/issues/36): [alternate-calendar research — richer decoding awaits evidence](ALTERNATE_CALENDAR_EVIDENCE.md)
 - [ ] [#37](https://github.com/scarver2/abbu/issues/37): explainable fuzzy names and configurable thresholds
 - [ ] [#38](https://github.com/scarver2/abbu/issues/38): merge plans, side-by-side evidence, and safe built-in policies
 - [ ] [#39](https://github.com/scarver2/abbu/issues/39): broader machine-readable JSON CLI contract
