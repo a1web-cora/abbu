@@ -420,6 +420,9 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [Alternate-calendar evidence boundary](ALTERNATE_CALENDAR_EVIDENCE.md): legacy
+  lunar labels/components do not establish a calendar, leap month or year cycle.
+
 - [History evidence boundary](HISTORY_EVIDENCE.md): record timestamps, snapshot
   differences and documented framework change events are not interchangeable.
 
