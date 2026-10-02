@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.10.0 adds a first-class machine JSON contract alongside source-scoped groups, timestamp
+Development version 0.11.0 adds a first-class machine JSON contract alongside source-scoped groups, timestamp
 queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
@@ -299,6 +299,20 @@ merged = matches.first.merge(policy: ->(left, right, evidence:) {
 })
 ```
 
+### Fuzzy Name Suggestions (Ruby)
+
+```ruby
+suggestions = Abbu::Utils::FuzzyMatcher.new(
+  archive.contacts.first, archive.contacts, threshold: 0.85
+).matches
+suggestions.each { |match| pp [match.status, match.score, match.evidence] }
+```
+
+This opt-in API compares one anchor against candidates, not all candidate pairs.
+It preserves parser evidence and existing exact deduplication behavior. See
+[fuzzy matching](docs/FUZZY_MATCHING.md) for score contributions, Unicode rules,
+resource bounds and ambiguity limits. Similarity is not identity.
+
 ## CLI
 
 For shell and agent integrations, see the [machine JSON contract](docs/MACHINE_JSON.md),
@@ -372,6 +386,10 @@ legacy XML and varied SQLite layouts in every CI run, and distinguishes tested
 synthetic shapes from unverified macOS/Contacts releases.
 
 ## Roadmap
+
+ABBU remains read-only for source archives and live stores. The
+[writer research decision](docs/WRITER_DECISION.md) explains why generating
+Apple-private bundles is not supported and what evidence could change that.
 
 ### Portable vCard Photos
 

@@ -11,7 +11,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added — planned 0.10.0
+### Added — planned 0.11.0
 
 - First-class `--json` for contacts, statistics, schema, sources/groups, duplicate
   groups, identity matches, and image extraction. New `--diagnostics` and
@@ -19,7 +19,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   machine serializers reuse the unchanged contact JSON representation.
 - Documented machine stdout, stderr, exit codes, privacy, and SemVer contract.
 
-### Changed — planned 0.10.0
+### Changed — planned 0.11.0
 
 - JSON-mode errors now emit a single `{ "error": { "code", "message" } }`
   document instead of empty stdout or a Ruby exception trace. Invalid inputs
@@ -28,6 +28,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Bare `--json` lists contacts. JSON combinations are validated before reading
   or writing, rather than silently prioritizing one operation. Human modes and
   successful existing contact/source/group/schema JSON shapes are unchanged.
+
+### Added — planned 0.10.0
+
+- Opt-in bounded, explainable fuzzy name suggestions using Unicode-preserving
+  Levenshtein distance. Exact identity evidence retains precedence; fuzzy-only
+  suggestions remain ambiguous and never merge contacts automatically.
 
 ### Added — planned 0.9.0
 
