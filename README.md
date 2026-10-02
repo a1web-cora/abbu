@@ -370,6 +370,11 @@ synthetic shapes from unverified macOS/Contacts releases.
 
 ## Roadmap
 
+Compare archives with `abbu Before.abbu --diff After.abbu --json` or
+`Abbu::SnapshotDiff.new(before, after).to_h`. See the
+[snapshot comparison contract](docs/SNAPSHOT_DIFF.md) for ambiguity, privacy,
+resource limits and field-level evidence.
+
 ### Portable vCard Photos
 
 Use `abbu Contacts.abbu --format vcard --photo-mode embedded --output contacts.vcf`

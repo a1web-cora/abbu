@@ -11,6 +11,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.10.0
+
+- Identity-evidence snapshot comparison through `SnapshotDiff` and `--diff`,
+  with raw field changes, provenance, explicit ambiguity and stable JSON output.
+
 ### Added — planned 0.9.0
 
 - Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and
