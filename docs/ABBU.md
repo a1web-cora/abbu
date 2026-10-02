@@ -420,6 +420,9 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [My Card evidence boundary](MY_CARD_EVIDENCE.md): a public framework query is
+  not an archive schema mapping; no designation is inferred from contact values.
+
 - [Writer decision](WRITER_DECISION.md): current evidence does not justify
   constructing Apple-private archives. Read compatibility is not import proof;
   future proposals require isolated, version-attributed import evidence.
