@@ -420,6 +420,11 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [iCalendar export](ICALENDAR.md) consumes existing normalized birthday and
+  anniversary fields. Synthetic SQLite and plist regressions preserve raw labels
+  and source bytes; they introduce no private-calendar mapping or Apple import
+  certification. Explicit lunar/alternate values are diagnosed and omitted.
+
 - Embedded vCard PHOTO follows [RFC 2426 §3.1.4](https://www.rfc-editor.org/rfc/rfc2426#section-3.1.4)
   binary/base64 serialization with existing CRLF folding. Synthetic signature
   regressions prove byte preservation, not image decodability or Apple import

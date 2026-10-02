@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.10.0
+
+- Deterministic iCalendar birthday/anniversary reminders through a Ruby exporter
+  and `--format icalendar`. Explicit recurrence year, revision time, and calendar
+  namespace avoid fabricated metadata. Unknown years remain unknown; invalid and
+  alternate-calendar dates are diagnosed and omitted. Existing exports are unchanged.
+
 ### Added — planned 0.9.0
 
 - Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and

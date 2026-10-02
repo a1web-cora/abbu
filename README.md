@@ -3,8 +3,8 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.8.0 strengthens vCard serialization alongside source-scoped groups, timestamp
-queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
+Development version 0.10.0 adds deterministic birthday/anniversary iCalendar reminders
+alongside source-scoped groups, queries, diagnostics, images, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
 ## Features
@@ -271,6 +271,31 @@ raise Ruby encoding errors. Existing files are overwritten on a successful
 See [vCard evidence and compatibility limits](docs/ABBU.md#vcard-serialization-evidence)
 for the standards basis and Apple-specific audit. Synthetic round-trip tests
 are not proof of import fidelity in every Apple Contacts release.
+
+### Birthday And Anniversary Calendars
+
+```ruby
+calendar = Abbu::Exporters::IcalendarExporter.new(
+  archive.contacts, year: 2026, generated_at: Time.utc(2026, 10, 1),
+  calendar_id: 'your-unique-calendar-namespace'
+)
+calendar.to_file('reminders.ics')
+calendar.diagnostics # Non-PII omission categories and zero-based contact indexes
+```
+
+```bash
+abbu Contacts.abbu --format icalendar --calendar-year 2026 \
+  --calendar-stamp 2026-10-01T00:00:00Z --calendar-id your-unique-calendar-namespace \
+  --output reminders.ics
+```
+
+The three metadata arguments are explicit so the same ordered input and metadata
+produce identical bytes without inventing a birth year, revision time, or Apple
+identity. Choose your own unique calendar namespace and actual export revision
+time. `year` is the first reminder year, not an original year. Unknown years stay
+unknown, and February 29 reminders recur only in leap years. Lunar/alternate
+calendar dates are diagnosed and omitted, not converted. See the
+[iCalendar contract](docs/ICALENDAR.md) for identity, privacy, and import limits.
 
 ### Duplicate Detection
 
