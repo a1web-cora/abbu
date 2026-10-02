@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.10.0
+
+- Opt-in bounded, explainable fuzzy name suggestions using Unicode-preserving
+  Levenshtein distance. Exact identity evidence retains precedence; fuzzy-only
+  suggestions remain ambiguous and never merge contacts automatically.
+
 ### Added — planned 0.9.0
 
 - Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and

@@ -299,6 +299,20 @@ merged = matches.first.merge(policy: ->(left, right, evidence:) {
 })
 ```
 
+### Fuzzy Name Suggestions (Ruby)
+
+```ruby
+suggestions = Abbu::Utils::FuzzyMatcher.new(
+  archive.contacts.first, archive.contacts, threshold: 0.85
+).matches
+suggestions.each { |match| pp [match.status, match.score, match.evidence] }
+```
+
+This opt-in API compares one anchor against candidates, not all candidate pairs.
+It preserves parser evidence and existing exact deduplication behavior. See
+[fuzzy matching](docs/FUZZY_MATCHING.md) for score contributions, Unicode rules,
+resource bounds and ambiguity limits. Similarity is not identity.
+
 ## CLI
 
 ```bash
@@ -369,6 +383,10 @@ legacy XML and varied SQLite layouts in every CI run, and distinguishes tested
 synthetic shapes from unverified macOS/Contacts releases.
 
 ## Roadmap
+
+ABBU remains read-only for source archives and live stores. The
+[writer research decision](docs/WRITER_DECISION.md) explains why generating
+Apple-private bundles is not supported and what evidence could change that.
 
 ### Portable vCard Photos
 

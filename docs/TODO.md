@@ -141,9 +141,9 @@ Version assignments below 1.0 are intentionally deferred until scopes are accept
 - [ ] [#30](https://github.com/scarver2/abbu/issues/30): embedded vCard photos (currently file URI references)
 - [ ] [#31](https://github.com/scarver2/abbu/issues/31): first-class read-only source objects
 - [ ] [#32](https://github.com/scarver2/abbu/issues/32): first-class groups and membership queries
-- [ ] [#33](https://github.com/scarver2/abbu/issues/33): evidence-backed My Card identification
+- [x] [#33](https://github.com/scarver2/abbu/issues/33): [My Card research — private mapping remains unsupported](MY_CARD_EVIDENCE.md)
 - [ ] [#34](https://github.com/scarver2/abbu/issues/34): modified-since and date-range queries
-- [ ] [#35](https://github.com/scarver2/abbu/issues/35): evidence-backed save/edit history
+- [x] [#35](https://github.com/scarver2/abbu/issues/35): [history research — no verified private event mapping](HISTORY_EVIDENCE.md)
 - [x] [#36](https://github.com/scarver2/abbu/issues/36): [alternate-calendar research — richer decoding awaits evidence](ALTERNATE_CALENDAR_EVIDENCE.md)
 - [ ] [#37](https://github.com/scarver2/abbu/issues/37): explainable fuzzy names and configurable thresholds
 - [ ] [#38](https://github.com/scarver2/abbu/issues/38): merge plans, side-by-side evidence, and safe built-in policies
@@ -154,7 +154,7 @@ Version assignments below 1.0 are intentionally deferred until scopes are accept
 - [ ] [#43](https://github.com/scarver2/abbu/issues/43): identity-aware snapshot diffs
 - [ ] [#44](https://github.com/scarver2/abbu/issues/44): history across snapshot directories
 - [ ] [#45](https://github.com/scarver2/abbu/issues/45): optional MCP/agent adapter over read-only interfaces
-- [ ] [#46](https://github.com/scarver2/abbu/issues/46): evidence-backed new-ABBU writer research
+- [x] [#46](https://github.com/scarver2/abbu/issues/46): [no private-schema writer with current evidence](WRITER_DECISION.md)
 - [ ] [#47](https://github.com/scarver2/abbu/issues/47): public API stability checklist
 - [ ] Thumbnail/full-size image selection after reproducible format evidence
 - [ ] Region filtering and an explicit CLI filter grammar
