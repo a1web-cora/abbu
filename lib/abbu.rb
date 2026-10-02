@@ -18,6 +18,7 @@ require_relative 'abbu/exporters/vcard_exporter'
 require_relative 'abbu/image_extractor'
 require_relative 'abbu/utils/contact_identity'
 require_relative 'abbu/utils/deduplicator'
+require_relative 'abbu/utils/fuzzy_matcher'
 require_relative 'abbu/utils/label_normalizer'
 
 module Abbu
