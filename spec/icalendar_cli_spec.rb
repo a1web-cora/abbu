@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'json'
 require 'open3'
 require 'tmpdir'
 
@@ -54,6 +55,19 @@ RSpec.describe 'iCalendar CLI' do # rubocop:disable RSpec/DescribeClass
         expect(stdout).to eq('')
         expect(stderr).to include('abbu:')
         expect(status.exitstatus).to eq(2)
+      end
+    end
+  end
+
+  it 'rejects calendar metadata in machine modes instead of ignoring it' do
+    %w[--json --matches --diagnostics].each do |mode|
+      [['--calendar-year', '2026'], ['--calendar-stamp', '2026-10-01T00:00:00Z'],
+       ['--calendar-id', 'fixture@example.test'], args].each do |metadata|
+        stdout, stderr, status = Open3.capture3(bin, '/missing.abbu', mode, *metadata)
+        expect(status.exitstatus).to eq(2)
+        expect(JSON.parse(stdout)).to include('error' => include('code' => 'invalid_input'))
+        expect(stdout).to include('Calendar options require')
+        expect(stderr).to be_empty
       end
     end
   end

@@ -10,6 +10,8 @@ require 'optparse'
 require 'time'
 require 'abbu'
 
+machine_requested = ARGV.include?('--json') || ARGV.include?('--matches') || ARGV.include?('--diagnostics')
+
 options = {
   format: nil,
   output: nil,
@@ -87,8 +89,16 @@ parser.on('--phone NUMBER', 'Find contacts by exact normalized phone number') do
   options[:phone] = number
 end
 
-parser.on('--json', 'Emit search results as JSON (optional for --sources or --groups)') do
+parser.on('--json', 'Emit a single JSON document for the selected operation (default: contacts)') do
   options[:json] = true
+end
+
+parser.on('--matches', 'Emit provenance-aware identity suggestions as JSON; never merges') do
+  options[:matches] = true
+end
+
+parser.on('--diagnostics', 'Parse contacts and emit parser diagnostics as JSON') do
+  options[:diagnostics] = true
 end
 
 timestamp_bounds = %w[since before]
@@ -103,12 +113,12 @@ timestamp_bounds = %w[since before]
 end
 
 parser.on('-v', '--version', 'Print version') do
-  puts "abbu #{Abbu::VERSION}"
+  puts(machine_requested ? JSON.generate(version: Abbu::VERSION) : "abbu #{Abbu::VERSION}")
   exit
 end
 
 parser.on('-h', '--help', 'Print this help') do
-  puts parser
+  puts(machine_requested ? JSON.generate(help: parser.to_s) : parser)
   exit
 end
 
@@ -120,7 +130,16 @@ parser.on('--live-path PATH', 'Read the specified live AddressBook directory') d
   options[:live_path] = path
 end
 
-parser.parse!
+begin
+  parser.parse!
+rescue OptionParser::ParseError => e
+  raise unless machine_requested
+
+  puts JSON.generate(error: { code: 'invalid_option', message: e.message })
+  exit 2
+end
+
+exit Abbu::MachineCommand.new(options, ARGV).run if machine_requested
 
 live_mode = options[:live] || !options[:live_path].nil?
 live_path = options[:live_path]
