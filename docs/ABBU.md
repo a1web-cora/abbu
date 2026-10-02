@@ -420,6 +420,9 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [History evidence boundary](HISTORY_EVIDENCE.md): record timestamps, snapshot
+  differences and documented framework change events are not interchangeable.
+
 - Embedded vCard PHOTO follows [RFC 2426 §3.1.4](https://www.rfc-editor.org/rfc/rfc2426#section-3.1.4)
   binary/base64 serialization with existing CRLF folding. Synthetic signature
   regressions prove byte preservation, not image decodability or Apple import
