@@ -301,6 +301,18 @@ merged = matches.first.merge(policy: ->(left, right, evidence:) {
 
 ## CLI
 
+### Snapshot History
+
+```ruby
+Abbu::SnapshotHistory.new(['01.abbu', '02.abbu'], retention: 2).each do |transition|
+  pp transition # current observations, absences and ambiguous continuity
+end
+```
+
+`abbu snapshots-directory --history` streams one JSON object per snapshot in
+lexical directory order. See [history semantics and bounds](docs/SNAPSHOT_HISTORY.md).
+Timeline IDs describe this analysis only, never universal contact identities.
+
 ```bash
 # Export to CSV
 abbu Contacts.abbu -f csv -o contacts.csv
