@@ -19,11 +19,11 @@ module Abbu
         puts JSON.pretty_generate(payload)
       end
 
-      private
-
       def payload
         @contacts.map { |c| contact_hash(c) }
       end
+
+      private
 
       def contact_hash(contact) # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
         {

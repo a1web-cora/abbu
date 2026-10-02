@@ -28,12 +28,16 @@ RSpec.describe 'timestamp query CLI' do # rubocop:disable RSpec/DescribeClass
     expect(status.exitstatus).to eq(1)
   end
 
-  it 'rejects invalid timestamps and conflicting output modes without stdout' do
+  it 'rejects invalid timestamps and conflicting modes with mode-appropriate errors' do
     [['--modified-since', 'invalid', '--json'],
      ['--created-since', '2000-01-01T00:00:00Z', '--stats']].each do |args|
       stdout, stderr, status = Open3.capture3(bin, fixture, *args)
-      expect(stdout).to be_empty
-      expect(stderr).to include('abbu:')
+      if args.include?('--json')
+        expect(JSON.parse(stdout)).to include('error' => include('code' => 'invalid_input'))
+      else
+        expect(stdout).to be_empty
+        expect(stderr).to include('abbu:')
+      end
       expect(status.exitstatus).to eq(2)
     end
   end

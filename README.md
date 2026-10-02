@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.8.0 strengthens vCard serialization alongside source-scoped groups, timestamp
+Development version 0.11.0 adds a first-class machine JSON contract alongside source-scoped groups, timestamp
 queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
@@ -314,6 +314,9 @@ It preserves parser evidence and existing exact deduplication behavior. See
 resource bounds and ambiguity limits. Similarity is not identity.
 
 ## CLI
+
+For shell and agent integrations, see the [machine JSON contract](docs/MACHINE_JSON.md),
+including structured diagnostics, identity suggestions, exit codes, and privacy.
 
 ```bash
 # Export to CSV
