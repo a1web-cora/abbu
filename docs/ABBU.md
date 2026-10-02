@@ -420,6 +420,9 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [History evidence boundary](HISTORY_EVIDENCE.md): record timestamps, snapshot
+  differences and documented framework change events are not interchangeable.
+
 - [My Card evidence boundary](MY_CARD_EVIDENCE.md): a public framework query is
   not an archive schema mapping; no designation is inferred from contact values.
 
