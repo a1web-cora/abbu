@@ -420,6 +420,9 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [Writer decision](WRITER_DECISION.md): current evidence does not justify
+  constructing Apple-private archives. Read compatibility is not import proof;
+  future proposals require isolated, version-attributed import evidence.
 - Embedded vCard PHOTO follows [RFC 2426 §3.1.4](https://www.rfc-editor.org/rfc/rfc2426#section-3.1.4)
   binary/base64 serialization with existing CRLF folding. Synthetic signature
   regressions prove byte preservation, not image decodability or Apple import
