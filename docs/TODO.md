@@ -154,7 +154,7 @@ Version assignments below 1.0 are intentionally deferred until scopes are accept
 - [ ] [#43](https://github.com/scarver2/abbu/issues/43): identity-aware snapshot diffs
 - [ ] [#44](https://github.com/scarver2/abbu/issues/44): history across snapshot directories
 - [ ] [#45](https://github.com/scarver2/abbu/issues/45): optional MCP/agent adapter over read-only interfaces
-- [ ] [#46](https://github.com/scarver2/abbu/issues/46): evidence-backed new-ABBU writer research
+- [x] [#46](https://github.com/scarver2/abbu/issues/46): [no private-schema writer with current evidence](WRITER_DECISION.md)
 - [ ] [#47](https://github.com/scarver2/abbu/issues/47): public API stability checklist
 - [ ] Thumbnail/full-size image selection after reproducible format evidence
 - [ ] Region filtering and an explicit CLI filter grammar
