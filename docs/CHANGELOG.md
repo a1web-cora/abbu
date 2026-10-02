@@ -20,7 +20,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Machine JSON rejects calendar metadata before opening inputs, rather than
   silently ignoring export-only options.
 
-### Added — planned 0.11.0
+## [0.11.0] - 2026-10-02
+
+### Added — machine JSON
 
 - First-class `--json` for contacts, statistics, schema, sources/groups, duplicate
   groups, identity matches, and image extraction. New `--diagnostics` and
@@ -28,7 +30,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   machine serializers reuse the unchanged contact JSON representation.
 - Documented machine stdout, stderr, exit codes, privacy, and SemVer contract.
 
-### Changed — planned 0.11.0
+### Changed — machine JSON
 
 - JSON-mode errors now emit a single `{ "error": { "code", "message" } }`
   document instead of empty stdout or a Ruby exception trace. Invalid inputs
@@ -38,13 +40,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   or writing, rather than silently prioritizing one operation. Human modes and
   successful existing contact/source/group/schema JSON shapes are unchanged.
 
-### Added — planned 0.10.0
+### Added — fuzzy matching
 
 - Opt-in bounded, explainable fuzzy name suggestions using Unicode-preserving
   Levenshtein distance. Exact identity evidence retains precedence; fuzzy-only
   suggestions remain ambiguous and never merge contacts automatically.
 
-### Added — planned 0.9.0
+### Added — embedded photos
 
 - Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and
   `--photo-mode embedded`. URI mode remains the default. Missing, unreadable,
