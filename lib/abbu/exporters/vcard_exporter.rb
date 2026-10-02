@@ -20,6 +20,11 @@ module Abbu
         print generate
       end
 
+      def write_to(io)
+        @contacts.each { |contact| io.write(vcard_for(contact)) }
+        nil
+      end
+
       private
 
       def generate

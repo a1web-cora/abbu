@@ -42,6 +42,17 @@ module Abbu
       raise permission_error(e.message)
     end
 
+    def each_contact(&block)
+      return enum_for(:each_contact) unless block
+
+      Parsers::SqliteParser.new(
+        database_paths, root_path: @path, readonly: true, diagnostics: diagnostics, strict: @strict
+      ).each_contact(&block)
+      self
+    rescue SQLite3::CantOpenException, Errno::EACCES => e
+      raise permission_error(e.message)
+    end
+
     def database_paths
       @database_paths ||= discover_database_paths.tap do |paths|
         raise NotFoundError, missing_database_message if paths.empty?

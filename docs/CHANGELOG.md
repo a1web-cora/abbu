@@ -11,6 +11,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.10.0
+
+- `Archive#each_contact` and `LiveStore#each_contact` enumerate contacts without
+  populating the cached array; SQLite readers close on block termination/errors.
+- Incremental CSV/vCard `write_to(io)`, JSONL export, and opt-in CLI `--stream`.
+  Late failures can leave partial output. Existing buffered exports are unchanged.
+- Reproducible synthetic 10,000-contact benchmark and documented memory bounds.
+
 ### Added — planned 0.9.0
 
 - Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and

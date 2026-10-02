@@ -387,6 +387,21 @@ See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature che
 The [pre-1.0 API stability gate](docs/API_STABILITY.md) inventories supported
 surfaces, evidence gaps, compatibility policy, and required release-readiness checks.
 
+### Streaming Large Archives
+
+Use `archive.each_contact` (also available on live stores) for uncached iteration.
+CSV and vCard exporters accept this enumerable through `write_to(io)`; the new
+`JsonlExporter` writes one existing JSON contact representation per line.
+
+```ruby
+Abbu::Exporters::JsonlExporter.new(Abbu.open('Contacts.abbu').each_contact).write_to($stdout)
+```
+
+CLI: `abbu Contacts.abbu --stream --format csv --output contacts.csv`.
+CSV, JSONL and vCard support streaming; JSONL always streams. Existing buffered
+CSV/JSON/vCard defaults remain unchanged. Streaming can leave partial output on
+late errors, including embedded-photo failures. See [streaming limits and benchmark](docs/STREAMING.md).
+
 ## Ruby Compatibility
 
 `abbu` supports Ruby 3.3 and newer. CI exercises Ruby 3.3, 3.4, and 4.0;
