@@ -11,6 +11,15 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.12.0
+
+- Deterministic iCalendar birthday/anniversary reminders through a Ruby exporter
+  and `--format icalendar`. Explicit recurrence year, revision time, and calendar
+  namespace avoid fabricated metadata. Unknown years remain unknown; invalid and
+  alternate-calendar dates are diagnosed and omitted. Existing exports are unchanged.
+- Machine JSON rejects calendar metadata before opening inputs, rather than
+  silently ignoring export-only options.
+
 ## [0.11.0] - 2026-10-02
 
 ### Added — machine JSON

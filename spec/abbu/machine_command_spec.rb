@@ -31,6 +31,15 @@ RSpec.describe Abbu::MachineCommand do
     expect(status).to eq(0)
   end
 
+  %i[calendar_year calendar_stamp calendar_id].each do |key|
+    it "rejects #{key} before opening the input" do
+      payload, status = run_command({ key => 'calendar metadata' }, ['/missing.abbu'])
+      expect(status).to eq(2)
+      expect(payload.fetch('error').fetch('message')).to eq('Calendar options require a standalone iCalendar export')
+      expect(stderr.string).to be_empty
+    end
+  end
+
   it 'returns diagnostics without contact values or duplicated stderr' do
     payload, status = run_command(diagnostics: true)
     expect(payload).to all(include('category', 'message', 'parser', 'source', 'context'))

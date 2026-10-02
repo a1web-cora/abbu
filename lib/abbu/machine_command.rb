@@ -81,6 +81,10 @@ module Abbu
     end
 
     def validate_format!(count)
+      if @options.values_at(:calendar_year, :calendar_stamp, :calendar_id).any?
+        raise ArgumentError, 'Calendar options require a standalone iCalendar export'
+      end
+
       incompatible_format = @options[:format] && (@options[:format] != 'json' || count.positive?)
       return unless @options[:output] || @options[:photo_mode] || incompatible_format
 
