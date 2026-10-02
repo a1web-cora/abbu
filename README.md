@@ -370,6 +370,10 @@ synthetic shapes from unverified macOS/Contacts releases.
 
 ## Roadmap
 
+ABBU remains read-only for source archives and live stores. The
+[writer research decision](docs/WRITER_DECISION.md) explains why generating
+Apple-private bundles is not supported and what evidence could change that.
+
 ### Portable vCard Photos
 
 Use `abbu Contacts.abbu --format vcard --photo-mode embedded --output contacts.vcf`
