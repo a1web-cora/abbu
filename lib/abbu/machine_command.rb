@@ -18,6 +18,7 @@ module Abbu
     end
 
     def run
+      @input = nil
       validate!
       @input = open_input
       print_result

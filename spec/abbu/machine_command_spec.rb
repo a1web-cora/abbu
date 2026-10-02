@@ -39,6 +39,21 @@ RSpec.describe Abbu::MachineCommand do
     expect(status).to eq(0)
   end
 
+  it 'does not retain input diagnostics when a reused command fails validation' do
+    options = { stats: true }
+    command = described_class.new(options, [fixture], stdout: stdout, stderr: stderr)
+    expect(command.run).to eq(0)
+    expect(stderr.string).not_to be_empty
+    stdout.truncate(0)
+    stdout.rewind
+    stderr.truncate(0)
+    stderr.rewind
+    options[:groups] = true
+    expect(command.run).to eq(2)
+    expect(JSON.parse(stdout.string)).to include('error' => include('code' => 'invalid_input'))
+    expect(stderr.string).to be_empty
+  end
+
   it 'preserves source and group metadata schemas' do
     payload, status = run_command(sources: true)
     expect(payload).to all(include('relative_path', 'files', 'provider' => nil))
