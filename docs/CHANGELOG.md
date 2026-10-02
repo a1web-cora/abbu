@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.9.0
+
+- Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and
+  `--photo-mode embedded`. URI mode remains the default. Missing, unreadable,
+  or unsupported image evidence fails before output; HEIC embedding is deferred.
+
 ## [0.8.1] - 2026-10-01
 
 ### Fixed

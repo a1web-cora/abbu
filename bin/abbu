@@ -35,6 +35,10 @@ parser.on('-o', '--output FILE', 'Output file (default: stdout)') do |o|
   options[:output] = o
 end
 
+parser.on('--photo-mode MODE', %w[uri embedded], 'vCard photos: uri (default) or embedded') do |mode|
+  options[:photo_mode] = mode.to_sym
+end
+
 parser.on('--extract-images DIR', 'Copy contact images to DIR') do |dir|
   options[:extract_images] = dir
 end
@@ -142,6 +146,11 @@ at_exit do
 end
 
 begin
+  if options[:photo_mode] && (options[:format] != 'vcard' ||
+     options.values_at(:stats, :dedupe, :search, :email, :phone, :schema, :extract_images, :date_filters).any?)
+    raise ArgumentError, '--photo-mode requires a standalone --format vcard export'
+  end
+
   listing = %i[sources groups].select { |key| options[key] }
   if listing.any? && (listing.length > 1 || options.values_at(:extract_images, :schema, :search, :email, :phone,
                                                               :date_filters, :stats, :dedupe, :format, :output).any?)
@@ -255,7 +264,7 @@ begin
     exporter = Abbu::Exporters::JsonExporter.new(archive.contacts)
     options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
   when 'vcard'
-    exporter = Abbu::Exporters::VcardExporter.new(archive.contacts)
+    exporter = Abbu::Exporters::VcardExporter.new(archive.contacts, photo_mode: options.fetch(:photo_mode, :uri))
     options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
   else
     puts parser
