@@ -141,7 +141,7 @@ Version assignments below 1.0 are intentionally deferred until scopes are accept
 - [ ] [#30](https://github.com/scarver2/abbu/issues/30): embedded vCard photos (currently file URI references)
 - [ ] [#31](https://github.com/scarver2/abbu/issues/31): first-class read-only source objects
 - [ ] [#32](https://github.com/scarver2/abbu/issues/32): first-class groups and membership queries
-- [ ] [#33](https://github.com/scarver2/abbu/issues/33): evidence-backed My Card identification
+- [x] [#33](https://github.com/scarver2/abbu/issues/33): [My Card research — private mapping remains unsupported](MY_CARD_EVIDENCE.md)
 - [ ] [#34](https://github.com/scarver2/abbu/issues/34): modified-since and date-range queries
 - [ ] [#35](https://github.com/scarver2/abbu/issues/35): evidence-backed save/edit history
 - [ ] [#36](https://github.com/scarver2/abbu/issues/36): alternate-calendar and lunar metadata research
