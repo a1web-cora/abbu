@@ -420,6 +420,11 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [Portable normalized SQLite](PORTABLE_SQLITE.md) writes an ABBU-owned derived
+  schema from public contacts, preserving source and raw multivalue evidence.
+  It does not copy private tables, infer Apple IDs, convert calendar semantics,
+  or claim Apple import compatibility. XML and SQLite source immutability is tested.
+
 - Embedded vCard PHOTO follows [RFC 2426 §3.1.4](https://www.rfc-editor.org/rfc/rfc2426#section-3.1.4)
   binary/base64 serialization with existing CRLF folding. Synthetic signature
   regressions prove byte preservation, not image decodability or Apple import

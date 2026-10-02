@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.10.0
+
+- Portable normalized SQLite exporter and `--format sqlite --output FILE`, with
+  explicit schema version, relational contact/source/group/multivalue/date data,
+  raw-label evidence, transactional staging, and atomic no-overwrite publication.
+  Existing exports and source stores remain unchanged; this is not an Apple writer.
+
 ### Added — planned 0.9.0
 
 - Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and

@@ -3,8 +3,8 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.8.0 strengthens vCard serialization alongside source-scoped groups, timestamp
-queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
+Development version 0.10.0 adds portable normalized SQLite export alongside source-scoped
+groups, timestamp queries, diagnostics, identity evidence, images, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
 ## Features
@@ -271,6 +271,25 @@ raise Ruby encoding errors. Existing files are overwritten on a successful
 See [vCard evidence and compatibility limits](docs/ABBU.md#vcard-serialization-evidence)
 for the standards basis and Apple-specific audit. Synthetic round-trip tests
 are not proof of import fidelity in every Apple Contacts release.
+
+### Portable SQLite
+
+```ruby
+Abbu::Exporters::SqliteExporter.new(archive.contacts).to_file('contacts.sqlite')
+```
+
+```bash
+abbu Contacts.abbu --format sqlite --output contacts.sqlite
+```
+
+This creates a separate, queryable ABBU-owned relational database with schema
+version metadata, source provenance, timestamps, multivalues, groups, and raw
+labels. It does not copy Apple tables or create an Apple-importable backup.
+Existing destinations (including symlinks) are never replaced. Output is a
+sensitive **unencrypted** artifact with owner-only file permissions, not a secure
+storage service; place it on appropriately encrypted storage and limit retention.
+See the [portable SQLite contract](docs/PORTABLE_SQLITE.md) for the schema,
+round-trip evaluation, deterministic-order boundary, and publication safeguards.
 
 ### Duplicate Detection
 

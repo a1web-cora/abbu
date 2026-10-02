@@ -1,0 +1,10 @@
+# sig/sqlite_exporter.rbs
+module Abbu
+  module Exporters
+    class SqliteExporter
+      SCHEMA_VERSION: Integer
+      def initialize: (Enumerable[Contact] contacts) -> void
+      def to_file: (String | Pathname path) -> String
+    end
+  end
+end
