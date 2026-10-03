@@ -2,5 +2,5 @@
 # frozen_string_literal: true
 
 module Abbu
-  VERSION = '0.10.0'
+  VERSION = '0.16.0'
 end

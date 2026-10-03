@@ -27,6 +27,9 @@ CSV and vCard exporters expose `write_to(io)` for any contact Enumerable.
 existing JSON contact fields. Caller-owned IO remains open. CLI `--stream`
 accepts standalone CSV, JSONL, or vCard export, including explicit live paths;
 JSONL always streams. Aggregate/search modes are not streaming modes.
+`--stream` also rejects machine JSON modes, snapshot diff, merge options,
+SQLite/iCalendar exports and calendar metadata before reading inputs or opening
+output files. Machine-mode conflicts use the existing structured JSON error contract.
 
 Writes are incremental and **not atomic**: a malformed later record, consumer IO
 failure, or unsupported embedded photo can leave a partial file/stdout stream.

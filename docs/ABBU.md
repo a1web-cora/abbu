@@ -420,6 +420,28 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [Portable normalized SQLite](PORTABLE_SQLITE.md) writes an ABBU-owned derived
+  schema from public contacts, preserving source and raw multivalue evidence.
+  It does not copy private tables, infer Apple IDs, convert calendar semantics,
+  or claim Apple import compatibility. XML and SQLite source immutability is tested.
+
+- [iCalendar export](ICALENDAR.md) consumes existing normalized birthday and
+  anniversary fields. Synthetic SQLite and plist regressions preserve raw labels
+  and source bytes; they introduce no private-calendar mapping or Apple import
+  certification. Explicit lunar/alternate values are diagnosed and omitted.
+
+- [Alternate-calendar evidence boundary](ALTERNATE_CALENDAR_EVIDENCE.md): legacy
+  lunar labels/components do not establish a calendar, leap month or year cycle.
+
+- [History evidence boundary](HISTORY_EVIDENCE.md): record timestamps, snapshot
+  differences and documented framework change events are not interchangeable.
+
+- [My Card evidence boundary](MY_CARD_EVIDENCE.md): a public framework query is
+  not an archive schema mapping; no designation is inferred from contact values.
+
+- [Writer decision](WRITER_DECISION.md): current evidence does not justify
+  constructing Apple-private archives. Read compatibility is not import proof;
+  future proposals require isolated, version-attributed import evidence.
 - Embedded vCard PHOTO follows [RFC 2426 §3.1.4](https://www.rfc-editor.org/rfc/rfc2426#section-3.1.4)
   binary/base64 serialization with existing CRLF folding. Synthetic signature
   regressions prove byte preservation, not image decodability or Apple import

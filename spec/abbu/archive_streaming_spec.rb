@@ -95,4 +95,32 @@ RSpec.describe Abbu::Archive do
     expect(status.exitstatus).to eq(2)
     expect(stderr).to include('--stream requires')
   end
+
+  it 'rejects machine streaming with structured errors before input access' do
+    executable = File.expand_path('../../bin/abbu', __dir__)
+    %w[--json --matches --diagnostics].each do |mode|
+      stdout, stderr, status = Open3.capture3(RbConfig.ruby, executable, '/missing.abbu', '--stream', mode)
+      expect(JSON.parse(stdout)).to include('error' => include('code' => 'invalid_input'))
+      expect(stderr).to be_empty
+      expect(status.exitstatus).to eq(2)
+    end
+  end
+
+  it 'rejects newer buffered operations before reading or opening stream output' do
+    executable = File.expand_path('../../bin/abbu', __dir__)
+    conflicts = [%w[--diff /also-missing.abbu], %w[--merge-preview], %w[--merge-policy prefer_newer],
+                 %w[--prefer-source Example], %w[--calendar-year 2026],
+                 %w[--calendar-stamp 2026-10-03T00:00:00Z], %w[--calendar-id example],
+                 %w[--format sqlite], %w[--format icalendar]]
+    Dir.mktmpdir do |directory|
+      flags = ['--stream', '--format', 'csv', '--output', File.join(directory, 'never.csv')]
+      conflicts.each do |options|
+        stdout, stderr, status = Open3.capture3(RbConfig.ruby, executable, '/missing.abbu', *flags, *options)
+        expect(stdout).to be_empty
+        expect(stderr).to include('--stream requires')
+        expect(status.exitstatus).to eq(2)
+        expect(Dir.children(directory)).to be_empty
+      end
+    end
+  end
 end

@@ -1,0 +1,8 @@
+# sig/snapshot_diff.rbs
+module Abbu
+  class SnapshotDiff
+    def initialize: (Archive | LiveStore | Enumerable[Contact] before, Archive | LiveStore | Enumerable[Contact] after, ?max_pairs: Integer) -> void
+    attr_reader result: Hash[Symbol, untyped]
+    def to_h: () -> Hash[Symbol, untyped]
+  end
+end
