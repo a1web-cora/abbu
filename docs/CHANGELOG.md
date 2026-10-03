@@ -11,7 +11,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added — planned 0.18.0
+## [0.18.0] - 2026-10-03
+
+This release includes the previously unreleased 0.12.0–0.17.0 development milestones.
+
+### Added — optional MCP adapter
 
 - Optional `abbu-mcp` stdio executable and `require 'abbu/mcp'` adapter, using
   the separately installed official MCP Ruby SDK. Core `abbu` has no MCP runtime
@@ -21,13 +25,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   No arbitrary path tool argument, file export, Contacts mutation, default
   contact logging, or unevidenced My Card detection.
 
-### Added — planned 0.17.0
+### Added — snapshot history
 
 - Streaming snapshot-history transitions with bounded absent-contact retention,
   per-analysis timelines, explicit ambiguity breaks and observed reappearances.
   Ruby ordered-list API and directory JSON Lines CLI do not infer edit events.
 
-### Added — planned 0.16.0
+### Added — streaming
 
 - `Archive#each_contact` and `LiveStore#each_contact` enumerate contacts without
   populating the cached array; SQLite readers close on block termination/errors.
@@ -35,14 +39,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   Late failures can leave partial output. Existing buffered exports are unchanged.
 - Reproducible synthetic 10,000-contact benchmark and documented memory bounds.
 
-### Added — planned 0.15.0
+### Added — portable SQLite
 
 - Portable normalized SQLite exporter and `--format sqlite --output FILE`, with
   explicit schema version, relational contact/source/group/multivalue/date data,
   raw-label and primitive-value evidence, transactional staging, and atomic no-overwrite publication.
   Existing exports and source stores remain unchanged; this is not an Apple writer.
 
-### Added — planned 0.14.0
+### Added — merge planning
 
 - Immutable merge-plan previews with explicit union, timestamp, source and
   completeness policies. Conflicts and original provenance remain reviewable;
@@ -51,14 +55,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Reject merge options in machine JSON, snapshot-diff, and calendar combinations
   before input reads; machine-mode conflicts retain structured JSON errors.
 
-### Added — planned 0.13.0
+### Added — snapshot comparison
 
 - Identity-evidence snapshot comparison through `SnapshotDiff` and `--diff`,
   with raw field changes, provenance, explicit ambiguity and stable JSON output.
 - Snapshot JSON uses the machine dispatcher and structured error contract;
   conflicting machine operations and calendar metadata fail before input reads.
 
-### Added — planned 0.12.0
+### Added — iCalendar
 
 - Deterministic iCalendar birthday/anniversary reminders through a Ruby exporter
   and `--format icalendar`. Explicit recurrence year, revision time, and calendar
