@@ -1,0 +1,13 @@
+# sig/icalendar_exporter.rbs
+module Abbu
+  module Exporters
+    class IcalendarExporter
+      type diagnostic = { category: Symbol, contact_index: Integer, field: Symbol }
+      attr_reader diagnostics: Array[diagnostic]
+      def initialize: (Enumerable[Contact] contacts, year: Integer, generated_at: Time, calendar_id: String) -> void
+      def to_ical: () -> String
+      def to_file: (String | Pathname path) -> Integer
+      def to_stdout: () -> nil
+    end
+  end
+end

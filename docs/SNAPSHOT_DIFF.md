@@ -9,6 +9,11 @@ The first CLI input may use explicit read-only live input selection; the second
 is an archive. `--strict` applies to both. The command exits 0 for a completed
 comparison even when differences or ambiguities exist, and 2 for argument/parse
 errors (live-store errors retain exit 1). Diagnostics remain on stderr.
+JSON mode follows the [machine error contract](MACHINE_JSON.md): one structured
+error document, with filesystem/access failures exiting 1. Only input selection,
+`--strict`, and optional `--json` may accompany `--diff`; other operations,
+export formats, output paths, and calendar metadata are rejected before reading
+either input. Comparison-input diagnostics are summarized on stderr.
 
 ## Identity Boundary
 

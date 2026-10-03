@@ -1,0 +1,27 @@
+# sig/streaming.rbs
+module Abbu
+  class Archive
+    def each_contact: () -> Enumerator[Contact, untyped]
+                    | () { (Contact) -> void } -> self
+  end
+  class LiveStore
+    def each_contact: () -> Enumerator[Contact, untyped]
+                    | () { (Contact) -> void } -> self
+  end
+  module Exporters
+    class JsonExporter
+    end
+    class CsvExporter
+      def write_to: (IO | StringIO io) -> nil
+    end
+    class VcardExporter
+      def write_to: (IO | StringIO io) -> nil
+    end
+    class JsonlExporter < JsonExporter
+      def initialize: (Enumerable[Contact] contacts) -> void
+      def write_to: (IO | StringIO io) -> nil
+      def to_file: (String | Pathname path) -> nil
+      def to_stdout: () -> nil
+    end
+  end
+end

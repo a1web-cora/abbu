@@ -97,10 +97,33 @@ RSpec.describe Abbu::SnapshotHistory do
       expect(stderr).to be_empty
       expect(status.exitstatus).to eq(0)
       stdout, stderr, status = Open3.capture3(executable, directory, '--history', '--json')
-      expect(stdout).to be_empty
-      expect(stderr).to include('--history supports only')
+      expect(JSON.parse(stdout).dig('error', 'message')).to include('--history requires standalone')
+      expect(stderr).to be_empty
       expect(status.exitstatus).to eq(2)
     end
     expect { described_class.from_directory('/missing/synthetic') }.to raise_error(ArgumentError)
+  end
+
+  it 'rejects incompatible modes before opening history inputs or creating output' do
+    executable = File.expand_path('../../bin/abbu', __dir__)
+    %w[--json --matches --diagnostics].each do |mode|
+      stdout, stderr, status = Open3.capture3(executable, '/missing/synthetic', '--history', mode)
+      expect(JSON.parse(stdout).dig('error', 'code')).to eq('invalid_input')
+      expect(JSON.parse(stdout).dig('error', 'message')).to include('--history requires standalone')
+      expect(stderr).to be_empty
+      expect(status.exitstatus).to eq(2)
+    end
+    Dir.mktmpdir do |directory|
+      output = File.join(directory, 'output')
+      [%w[--stream --format csv], %w[--format sqlite], %w[--merge-preview],
+       %w[--calendar-year 2026], %w[--diff other.abbu]].each do |arguments|
+        stdout, stderr, status = Open3.capture3(executable, '/missing/synthetic', '--history',
+                                                *arguments, '--output', output)
+        expect(stdout).to be_empty
+        expect(stderr).to include('--history supports only')
+        expect(status.exitstatus).to eq(2)
+        expect(File.exist?(output)).to be(false)
+      end
+    end
   end
 end

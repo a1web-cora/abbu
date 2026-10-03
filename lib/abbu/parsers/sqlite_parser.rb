@@ -49,7 +49,32 @@ module Abbu
         end
       end
 
+      def each_contact(&block)
+        return enum_for(:each_contact) unless block
+
+        @db_paths.each do |path|
+          stream_db(path, &block)
+        end
+      end
+
       private
+
+      def stream_db(path)
+        @active_db_path = path
+        db = SQLite3::Database.new(path.to_s, readonly: true)
+        db.results_as_hash = true
+        statement = stream_statement(db)
+        statement.execute.each { |row| yield build_contact(db, row, path) }
+      ensure
+        statement&.close
+        db&.close
+      end
+
+      def stream_statement(db)
+        db.prepare('SELECT * FROM ZABCDRECORD WHERE Z_ENT != 15')
+      rescue SQLite3::Exception
+        fail_required_schema(@active_db_path)
+      end
 
       def parse_db(db_path)
         @active_db_path = db_path

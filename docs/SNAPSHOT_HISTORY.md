@@ -58,6 +58,12 @@ handling. Diagnostics are included in each transition, not hidden or printed as
 non-JSON stdout. A later failure may leave earlier valid JSON lines: consumers
 must check exit status and must not label a partial stream complete.
 
+Combining history with machine selectors (`--json`, `--matches`, or
+`--diagnostics`) returns the machine contract's structured `invalid_input` error
+before opening inputs. History already emits JSON Lines; these selectors do not
+convert it to a single JSON document. Export and other operation options are
+also rejected before opening snapshots or creating output files.
+
 ## Bounded Strategy And Privacy
 
 Default `limits: { snapshots: 100, contacts: 10_000, pairs: 100_000 }` bounds path
