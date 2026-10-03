@@ -11,6 +11,36 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.17.0
+
+- Streaming snapshot-history transitions with bounded absent-contact retention,
+  per-analysis timelines, explicit ambiguity breaks and observed reappearances.
+  Ruby ordered-list API and directory JSON Lines CLI do not infer edit events.
+
+### Added — planned 0.16.0
+
+- `Archive#each_contact` and `LiveStore#each_contact` enumerate contacts without
+  populating the cached array; SQLite readers close on block termination/errors.
+- Incremental CSV/vCard `write_to(io)`, JSONL export, and opt-in CLI `--stream`.
+  Late failures can leave partial output. Existing buffered exports are unchanged.
+- Reproducible synthetic 10,000-contact benchmark and documented memory bounds.
+
+### Added — planned 0.15.0
+
+- Portable normalized SQLite exporter and `--format sqlite --output FILE`, with
+  explicit schema version, relational contact/source/group/multivalue/date data,
+  raw-label and primitive-value evidence, transactional staging, and atomic no-overwrite publication.
+  Existing exports and source stores remain unchanged; this is not an Apple writer.
+
+### Added — planned 0.14.0
+
+- Immutable merge-plan previews with explicit union, timestamp, source and
+  completeness policies. Conflicts and original provenance remain reviewable;
+  materialization requires an explicit policy and never writes source stores.
+  `--merge-preview` provides a JSON-only preview, never an apply operation.
+- Reject merge options in machine JSON, snapshot-diff, and calendar combinations
+  before input reads; machine-mode conflicts retain structured JSON errors.
+
 ### Added — planned 0.13.0
 
 - Identity-evidence snapshot comparison through `SnapshotDiff` and `--diff`,

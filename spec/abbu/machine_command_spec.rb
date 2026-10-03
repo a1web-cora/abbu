@@ -31,6 +31,22 @@ RSpec.describe Abbu::MachineCommand do
     expect(status).to eq(0)
   end
 
+  it 'rejects streaming before reading machine input' do
+    payload, status = run_command({ stream: true }, ['/missing.abbu'])
+    expect(payload).to include('error' => include('code' => 'invalid_input'))
+    expect(status).to eq(2)
+    expect(stderr.string).to be_empty
+  end
+
+  %i[merge_preview merge_policy prefer_source].each do |key|
+    it "rejects #{key} in the machine dispatcher before input access" do
+      payload, status = run_command({ key => true }, ['/missing.abbu'])
+      expect(payload).to include('error' => include('code' => 'invalid_input'))
+      expect(status).to eq(2)
+      expect(stderr.string).to be_empty
+    end
+  end
+
   it 'compares snapshots through the JSON dispatcher and reports both inputs diagnostics' do
     payload, status = run_command(diff: fixture)
     expect(payload).to include('schema_version' => 1, 'changed' => [], 'added' => [], 'removed' => [])

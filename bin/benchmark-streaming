@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# bin/benchmark-streaming
+
+source "$(dirname "$0")/_lib.sh"
+bundle_exec ruby benchmarks/streaming.rb "$@"

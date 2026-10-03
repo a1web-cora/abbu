@@ -27,6 +27,20 @@ module Abbu
       @contacts ||= parser.contacts.tap { |cs| attach_images(cs) }
     end
 
+    def each_contact
+      return enum_for(:each_contact) unless block_given?
+
+      resolver = Utils::ImageResolver.new(@path)
+      parser.each_contact do |contact|
+        if contact.image_uri
+          contact.image_path = resolver.resolve(contact.image_uri, source: contact.source)
+          record_missing_image(contact) unless contact.image_path
+        end
+        yield contact
+      end
+      self
+    end
+
     def query
       Query.new(contacts)
     end

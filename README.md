@@ -3,8 +3,8 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.13.0 adds evidence-aware snapshot comparison and retains iCalendar reminders
-alongside machine JSON, source-scoped groups, queries, diagnostics, images, and CSV/JSON/vCard export.
+Development version 0.17.0 adds bounded snapshot-history observations alongside
+portable SQLite, merge previews, snapshot comparison, iCalendar, machine JSON, and queries.
 The public API remains pre-1.0.
 
 ## Features
@@ -272,6 +272,25 @@ See [vCard evidence and compatibility limits](docs/ABBU.md#vcard-serialization-e
 for the standards basis and Apple-specific audit. Synthetic round-trip tests
 are not proof of import fidelity in every Apple Contacts release.
 
+### Portable SQLite
+
+```ruby
+Abbu::Exporters::SqliteExporter.new(archive.contacts).to_file('contacts.sqlite')
+```
+
+```bash
+abbu Contacts.abbu --format sqlite --output contacts.sqlite
+```
+
+This creates a separate, queryable ABBU-owned relational database with schema
+version metadata, source provenance, timestamps, multivalues, groups, and raw
+labels. It does not copy Apple tables or create an Apple-importable backup.
+Existing destinations (including symlinks) are never replaced. Output is a
+sensitive **unencrypted** artifact with owner-only file permissions, not a secure
+storage service; place it on appropriately encrypted storage and limit retention.
+See the [portable SQLite contract](docs/PORTABLE_SQLITE.md) for the schema,
+round-trip evaluation, deterministic-order boundary, and publication safeguards.
+
 ### Birthday And Anniversary Calendars
 
 ```ruby
@@ -339,6 +358,30 @@ It preserves parser evidence and existing exact deduplication behavior. See
 resource bounds and ambiguity limits. Similarity is not identity.
 
 ## CLI
+
+### Snapshot History
+
+```ruby
+Abbu::SnapshotHistory.new(['01.abbu', '02.abbu'], retention: 2).each do |transition|
+  pp transition # current observations, absences and ambiguous continuity
+end
+```
+
+`abbu snapshots-directory --history` streams one JSON object per snapshot in
+lexical directory order. See [history semantics and bounds](docs/SNAPSHOT_HISTORY.md).
+Timeline IDs describe this analysis only, never universal contact identities.
+### Safe Merge Plans
+
+```ruby
+plan = Abbu::MergePlan.new(left, right, policy: :prefer_newer)
+pp plan.to_h # detached inputs, selected fields, alternatives, conflicts and reasons
+merged = plan.materialize # raises without a policy or with unresolved conflicts
+```
+
+`abbu Contacts.abbu --merge-preview` emits exact-evidence candidate plans as JSON
+without applying them. Optional `--merge-policy prefer_source --prefer-source
+Sources/Example/AddressBook-v22.abcddb` previews an explicit preference. See
+[merge-plan boundaries](docs/MERGE_PLANS.md) before materializing derived contacts.
 
 For shell and agent integrations, see the [machine JSON contract](docs/MACHINE_JSON.md),
 including structured diagnostics, identity suggestions, exit codes, and privacy.
@@ -437,6 +480,21 @@ in memory, including base64 expansion. Do not embed untrusted or oversized files
 See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature checklist.
 The [pre-1.0 API stability gate](docs/API_STABILITY.md) inventories supported
 surfaces, evidence gaps, compatibility policy, and required release-readiness checks.
+
+### Streaming Large Archives
+
+Use `archive.each_contact` (also available on live stores) for uncached iteration.
+CSV and vCard exporters accept this enumerable through `write_to(io)`; the new
+`JsonlExporter` writes one existing JSON contact representation per line.
+
+```ruby
+Abbu::Exporters::JsonlExporter.new(Abbu.open('Contacts.abbu').each_contact).write_to($stdout)
+```
+
+CLI: `abbu Contacts.abbu --stream --format csv --output contacts.csv`.
+CSV, JSONL and vCard support streaming; JSONL always streams. Existing buffered
+CSV/JSON/vCard defaults remain unchanged. Streaming can leave partial output on
+late errors, including embedded-photo failures. See [streaming limits and benchmark](docs/STREAMING.md).
 
 ## Ruby Compatibility
 
