@@ -1,0 +1,19 @@
+# sig/mcp.rbs
+module Abbu
+  module Mcp
+    class ReadSession
+      def initialize: (untyped input) -> void
+      def query: (mode: String, value: String, ?offset: Integer, ?limit: Integer) -> Hash[Symbol, untyped]
+      def stats: () -> Hash[Symbol, Integer]
+      def diagnostics: () -> Array[Hash[Symbol, untyped]]
+      def sources: () -> Array[Hash[Symbol, untyped]]
+      def groups: () -> Array[Hash[Symbol, untyped]]
+    end
+
+    class Server
+      attr_reader server: untyped
+      def initialize: (path: String, ?live: bool, ?strict: bool) -> void
+      def open: () -> untyped
+    end
+  end
+end
