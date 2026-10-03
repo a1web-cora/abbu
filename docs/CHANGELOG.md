@@ -11,14 +11,65 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added — planned 0.10.0
+### Added — planned 0.15.0
 
 - Portable normalized SQLite exporter and `--format sqlite --output FILE`, with
   explicit schema version, relational contact/source/group/multivalue/date data,
   raw-label and primitive-value evidence, transactional staging, and atomic no-overwrite publication.
   Existing exports and source stores remain unchanged; this is not an Apple writer.
 
-### Added — planned 0.9.0
+### Added — planned 0.14.0
+
+- Immutable merge-plan previews with explicit union, timestamp, source and
+  completeness policies. Conflicts and original provenance remain reviewable;
+  materialization requires an explicit policy and never writes source stores.
+  `--merge-preview` provides a JSON-only preview, never an apply operation.
+- Reject merge options in machine JSON, snapshot-diff, and calendar combinations
+  before input reads; machine-mode conflicts retain structured JSON errors.
+
+### Added — planned 0.13.0
+
+- Identity-evidence snapshot comparison through `SnapshotDiff` and `--diff`,
+  with raw field changes, provenance, explicit ambiguity and stable JSON output.
+- Snapshot JSON uses the machine dispatcher and structured error contract;
+  conflicting machine operations and calendar metadata fail before input reads.
+
+### Added — planned 0.12.0
+
+- Deterministic iCalendar birthday/anniversary reminders through a Ruby exporter
+  and `--format icalendar`. Explicit recurrence year, revision time, and calendar
+  namespace avoid fabricated metadata. Unknown years remain unknown; invalid and
+  alternate-calendar dates are diagnosed and omitted. Existing exports are unchanged.
+- Machine JSON rejects calendar metadata before opening inputs, rather than
+  silently ignoring export-only options.
+
+## [0.11.0] - 2026-10-02
+
+### Added — machine JSON
+
+- First-class `--json` for contacts, statistics, schema, sources/groups, duplicate
+  groups, identity matches, and image extraction. New `--diagnostics` and
+  `--matches` are JSON-only operations. Public `JsonExporter#payload` and
+  machine serializers reuse the unchanged contact JSON representation.
+- Documented machine stdout, stderr, exit codes, privacy, and SemVer contract.
+
+### Changed — machine JSON
+
+- JSON-mode errors now emit a single `{ "error": { "code", "message" } }`
+  document instead of empty stdout or a Ruby exception trace. Invalid inputs
+  and conflicting options exit 2; unavailable live inputs and filesystem errors
+  exit 1. JSON callers must check exit status before treating stdout as data.
+- Bare `--json` lists contacts. JSON combinations are validated before reading
+  or writing, rather than silently prioritizing one operation. Human modes and
+  successful existing contact/source/group/schema JSON shapes are unchanged.
+
+### Added — fuzzy matching
+
+- Opt-in bounded, explainable fuzzy name suggestions using Unicode-preserving
+  Levenshtein distance. Exact identity evidence retains precedence; fuzzy-only
+  suggestions remain ambiguous and never merge contacts automatically.
+
+### Added — embedded photos
 
 - Opt-in embedded JPEG/PNG/GIF vCard photos via `photo_mode: :embedded` and
   `--photo-mode embedded`. URI mode remains the default. Missing, unreadable,

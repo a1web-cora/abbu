@@ -1,0 +1,23 @@
+# sig/machine_output.rbs
+module Abbu
+  module Exporters
+    class JsonExporter
+      def payload: () -> Array[Hash[Symbol, untyped]]
+    end
+  end
+
+  class MachineOutput
+    def initialize: (untyped input) -> void
+    def contacts: (?Enumerable[Contact] records) -> Array[Hash[Symbol, untyped]]
+    def stats: () -> Hash[Symbol, Integer]
+    def diagnostics: () -> Array[Hash[Symbol, untyped]]
+    def duplicates: () -> Array[Hash[Symbol, untyped]]
+    def matches: () -> Array[Hash[Symbol, untyped]]
+    def images: (String destination) -> Hash[Symbol, untyped]
+  end
+
+  class MachineCommand
+    def initialize: (Hash[Symbol, untyped] options, Array[String] arguments, ?stdout: untyped, ?stderr: untyped) -> void
+    def run: () -> Integer
+  end
+end
