@@ -4,9 +4,13 @@
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
+require 'date'
 require 'json'
 require 'optparse'
+require 'time'
 require 'abbu'
+
+machine_requested = ARGV.include?('--json') || ARGV.include?('--matches') || ARGV.include?('--diagnostics')
 
 options = {
   format: nil,
@@ -27,9 +31,15 @@ options = {
 parser = OptionParser.new
 parser.banner = 'Usage: abbu <file.abbu> [options] | abbu --live [options] | abbu --live-path PATH [options]'
 
-parser.on('-f', '--format FORMAT', %w[csv json vcard], 'Export format (csv, json, vcard)') do |f|
+parser.on('-f', '--format FORMAT', %w[csv json vcard icalendar], 'Export format (csv, json, vcard, icalendar)') do |f|
   options[:format] = f
 end
+
+parser.on('--calendar-year YEAR', Integer, 'First reminder year (not a birth year)') { |v| options[:calendar_year] = v }
+parser.on('--calendar-stamp TIME', 'Export revision time in ISO 8601 with timezone') do |v|
+  options[:calendar_stamp] = v
+end
+parser.on('--calendar-id ID', 'Unique caller-owned calendar namespace') { |v| options[:calendar_id] = v }
 
 parser.on('-o', '--output FILE', 'Output file (default: stdout)') do |o|
   options[:output] = o
@@ -45,6 +55,10 @@ end
 
 parser.on('--stats', 'Print contact statistics') do
   options[:stats] = true
+end
+
+parser.on('--diff PATH', 'Compare this input with another archive; optional --json') do |path|
+  options[:diff] = path
 end
 
 parser.on('--dedupe', 'Find and print duplicate contacts') do
@@ -89,8 +103,16 @@ parser.on('--phone NUMBER', 'Find contacts by exact normalized phone number') do
   options[:phone] = number
 end
 
-parser.on('--json', 'Emit search results as JSON (optional for --sources or --groups)') do
+parser.on('--json', 'Emit a single JSON document for the selected operation (default: contacts)') do
   options[:json] = true
+end
+
+parser.on('--matches', 'Emit provenance-aware identity suggestions as JSON; never merges') do
+  options[:matches] = true
+end
+
+parser.on('--diagnostics', 'Parse contacts and emit parser diagnostics as JSON') do
+  options[:diagnostics] = true
 end
 
 timestamp_bounds = %w[since before]
@@ -105,12 +127,12 @@ timestamp_bounds = %w[since before]
 end
 
 parser.on('-v', '--version', 'Print version') do
-  puts "abbu #{Abbu::VERSION}"
+  puts(machine_requested ? JSON.generate(version: Abbu::VERSION) : "abbu #{Abbu::VERSION}")
   exit
 end
 
 parser.on('-h', '--help', 'Print this help') do
-  puts parser
+  puts(machine_requested ? JSON.generate(help: parser.to_s) : parser)
   exit
 end
 
@@ -122,7 +144,16 @@ parser.on('--live-path PATH', 'Read the specified live AddressBook directory') d
   options[:live_path] = path
 end
 
-parser.parse!
+begin
+  parser.parse!
+rescue OptionParser::ParseError => e
+  raise unless machine_requested
+
+  puts JSON.generate(error: { code: 'invalid_option', message: e.message })
+  exit 2
+end
+
+exit Abbu::MachineCommand.new(options, ARGV).run if machine_requested
 
 live_mode = options[:live] || !options[:live_path].nil?
 live_path = options[:live_path]
@@ -157,6 +188,38 @@ end
 
 begin
   Abbu::MergePreview.validate!(options)
+  if options[:diff]
+    unless options.values_at(:format, :output, :photo_mode, :extract_images, :stats, :dedupe, :schema,
+                             :sources, :groups, :search, :email, :phone, :date_filters,
+                             :calendar_year, :calendar_stamp, :calendar_id).compact.none? { |v| v }
+      raise ArgumentError, '--diff supports only --json, --strict and input selection'
+    end
+
+    archive = if live_mode
+                Abbu.open_live(live_path, strict: options[:strict])
+              else
+                Abbu.open(file, strict: options[:strict])
+              end
+    after = Abbu.open(options[:diff], strict: options[:strict])
+    comparison = Abbu::SnapshotDiff.new(archive, after).to_h
+    %i[added removed changed unchanged ambiguous].each { |kind| puts "#{kind}: #{comparison.fetch(kind).length}" }
+    warn "Comparison input diagnostics: #{after.diagnostics.length}" unless after.diagnostics.empty?
+    exit 0
+  end
+
+  calendar_options = options.values_at(:calendar_year, :calendar_stamp, :calendar_id)
+  if options[:format] == 'icalendar' || calendar_options.any?
+    conflicts = options.values_at(:stats, :dedupe, :search, :email, :phone, :schema, :extract_images,
+                                  :date_filters, :sources, :groups, :json, :photo_mode).any?
+    if options[:format] != 'icalendar' || calendar_options.any?(&:nil?) || conflicts
+      raise ArgumentError, 'standalone --format icalendar requires --calendar-year, --calendar-stamp, and --calendar-id'
+    end
+    unless options[:calendar_stamp].match?(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})\z/)
+      raise ArgumentError, '--calendar-stamp requires full ISO 8601 with timezone'
+    end
+
+    Date.iso8601(options[:calendar_stamp].split('T').first)
+  end
   if options[:photo_mode] && (options[:format] != 'vcard' ||
      options.values_at(:stats, :dedupe, :search, :email, :phone, :schema, :extract_images, :date_filters).any?)
     raise ArgumentError, '--photo-mode requires a standalone --format vcard export'
@@ -283,6 +346,12 @@ begin
   when 'vcard'
     exporter = Abbu::Exporters::VcardExporter.new(archive.contacts, photo_mode: options.fetch(:photo_mode, :uri))
     options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+  when 'icalendar'
+    metadata = { year: options[:calendar_year], generated_at: Time.iso8601(options[:calendar_stamp]),
+                 calendar_id: options[:calendar_id] }
+    exporter = Abbu::Exporters::IcalendarExporter.new(archive.contacts, **metadata)
+    options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+    exporter.diagnostics.each { |d| warn "Calendar #{d[:category]}: contact #{d[:contact_index]}, #{d[:field]}" }
   else
     puts parser
     exit 1

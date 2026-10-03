@@ -55,6 +55,12 @@ parse errors exit 2; existing live input errors retain exit 1. Diagnostics remai
 on stderr. Policies validate even when there are no candidates. A source selector
 that does not uniquely identify one member of a candidate pair fails explicitly.
 
+Merge options cannot accompany machine operations (`--json`, `--matches`, or
+`--diagnostics`), snapshot diff, or calendar exports/metadata. Machine-mode
+conflicts produce the existing structured `invalid_input` error with status 2;
+they never silently fall back to contact output. Operation conflicts and orphaned
+policy/source options are rejected before reading inputs.
+
 There is no CLI apply, file output or source mutation path. Exact matching is
 currently all-pairs and results/plans are buffered: scope inputs in the Ruby API
 for large datasets. A plan contains sensitive raw values, labels, image paths,
