@@ -38,6 +38,15 @@ module Abbu
         @paths.filter_map { |file| parse_file(file) }
       end
 
+      def each_contact
+        return enum_for(:each_contact) unless block_given?
+
+        @paths.each do |file|
+          contact = parse_file(file)
+          yield contact if contact
+        end
+      end
+
       private
 
       def resolve_paths(paths)

@@ -24,6 +24,13 @@ module Abbu
         end)
       end
 
+      def write_to(io)
+        csv = CSV.new(io)
+        csv << headers
+        @contacts.each { |contact| csv << row(contact) }
+        nil
+      end
+
       private
 
       def headers

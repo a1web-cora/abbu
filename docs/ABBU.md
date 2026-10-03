@@ -420,6 +420,16 @@ separate compatibility gate before broader claims.
 
 ## Repository Evidence
 
+- [Portable normalized SQLite](PORTABLE_SQLITE.md) writes an ABBU-owned derived
+  schema from public contacts, preserving source and raw multivalue evidence.
+  It does not copy private tables, infer Apple IDs, convert calendar semantics,
+  or claim Apple import compatibility. XML and SQLite source immutability is tested.
+
+- [iCalendar export](ICALENDAR.md) consumes existing normalized birthday and
+  anniversary fields. Synthetic SQLite and plist regressions preserve raw labels
+  and source bytes; they introduce no private-calendar mapping or Apple import
+  certification. Explicit lunar/alternate values are diagnosed and omitted.
+
 - [Alternate-calendar evidence boundary](ALTERNATE_CALENDAR_EVIDENCE.md): legacy
   lunar labels/components do not establish a calendar, leap month or year cycle.
 

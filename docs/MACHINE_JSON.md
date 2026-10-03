@@ -24,6 +24,7 @@ response. Human CLI modes and `--format json` without `--json` remain unchanged.
 | `--matches` (optional `--json`) | Identity suggestion array | `[]`, status 0 |
 | `--diagnostics` (optional `--json`) | Parser diagnostic array after parsing | `[]`, status 0 |
 | `--extract-images DIR --json` | `{files, diagnostics}` | Two empty arrays, status 0 |
+| `--diff PATH --json` | [Snapshot comparison](SNAPSHOT_DIFF.md), schema version 1 | Empty category arrays, status 0 |
 | `--version --json`, `--help --json` | `{version}` or `{help}` strings | Not applicable |
 
 Only one operation is allowed, except timestamp bounds can accompany one search.
