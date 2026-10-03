@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.15.0
+
+- Portable normalized SQLite exporter and `--format sqlite --output FILE`, with
+  explicit schema version, relational contact/source/group/multivalue/date data,
+  raw-label and primitive-value evidence, transactional staging, and atomic no-overwrite publication.
+  Existing exports and source stores remain unchanged; this is not an Apple writer.
+
 ### Added — planned 0.14.0
 
 - Immutable merge-plan previews with explicit union, timestamp, source and
