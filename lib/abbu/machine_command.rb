@@ -58,6 +58,8 @@ module Abbu
     end
 
     def validate!
+      raise ArgumentError, '--stream requires a standalone CSV, JSONL or vCard export' if @options[:stream]
+
       MergePreview.validate!(@options.merge(json: true))
       validate_input!
       validate_operation!

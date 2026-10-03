@@ -11,6 +11,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.16.0
+
+- `Archive#each_contact` and `LiveStore#each_contact` enumerate contacts without
+  populating the cached array; SQLite readers close on block termination/errors.
+- Incremental CSV/vCard `write_to(io)`, JSONL export, and opt-in CLI `--stream`.
+  Late failures can leave partial output. Existing buffered exports are unchanged.
+- Reproducible synthetic 10,000-contact benchmark and documented memory bounds.
+
 ### Added — planned 0.15.0
 
 - Portable normalized SQLite exporter and `--format sqlite --output FILE`, with

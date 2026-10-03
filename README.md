@@ -3,8 +3,8 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.15.0 adds portable normalized SQLite export alongside merge-plan
-previews, snapshot comparison, iCalendar reminders, machine JSON, queries, and existing exports.
+Development version 0.16.0 adds uncached contact iteration and incremental exports alongside
+portable SQLite, merge previews, snapshot comparison, iCalendar, machine JSON, and queries.
 The public API remains pre-1.0.
 
 ## Features
@@ -469,6 +469,21 @@ in memory, including base64 expansion. Do not embed untrusted or oversized files
 See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature checklist.
 The [pre-1.0 API stability gate](docs/API_STABILITY.md) inventories supported
 surfaces, evidence gaps, compatibility policy, and required release-readiness checks.
+
+### Streaming Large Archives
+
+Use `archive.each_contact` (also available on live stores) for uncached iteration.
+CSV and vCard exporters accept this enumerable through `write_to(io)`; the new
+`JsonlExporter` writes one existing JSON contact representation per line.
+
+```ruby
+Abbu::Exporters::JsonlExporter.new(Abbu.open('Contacts.abbu').each_contact).write_to($stdout)
+```
+
+CLI: `abbu Contacts.abbu --stream --format csv --output contacts.csv`.
+CSV, JSONL and vCard support streaming; JSONL always streams. Existing buffered
+CSV/JSON/vCard defaults remain unchanged. Streaming can leave partial output on
+late errors, including embedded-photo failures. See [streaming limits and benchmark](docs/STREAMING.md).
 
 ## Ruby Compatibility
 

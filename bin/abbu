@@ -31,10 +31,12 @@ options = {
 parser = OptionParser.new
 parser.banner = 'Usage: abbu <file.abbu> [options] | abbu --live [options] | abbu --live-path PATH [options]'
 
-parser.on('-f', '--format FORMAT', %w[csv json sqlite vcard icalendar],
-          'Export format (csv, json, sqlite, vcard, icalendar)') do |f|
+parser.on('-f', '--format FORMAT', %w[csv json jsonl sqlite vcard icalendar],
+          'Export format (csv, json, jsonl, sqlite, vcard, icalendar)') do |f|
   options[:format] = f
 end
+
+parser.on('--stream', 'Stream CSV/JSONL/vCard; errors may leave partial output') { options[:stream] = true }
 
 parser.on('--calendar-year YEAR', Integer, 'First reminder year (not a birth year)') { |v| options[:calendar_year] = v }
 parser.on('--calendar-stamp TIME', 'Export revision time in ISO 8601 with timezone') do |v|
@@ -188,6 +190,13 @@ at_exit do
 end
 
 begin
+  if options[:stream] && (!%w[csv jsonl vcard].include?(options[:format]) ||
+     options.values_at(:extract_images, :schema, :search, :email, :phone, :json, :date_filters,
+                       :sources, :groups, :stats, :dedupe, :diff, :merge_preview, :merge_policy,
+                       :prefer_source, :calendar_year, :calendar_stamp, :calendar_id).any?)
+    raise ArgumentError, '--stream requires only CSV, JSONL or vCard export options'
+  end
+
   if options[:format] == 'sqlite'
     conflicts = options.values_at(:stats, :dedupe, :search, :email, :phone, :schema, :extract_images,
                                   :date_filters, :sources, :groups, :json, :photo_mode).any?
@@ -344,12 +353,31 @@ begin
     exit
   end
 
+  if options[:stream]
+    contacts = archive.each_contact
+    exporter = case options[:format]
+               when 'csv' then Abbu::Exporters::CsvExporter.new(contacts)
+               when 'jsonl' then Abbu::Exporters::JsonlExporter.new(contacts)
+               when 'vcard'
+                 Abbu::Exporters::VcardExporter.new(contacts, photo_mode: options.fetch(:photo_mode, :uri))
+               end
+    if options[:output]
+      File.open(options[:output], 'wb') { |io| exporter.write_to(io) }
+    else
+      exporter.write_to($stdout)
+    end
+    exit 0
+  end
+
   case options[:format]
   when 'csv'
     exporter = Abbu::Exporters::CsvExporter.new(archive.contacts)
     options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
   when 'json'
     exporter = Abbu::Exporters::JsonExporter.new(archive.contacts)
+    options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
+  when 'jsonl'
+    exporter = Abbu::Exporters::JsonlExporter.new(archive.each_contact)
     options[:output] ? exporter.to_file(options[:output]) : exporter.to_stdout
   when 'sqlite'
     begin
