@@ -233,11 +233,10 @@ RSpec.describe 'abbu CLI' do # rubocop:disable RSpec/DescribeClass
     expect($CHILD_STATUS.exitstatus).to eq(1)
   end
 
-  it 'rejects JSON mode without a search option' do
+  it 'lists contacts in JSON mode without another operation' do
     fixture = File.expand_path('fixtures/TestContacts.abbu', __dir__)
-    output = `#{bin} "#{fixture}" --json 2>&1`
-
-    expect(output).to include('--json requires --search, --email, or --phone')
-    expect($CHILD_STATUS.exitstatus).to eq(1)
+    output, _stderr, status = Open3.capture3(bin, fixture, '--json')
+    expect(JSON.parse(output).length).to eq(3)
+    expect(status.exitstatus).to eq(0)
   end
 end

@@ -3,8 +3,8 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.8.0 strengthens vCard serialization alongside source-scoped groups, timestamp
-queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
+Development version 0.13.0 adds evidence-aware snapshot comparison and retains iCalendar reminders
+alongside machine JSON, source-scoped groups, queries, diagnostics, images, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
 ## Features
@@ -272,6 +272,31 @@ See [vCard evidence and compatibility limits](docs/ABBU.md#vcard-serialization-e
 for the standards basis and Apple-specific audit. Synthetic round-trip tests
 are not proof of import fidelity in every Apple Contacts release.
 
+### Birthday And Anniversary Calendars
+
+```ruby
+calendar = Abbu::Exporters::IcalendarExporter.new(
+  archive.contacts, year: 2026, generated_at: Time.utc(2026, 10, 1),
+  calendar_id: 'your-unique-calendar-namespace'
+)
+calendar.to_file('reminders.ics')
+calendar.diagnostics # Non-PII omission categories and zero-based contact indexes
+```
+
+```bash
+abbu Contacts.abbu --format icalendar --calendar-year 2026 \
+  --calendar-stamp 2026-10-01T00:00:00Z --calendar-id your-unique-calendar-namespace \
+  --output reminders.ics
+```
+
+The three metadata arguments are explicit so the same ordered input and metadata
+produce identical bytes without inventing a birth year, revision time, or Apple
+identity. Choose your own unique calendar namespace and actual export revision
+time. `year` is the first reminder year, not an original year. Unknown years stay
+unknown, and February 29 reminders recur only in leap years. Lunar/alternate
+calendar dates are diagnosed and omitted, not converted. See the
+[iCalendar contract](docs/ICALENDAR.md) for identity, privacy, and import limits.
+
 ### Duplicate Detection
 
 ```ruby
@@ -299,7 +324,24 @@ merged = matches.first.merge(policy: ->(left, right, evidence:) {
 })
 ```
 
+### Fuzzy Name Suggestions (Ruby)
+
+```ruby
+suggestions = Abbu::Utils::FuzzyMatcher.new(
+  archive.contacts.first, archive.contacts, threshold: 0.85
+).matches
+suggestions.each { |match| pp [match.status, match.score, match.evidence] }
+```
+
+This opt-in API compares one anchor against candidates, not all candidate pairs.
+It preserves parser evidence and existing exact deduplication behavior. See
+[fuzzy matching](docs/FUZZY_MATCHING.md) for score contributions, Unicode rules,
+resource bounds and ambiguity limits. Similarity is not identity.
+
 ## CLI
+
+For shell and agent integrations, see the [machine JSON contract](docs/MACHINE_JSON.md),
+including structured diagnostics, identity suggestions, exit codes, and privacy.
 
 ```bash
 # Export to CSV
@@ -374,6 +416,10 @@ Compare archives with `abbu Before.abbu --diff After.abbu --json` or
 `Abbu::SnapshotDiff.new(before, after).to_h`. See the
 [snapshot comparison contract](docs/SNAPSHOT_DIFF.md) for ambiguity, privacy,
 resource limits and field-level evidence.
+
+ABBU remains read-only for source archives and live stores. The
+[writer research decision](docs/WRITER_DECISION.md) explains why generating
+Apple-private bundles is not supported and what evidence could change that.
 
 ### Portable vCard Photos
 

@@ -1,0 +1,22 @@
+# sig/fuzzy_matcher.rbs
+module Abbu
+  module Utils
+    class Deduplicator
+      class Match
+        attr_reader left: Contact
+        attr_reader right: Contact
+        attr_reader evidence: Array[Hash[Symbol, untyped]]
+        attr_reader score: Float
+        attr_reader confidence: Symbol
+        attr_reader status: Symbol
+        def sources: () -> Array[untyped]
+        def ambiguous?: () -> bool
+        def merge: (?policy: untyped) -> untyped
+      end
+    end
+    class FuzzyMatcher
+      def initialize: (Contact contact, Enumerable[Contact] candidates, ?threshold: Numeric, ?max_candidates: Integer, ?max_name_length: Integer) -> void
+      def matches: () -> Array[Deduplicator::Match]
+    end
+  end
+end
