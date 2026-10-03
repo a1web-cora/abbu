@@ -1,7 +1,18 @@
 # .github/workflows/release.yml
 name: Release gem
+run-name: Release ${{ inputs.version || github.ref_name }} at ${{ inputs.commit || github.sha }}
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Approved stable version, without v (for example 0.18.0)'
+        required: true
+        type: string
+      commit:
+        description: 'Approved full 40-character commit SHA accepted on main'
+        required: true
+        type: string
   push:
     tags:
       - "v*"
@@ -13,51 +24,137 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
+  prepare:
+    if: github.repository == 'scarver2/abbu'
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
-      id-token: write
-
-    environment: release
-
+    outputs:
+      version: ${{ steps.candidate.outputs.version }}
+      commit: ${{ steps.candidate.outputs.commit }}
+      epoch: ${{ steps.candidate.outputs.epoch }}
     steps:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Verify authorized source and reproducible build timestamp
-        shell: bash
+      - name: Validate exact release candidate
+        id: candidate
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_COMMIT: ${{ inputs.commit }}
         run: |
           set -euo pipefail
-          [[ "${GITHUB_REF_TYPE}" == "tag" ]]
-          [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
-          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)" >> "$GITHUB_ENV"
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-          bundler-cache: true
-
-      - name: Verify tag matches gem version
-        shell: bash
-        run: |
-          version="$(ruby -Ilib -rabbu/version -e 'print Abbu::VERSION')"
-          expected="v${version}"
-          if [[ "${GITHUB_REF_NAME}" != "${expected}" ]]; then
-            echo "Release tag ${GITHUB_REF_NAME} does not match gem version ${expected}" >&2
-            exit 1
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            [[ "$GITHUB_REF" == refs/heads/main ]]
+            version="$INPUT_VERSION"
+            commit="$INPUT_COMMIT"
+          else
+            [[ "$GITHUB_REF_TYPE" == tag ]]
+            version="${GITHUB_REF_NAME#v}"
+            commit="$(git rev-parse HEAD)"
           fi
+          git fetch origin main --tags
+          bin/release-check "$version" "$commit"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "epoch=$(git show -s --format=%ct "$commit")" >> "$GITHUB_OUTPUT"
+          printf '### Release candidate\n\nVersion: `%s`\n\nCommit: `%s`\n' "$version" "$commit" >> "$GITHUB_STEP_SUMMARY"
 
+  verify:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        ruby-version: ["3.3", "3.4", "4.0"]
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.prepare.outputs.epoch }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
       - name: Verify release package
         run: |
           bin/spec
           bin/lint
           bin/package
 
+  tag:
+    name: Authorize and tag exact candidate
+    needs: [prepare, verify]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Create only the approved tag (never move it)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          COMMIT: ${{ needs.prepare.outputs.commit }}
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags
+          bin/release-check "$VERSION" "$COMMIT"
+          if ! git show-ref --verify --quiet "refs/tags/v$VERSION"; then
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" --method POST \
+              -f "ref=refs/tags/v$VERSION" -f "sha=$COMMIT"
+          fi
+          git fetch origin "refs/tags/v$VERSION"
+          [[ "$(git rev-parse 'FETCH_HEAD^{commit}')" == "$COMMIT" ]]
+
+  release:
+    name: Publish approved gem
+    needs: [prepare, tag]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.prepare.outputs.epoch }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify immutable tag before publishing
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          COMMIT: ${{ needs.prepare.outputs.commit }}
+        run: |
+          set -euo pipefail
+          git fetch origin "refs/tags/v$VERSION"
+          [[ "$(git rev-parse HEAD)" == "$COMMIT" ]]
+          [[ "$(git rev-parse 'FETCH_HEAD^{commit}')" == "$COMMIT" ]]
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - name: Verify release package again in publishing checkout
+        run: |
+          bin/spec
+          bin/lint
+          bin/package
+
+      # Continue in this run: GITHUB_TOKEN tag creation does not trigger push workflows.
       - uses: rubygems/release-gem@v1
+      - name: Record publication
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          COMMIT: ${{ needs.prepare.outputs.commit }}
+        run: |
+          printf 'Published abbu %s from %s through RubyGems Trusted Publishing.\n' "$VERSION" "$COMMIT" >> "$GITHUB_STEP_SUMMARY"

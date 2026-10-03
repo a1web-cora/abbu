@@ -57,6 +57,9 @@ matrix runs this same command with its Bundler-managed installation paths.
 
 ## Pull Request Guidelines
 
+For authorized publication, use the [GitHub-hosted release runbook](RELEASING.md).
+It documents exact-commit dispatch, environment approvals, and safe recovery.
+
 - Base branch: `main`
 - Commit style: [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `chore:`)
 - All specs must pass and coverage must remain at 100%

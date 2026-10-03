@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# bin/release-check
+
+source "$(dirname "$0")/_lib.sh"
+
+if [[ "${1:-}" == --help || "${1:-}" == -h ]]; then
+  echo 'Usage: bin/release-check VERSION FULL_COMMIT_SHA'
+  echo 'Read-only checks against fetched origin/main and tags. Does not authorize publication.'
+  exit 0
+fi
+
+fail() { echo "Release check: $*" >&2; exit 1; }
+[[ $# == 2 ]] || fail 'expected version and full commit SHA'
+version="$1"
+commit="$2"
+[[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail 'invalid stable version'
+[[ "$commit" =~ ^[0-9a-f]{40}$ ]] || fail 'expected lowercase full commit SHA'
+[[ -z "$(git status --porcelain)" ]] || fail 'checkout is not clean'
+[[ "$(git rev-parse "$commit^{commit}")" == "$commit" ]] || fail 'not an exact commit'
+git merge-base --is-ancestor "$commit" origin/main || fail 'commit is not accepted on origin/main'
+
+# Inspect data without executing code from the candidate commit.
+git show "$commit:lib/abbu/version.rb" | grep -Fx "  VERSION = '$version'" >/dev/null || fail 'version mismatch'
+git show "$commit:docs/CHANGELOG.md" | grep -F "## [$version] - " | grep -E ' - [0-9]{4}-[0-9]{2}-[0-9]{2}$' >/dev/null || fail 'missing dated changelog'
+tag="v$version"
+if git show-ref --verify --quiet "refs/tags/$tag"; then
+  [[ "$(git rev-parse "refs/tags/$tag^{commit}")" == "$commit" ]] || fail 'existing tag points elsewhere'
+fi
+printf 'Verified release candidate %s at %s (not publication authorization)\n' "$tag" "$commit"

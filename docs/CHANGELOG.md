@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Release Tooling
+
+- Browser-initiated GitHub releases accept an exact approved version and commit,
+  verify the supported Ruby matrix, and create immutable tags with the built-in
+  GitHub token before OIDC publication. Protected Sheriff approvals remain required.
+
 ## [0.18.0] - 2026-10-03
 
 This release includes the previously unreleased 0.12.0–0.17.0 development milestones.

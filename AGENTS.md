@@ -83,6 +83,8 @@ Project-local commands are authoritative:
 - `bin/spec [arguments]` runs RSpec;
 - `bin/lint [arguments]` runs RuboCop;
 - `bin/package` builds and verifies the gem package; and
+- `bin/release-check VERSION FULL_COMMIT_SHA` checks fetched release source
+  invariants without creating a tag or publishing; and
 - `bin/dev` runs the Guard development loop.
 
 CI must call these commands instead of recreating their implementation. Add a
@@ -141,6 +143,11 @@ gate.
 - A release workflow executes prior authorization; it never grants it. Creating
   or pushing the release tag remains Sheriff-gated, and the workflow must verify
   that the tag exactly matches the gem version before publishing.
+- Browser release dispatch must run from `main` with an explicitly approved
+  version and full commit SHA. Keep tag creation and OIDC publication in
+  separate protected jobs with Contents-write and OIDC-write scoped separately.
+  See `docs/RELEASING.md`; dispatch, tag creation, and environment approval remain
+  Sheriff-gated.
 
 ## Repository Skills
 
