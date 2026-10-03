@@ -57,10 +57,12 @@ jobs:
           fi
           git fetch origin main --tags
           bin/release-check "$version" "$commit"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "commit=$commit" >> "$GITHUB_OUTPUT"
-          echo "epoch=$(git show -s --format=%ct "$commit")" >> "$GITHUB_OUTPUT"
-          printf '### Release candidate\n\nVersion: `%s`\n\nCommit: `%s`\n' "$version" "$commit" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "version=$version"
+            echo "commit=$commit"
+            echo "epoch=$(git show -s --format=%ct "$commit")"
+          } >> "$GITHUB_OUTPUT"
+          printf '### Release candidate\n\nVersion: %s\n\nCommit: %s\n' "$version" "$commit" >> "$GITHUB_STEP_SUMMARY"
 
   verify:
     needs: prepare
