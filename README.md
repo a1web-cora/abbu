@@ -3,8 +3,8 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.11.0 adds an optional read-only MCP adapter alongside source-scoped groups, timestamp
-queries, diagnostics, identity evidence, image extraction, and CSV/JSON/vCard export.
+Development version 0.17.0 adds an optional read-only MCP adapter alongside streaming,
+portable SQLite, merge previews, snapshot comparison, iCalendar, machine JSON, and queries.
 The public API remains pre-1.0.
 
 ## Features
@@ -272,6 +272,50 @@ See [vCard evidence and compatibility limits](docs/ABBU.md#vcard-serialization-e
 for the standards basis and Apple-specific audit. Synthetic round-trip tests
 are not proof of import fidelity in every Apple Contacts release.
 
+### Portable SQLite
+
+```ruby
+Abbu::Exporters::SqliteExporter.new(archive.contacts).to_file('contacts.sqlite')
+```
+
+```bash
+abbu Contacts.abbu --format sqlite --output contacts.sqlite
+```
+
+This creates a separate, queryable ABBU-owned relational database with schema
+version metadata, source provenance, timestamps, multivalues, groups, and raw
+labels. It does not copy Apple tables or create an Apple-importable backup.
+Existing destinations (including symlinks) are never replaced. Output is a
+sensitive **unencrypted** artifact with owner-only file permissions, not a secure
+storage service; place it on appropriately encrypted storage and limit retention.
+See the [portable SQLite contract](docs/PORTABLE_SQLITE.md) for the schema,
+round-trip evaluation, deterministic-order boundary, and publication safeguards.
+
+### Birthday And Anniversary Calendars
+
+```ruby
+calendar = Abbu::Exporters::IcalendarExporter.new(
+  archive.contacts, year: 2026, generated_at: Time.utc(2026, 10, 1),
+  calendar_id: 'your-unique-calendar-namespace'
+)
+calendar.to_file('reminders.ics')
+calendar.diagnostics # Non-PII omission categories and zero-based contact indexes
+```
+
+```bash
+abbu Contacts.abbu --format icalendar --calendar-year 2026 \
+  --calendar-stamp 2026-10-01T00:00:00Z --calendar-id your-unique-calendar-namespace \
+  --output reminders.ics
+```
+
+The three metadata arguments are explicit so the same ordered input and metadata
+produce identical bytes without inventing a birth year, revision time, or Apple
+identity. Choose your own unique calendar namespace and actual export revision
+time. `year` is the first reminder year, not an original year. Unknown years stay
+unknown, and February 29 reminders recur only in leap years. Lunar/alternate
+calendar dates are diagnosed and omitted, not converted. See the
+[iCalendar contract](docs/ICALENDAR.md) for identity, privacy, and import limits.
+
 ### Duplicate Detection
 
 ```ruby
@@ -299,10 +343,37 @@ merged = matches.first.merge(policy: ->(left, right, evidence:) {
 })
 ```
 
+### Fuzzy Name Suggestions (Ruby)
+
+```ruby
+suggestions = Abbu::Utils::FuzzyMatcher.new(
+  archive.contacts.first, archive.contacts, threshold: 0.85
+).matches
+suggestions.each { |match| pp [match.status, match.score, match.evidence] }
+```
+
+This opt-in API compares one anchor against candidates, not all candidate pairs.
+It preserves parser evidence and existing exact deduplication behavior. See
+[fuzzy matching](docs/FUZZY_MATCHING.md) for score contributions, Unicode rules,
+resource bounds and ambiguity limits. Similarity is not identity.
+
 ## CLI
 
 An opt-in [MCP adapter](docs/MCP.md) exposes public read APIs to a trusted local
 agent host. It requires a separately installed SDK; ordinary ABBU use does not.
+
+### Safe Merge Plans
+
+```ruby
+plan = Abbu::MergePlan.new(left, right, policy: :prefer_newer)
+pp plan.to_h # detached inputs, selected fields, alternatives, conflicts and reasons
+merged = plan.materialize # raises without a policy or with unresolved conflicts
+```
+
+`abbu Contacts.abbu --merge-preview` emits exact-evidence candidate plans as JSON
+without applying them. Optional `--merge-policy prefer_source --prefer-source
+Sources/Example/AddressBook-v22.abcddb` previews an explicit preference. See
+[merge-plan boundaries](docs/MERGE_PLANS.md) before materializing derived contacts.
 
 For shell and agent integrations, see the [machine JSON contract](docs/MACHINE_JSON.md),
 including structured diagnostics, identity suggestions, exit codes, and privacy.
@@ -376,6 +447,15 @@ synthetic shapes from unverified macOS/Contacts releases.
 
 ## Roadmap
 
+Compare archives with `abbu Before.abbu --diff After.abbu --json` or
+`Abbu::SnapshotDiff.new(before, after).to_h`. See the
+[snapshot comparison contract](docs/SNAPSHOT_DIFF.md) for ambiguity, privacy,
+resource limits and field-level evidence.
+
+ABBU remains read-only for source archives and live stores. The
+[writer research decision](docs/WRITER_DECISION.md) explains why generating
+Apple-private bundles is not supported and what evidence could change that.
+
 ### Portable vCard Photos
 
 Use `abbu Contacts.abbu --format vcard --photo-mode embedded --output contacts.vcf`
@@ -392,6 +472,21 @@ in memory, including base64 expansion. Do not embed untrusted or oversized files
 See [`docs/TODO.md`](docs/TODO.md) for the full release schedule and feature checklist.
 The [pre-1.0 API stability gate](docs/API_STABILITY.md) inventories supported
 surfaces, evidence gaps, compatibility policy, and required release-readiness checks.
+
+### Streaming Large Archives
+
+Use `archive.each_contact` (also available on live stores) for uncached iteration.
+CSV and vCard exporters accept this enumerable through `write_to(io)`; the new
+`JsonlExporter` writes one existing JSON contact representation per line.
+
+```ruby
+Abbu::Exporters::JsonlExporter.new(Abbu.open('Contacts.abbu').each_contact).write_to($stdout)
+```
+
+CLI: `abbu Contacts.abbu --stream --format csv --output contacts.csv`.
+CSV, JSONL and vCard support streaming; JSONL always streams. Existing buffered
+CSV/JSON/vCard defaults remain unchanged. Streaming can leave partial output on
+late errors, including embedded-photo failures. See [streaming limits and benchmark](docs/STREAMING.md).
 
 ## Ruby Compatibility
 

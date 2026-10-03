@@ -3,11 +3,12 @@
 
 require 'json'
 require_relative 'machine_output'
+require_relative 'merge_preview'
 
 module Abbu
   # One JSON document per invocation. Existing human CLI paths stay separate.
   class MachineCommand
-    OPERATIONS = %i[stats schema sources groups dedupe matches diagnostics extract_images].freeze
+    OPERATIONS = %i[stats schema sources groups dedupe matches diagnostics extract_images diff].freeze
     SEARCHES = %i[search email phone].freeze
 
     def initialize(options, arguments, stdout: $stdout, stderr: $stderr)
@@ -18,7 +19,7 @@ module Abbu
     end
 
     def run
-      @input = nil
+      @input = @comparison_input = nil
       validate!
       @input = open_input
       print_result
@@ -57,6 +58,9 @@ module Abbu
     end
 
     def validate!
+      raise ArgumentError, '--stream requires a standalone CSV, JSONL or vCard export' if @options[:stream]
+
+      MergePreview.validate!(@options.merge(json: true))
       validate_input!
       validate_operation!
       return unless live? && (search? || %i[schema extract_images].include?(operation))
@@ -81,6 +85,10 @@ module Abbu
     end
 
     def validate_format!(count)
+      if @options.values_at(:calendar_year, :calendar_stamp, :calendar_id).any?
+        raise ArgumentError, 'Calendar options require a standalone iCalendar export'
+      end
+
       incompatible_format = @options[:format] && (@options[:format] != 'json' || count.positive?)
       return unless @options[:output] || @options[:photo_mode] || incompatible_format
 
@@ -93,11 +101,17 @@ module Abbu
       return listing if %i[schema sources groups].include?(operation)
 
       case operation
+      when :diff then snapshot_diff
       when :extract_images then output.images(@options[:extract_images])
       when :dedupe then output.duplicates
       when nil then output.contacts
       else output.public_send(operation)
       end
+    end
+
+    def snapshot_diff
+      @comparison_input = Abbu.open(@options[:diff], strict: @options[:strict])
+      SnapshotDiff.new(@input, @comparison_input).to_h
     end
 
     def listing
@@ -130,6 +144,9 @@ module Abbu
     end
 
     def report_diagnostics
+      if @comparison_input && !@comparison_input.diagnostics.empty?
+        @stderr.puts("Comparison input diagnostics: #{@comparison_input.diagnostics.length}")
+      end
       return unless @input && operation != :diagnostics
 
       @input.diagnostics.each do |diagnostic|
