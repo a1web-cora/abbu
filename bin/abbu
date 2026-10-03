@@ -64,6 +64,10 @@ parser.on('--diff PATH', 'Compare this input with another archive; optional --js
   options[:diff] = path
 end
 
+parser.on('--history', 'Analyze a directory of .abbu snapshots as JSON Lines') do
+  options[:history] = true
+end
+
 parser.on('--dedupe', 'Find and print duplicate contacts') do
   options[:dedupe] = true
 end
@@ -190,6 +194,17 @@ at_exit do
 end
 
 begin
+  if options[:history]
+    allowed = %i[history strict]
+    raise ArgumentError, '--history supports only directory input and --strict' if
+      options.any? { |key, value| value && !allowed.include?(key) } || ARGV.any?
+
+    Abbu::SnapshotHistory.from_directory(file, strict: options[:strict]).each do |transition|
+      puts JSON.generate(transition)
+    end
+    exit 0
+  end
+
   if options[:stream] && (!%w[csv jsonl vcard].include?(options[:format]) ||
      options.values_at(:extract_images, :schema, :search, :email, :phone, :json, :date_filters,
                        :sources, :groups, :stats, :dedupe, :diff, :merge_preview, :merge_policy,

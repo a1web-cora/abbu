@@ -1,0 +1,10 @@
+# sig/snapshot_history.rbs
+module Abbu
+  class SnapshotHistory
+    include Enumerable[Hash[Symbol, untyped]]
+    def initialize: (Enumerable[String] paths, ?strict: bool, ?retention: Integer, ?limits: Hash[Symbol, Integer]) -> void
+    def self.from_directory: (String path, **untyped options) -> SnapshotHistory
+    def each: () { (Hash[Symbol, untyped]) -> void } -> SnapshotHistory
+            | () -> Enumerator[Hash[Symbol, untyped], SnapshotHistory]
+  end
+end

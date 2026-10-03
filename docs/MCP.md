@@ -18,7 +18,7 @@ integration tests, not a mock protocol implementation.
 
 ```ruby
 # Application Gemfile (once this ABBU development version is released)
-gem 'abbu', '~> 0.17.0'
+gem 'abbu', '~> 0.18.0'
 gem 'mcp', '~> 1.6.1'
 ```
 

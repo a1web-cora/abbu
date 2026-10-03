@@ -3,7 +3,8 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.17.0 adds an optional read-only MCP adapter alongside streaming,
+Development version 0.18.0 adds an optional read-only MCP adapter alongside streaming,
+bounded snapshot-history observations,
 portable SQLite, merge previews, snapshot comparison, iCalendar, machine JSON, and queries.
 The public API remains pre-1.0.
 
@@ -361,6 +362,18 @@ resource bounds and ambiguity limits. Similarity is not identity.
 
 An opt-in [MCP adapter](docs/MCP.md) exposes public read APIs to a trusted local
 agent host. It requires a separately installed SDK; ordinary ABBU use does not.
+
+### Snapshot History
+
+```ruby
+Abbu::SnapshotHistory.new(['01.abbu', '02.abbu'], retention: 2).each do |transition|
+  pp transition # current observations, absences and ambiguous continuity
+end
+```
+
+`abbu snapshots-directory --history` streams one JSON object per snapshot in
+lexical directory order. See [history semantics and bounds](docs/SNAPSHOT_HISTORY.md).
+Timeline IDs describe this analysis only, never universal contact identities.
 
 ### Safe Merge Plans
 

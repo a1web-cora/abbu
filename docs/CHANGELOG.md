@@ -11,7 +11,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added — planned 0.17.0
+### Added — planned 0.18.0
 
 - Optional `abbu-mcp` stdio executable and `require 'abbu/mcp'` adapter, using
   the separately installed official MCP Ruby SDK. Core `abbu` has no MCP runtime
@@ -20,6 +20,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   and explicit diagnostics, bound to one operator-selected archive or live path.
   No arbitrary path tool argument, file export, Contacts mutation, default
   contact logging, or unevidenced My Card detection.
+
+### Added — planned 0.17.0
+
+- Streaming snapshot-history transitions with bounded absent-contact retention,
+  per-analysis timelines, explicit ambiguity breaks and observed reappearances.
+  Ruby ordered-list API and directory JSON Lines CLI do not infer edit events.
 
 ### Added — planned 0.16.0
 
