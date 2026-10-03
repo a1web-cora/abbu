@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.16.0 adds uncached contact iteration and incremental exports alongside
+Development version 0.17.0 adds bounded snapshot-history observations alongside
 portable SQLite, merge previews, snapshot comparison, iCalendar, machine JSON, and queries.
 The public API remains pre-1.0.
 
@@ -359,6 +359,17 @@ resource bounds and ambiguity limits. Similarity is not identity.
 
 ## CLI
 
+### Snapshot History
+
+```ruby
+Abbu::SnapshotHistory.new(['01.abbu', '02.abbu'], retention: 2).each do |transition|
+  pp transition # current observations, absences and ambiguous continuity
+end
+```
+
+`abbu snapshots-directory --history` streams one JSON object per snapshot in
+lexical directory order. See [history semantics and bounds](docs/SNAPSHOT_HISTORY.md).
+Timeline IDs describe this analysis only, never universal contact identities.
 ### Safe Merge Plans
 
 ```ruby

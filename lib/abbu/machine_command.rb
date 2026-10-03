@@ -58,6 +58,8 @@ module Abbu
     end
 
     def validate!
+      raise ArgumentError, '--history requires standalone JSON Lines output' if @options[:history]
+
       raise ArgumentError, '--stream requires a standalone CSV, JSONL or vCard export' if @options[:stream]
 
       MergePreview.validate!(@options.merge(json: true))

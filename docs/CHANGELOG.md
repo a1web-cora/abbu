@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.17.0
+
+- Streaming snapshot-history transitions with bounded absent-contact retention,
+  per-analysis timelines, explicit ambiguity breaks and observed reappearances.
+  Ruby ordered-list API and directory JSON Lines CLI do not infer edit events.
+
 ### Added — planned 0.16.0
 
 - `Archive#each_contact` and `LiveStore#each_contact` enumerate contacts without
