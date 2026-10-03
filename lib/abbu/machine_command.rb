@@ -3,6 +3,7 @@
 
 require 'json'
 require_relative 'machine_output'
+require_relative 'merge_preview'
 
 module Abbu
   # One JSON document per invocation. Existing human CLI paths stay separate.
@@ -57,6 +58,7 @@ module Abbu
     end
 
     def validate!
+      MergePreview.validate!(@options.merge(json: true))
       validate_input!
       validate_operation!
       return unless live? && (search? || %i[schema extract_images].include?(operation))

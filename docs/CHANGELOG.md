@@ -11,6 +11,15 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.14.0
+
+- Immutable merge-plan previews with explicit union, timestamp, source and
+  completeness policies. Conflicts and original provenance remain reviewable;
+  materialization requires an explicit policy and never writes source stores.
+  `--merge-preview` provides a JSON-only preview, never an apply operation.
+- Reject merge options in machine JSON, snapshot-diff, and calendar combinations
+  before input reads; machine-mode conflicts retain structured JSON errors.
+
 ### Added — planned 0.13.0
 
 - Identity-evidence snapshot comparison through `SnapshotDiff` and `--diff`,

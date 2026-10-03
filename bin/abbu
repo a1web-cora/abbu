@@ -65,6 +65,16 @@ parser.on('--dedupe', 'Find and print duplicate contacts') do
   options[:dedupe] = true
 end
 
+parser.on('--merge-preview', 'Preview exact-evidence merge plans as JSON; never apply') do
+  options[:merge_preview] = true
+end
+parser.on('--merge-policy POLICY', 'Explicit merge policy for the preview') do |policy|
+  options[:merge_policy] = policy.to_sym
+end
+parser.on('--prefer-source PATH', 'Exact source relative_path for prefer_source policy') do |path|
+  options[:prefer_source] = path
+end
+
 parser.on('--search TERM', 'Find contacts by partial name or email') do |term|
   options[:search] = term
 end
@@ -177,6 +187,7 @@ at_exit do
 end
 
 begin
+  Abbu::MergePreview.validate!(options)
   if options[:diff]
     unless options.values_at(:format, :output, :photo_mode, :extract_images, :stats, :dedupe, :schema,
                              :sources, :groups, :search, :email, :phone, :date_filters,
@@ -235,6 +246,12 @@ begin
     options[:date_filters].each { |field, bounds| Abbu::TimestampRange.new(field, **bounds) }
   end
   archive = live_mode ? Abbu.open_live(live_path, strict: options[:strict]) : Abbu.open(file, strict: options[:strict])
+
+  if options[:merge_preview]
+    plans = Abbu::MergePreview.plans(archive.contacts, policy: options[:merge_policy], source: options[:prefer_source])
+    puts JSON.pretty_generate(plans)
+    exit 0
+  end
 
   if listing.any?
     puts JSON.pretty_generate(archive.public_send(listing.first).map(&:to_h))

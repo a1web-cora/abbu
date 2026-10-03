@@ -1,0 +1,16 @@
+# sig/merge_plan.rbs
+module Abbu
+  class MergePlan
+    attr_reader policy: Symbol?
+    attr_reader fields: Hash[Symbol, untyped]
+    attr_reader sources: Array[untyped]
+    attr_reader conflicts: Hash[Symbol, untyped]
+    def initialize: (Contact left, Contact right, ?policy: Symbol?, ?source: String?) -> void
+    def to_h: () -> Hash[Symbol, untyped]
+    def materialize: () -> Contact
+  end
+  class MergePreview
+    def self.validate!: (Hash[Symbol, untyped] options) -> void
+    def self.plans: (Array[Contact] contacts, ?policy: Symbol?, ?source: String?) -> Array[Hash[Symbol, untyped]]
+  end
+end

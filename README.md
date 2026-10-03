@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.13.0 adds evidence-aware snapshot comparison and retains iCalendar reminders
+Development version 0.14.0 adds explicit merge-plan previews alongside snapshot comparison and iCalendar reminders
 alongside machine JSON, source-scoped groups, queries, diagnostics, images, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
@@ -339,6 +339,19 @@ It preserves parser evidence and existing exact deduplication behavior. See
 resource bounds and ambiguity limits. Similarity is not identity.
 
 ## CLI
+
+### Safe Merge Plans
+
+```ruby
+plan = Abbu::MergePlan.new(left, right, policy: :prefer_newer)
+pp plan.to_h # detached inputs, selected fields, alternatives, conflicts and reasons
+merged = plan.materialize # raises without a policy or with unresolved conflicts
+```
+
+`abbu Contacts.abbu --merge-preview` emits exact-evidence candidate plans as JSON
+without applying them. Optional `--merge-policy prefer_source --prefer-source
+Sources/Example/AddressBook-v22.abcddb` previews an explicit preference. See
+[merge-plan boundaries](docs/MERGE_PLANS.md) before materializing derived contacts.
 
 For shell and agent integrations, see the [machine JSON contract](docs/MACHINE_JSON.md),
 including structured diagnostics, identity suggestions, exit codes, and privacy.
