@@ -57,6 +57,10 @@ parser.on('--stats', 'Print contact statistics') do
   options[:stats] = true
 end
 
+parser.on('--diff PATH', 'Compare this input with another archive; optional --json') do |path|
+  options[:diff] = path
+end
+
 parser.on('--dedupe', 'Find and print duplicate contacts') do
   options[:dedupe] = true
 end
@@ -173,6 +177,25 @@ at_exit do
 end
 
 begin
+  if options[:diff]
+    unless options.values_at(:format, :output, :photo_mode, :extract_images, :stats, :dedupe, :schema,
+                             :sources, :groups, :search, :email, :phone, :date_filters,
+                             :calendar_year, :calendar_stamp, :calendar_id).compact.none? { |v| v }
+      raise ArgumentError, '--diff supports only --json, --strict and input selection'
+    end
+
+    archive = if live_mode
+                Abbu.open_live(live_path, strict: options[:strict])
+              else
+                Abbu.open(file, strict: options[:strict])
+              end
+    after = Abbu.open(options[:diff], strict: options[:strict])
+    comparison = Abbu::SnapshotDiff.new(archive, after).to_h
+    %i[added removed changed unchanged ambiguous].each { |kind| puts "#{kind}: #{comparison.fetch(kind).length}" }
+    warn "Comparison input diagnostics: #{after.diagnostics.length}" unless after.diagnostics.empty?
+    exit 0
+  end
+
   calendar_options = options.values_at(:calendar_year, :calendar_stamp, :calendar_id)
   if options[:format] == 'icalendar' || calendar_options.any?
     conflicts = options.values_at(:stats, :dedupe, :search, :email, :phone, :schema, :extract_images,

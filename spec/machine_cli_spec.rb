@@ -44,4 +44,33 @@ RSpec.describe 'machine CLI contract' do # rubocop:disable RSpec/DescribeClass
       expect(status.exitstatus).to eq(0)
     end
   end
+
+  it 'keeps snapshot comparison JSON distinct from bare contact JSON in either option order' do
+    [['--json', '--diff', fixture], ['--diff', fixture, '--json']].each do |options|
+      stdout, stderr, status = Open3.capture3(bin, fixture, *options)
+      expect(JSON.parse(stdout)).to include('schema_version' => 1, 'added' => [], 'removed' => [])
+      expect(stderr).to be_empty
+      expect(status.exitstatus).to eq(0)
+    end
+  end
+
+  it 'rejects diff conflicts before reading either input or writing output' do
+    conflicts = [%w[--stats], %w[--matches], %w[--diagnostics], %w[--search Stan],
+                 %w[--format json], %w[--output unused.json], %w[--calendar-year 2026],
+                 %w[--calendar-stamp 2026-10-02T00:00:00Z], %w[--calendar-id example]]
+    conflicts.each do |options|
+      stdout, stderr, status = Open3.capture3(bin, '/missing.abbu', '--diff', '/also-missing.abbu', '--json', *options)
+      expect(JSON.parse(stdout)).to include('error' => include('code' => 'invalid_input'))
+      expect(stderr).to be_empty
+      expect(status.exitstatus).to eq(2)
+    end
+  end
+
+  it 'rejects calendar metadata in human diff mode before opening inputs' do
+    options = %w[--diff /also-missing.abbu --calendar-year 2026]
+    stdout, stderr, status = Open3.capture3(bin, '/missing.abbu', *options)
+    expect(stdout).to be_empty
+    expect(stderr).to include('--diff supports only')
+    expect(status.exitstatus).to eq(2)
+  end
 end

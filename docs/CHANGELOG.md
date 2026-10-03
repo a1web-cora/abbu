@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — planned 0.13.0
+
+- Identity-evidence snapshot comparison through `SnapshotDiff` and `--diff`,
+  with raw field changes, provenance, explicit ambiguity and stable JSON output.
+- Snapshot JSON uses the machine dispatcher and structured error contract;
+  conflicting machine operations and calendar metadata fail before input reads.
+
 ### Added — planned 0.12.0
 
 - Deterministic iCalendar birthday/anniversary reminders through a Ruby exporter

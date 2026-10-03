@@ -3,7 +3,7 @@
 # abbu
 
 Read-only Apple Contacts toolkit for `.abbu` archives and opt-in live macOS stores.
-Development version 0.12.0 adds deterministic birthday/anniversary iCalendar reminders
+Development version 0.13.0 adds evidence-aware snapshot comparison and retains iCalendar reminders
 alongside machine JSON, source-scoped groups, queries, diagnostics, images, and CSV/JSON/vCard export.
 The public API remains pre-1.0.
 
@@ -411,6 +411,11 @@ legacy XML and varied SQLite layouts in every CI run, and distinguishes tested
 synthetic shapes from unverified macOS/Contacts releases.
 
 ## Roadmap
+
+Compare archives with `abbu Before.abbu --diff After.abbu --json` or
+`Abbu::SnapshotDiff.new(before, after).to_h`. See the
+[snapshot comparison contract](docs/SNAPSHOT_DIFF.md) for ambiguity, privacy,
+resource limits and field-level evidence.
 
 ABBU remains read-only for source archives and live stores. The
 [writer research decision](docs/WRITER_DECISION.md) explains why generating

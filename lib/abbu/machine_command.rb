@@ -7,7 +7,7 @@ require_relative 'machine_output'
 module Abbu
   # One JSON document per invocation. Existing human CLI paths stay separate.
   class MachineCommand
-    OPERATIONS = %i[stats schema sources groups dedupe matches diagnostics extract_images].freeze
+    OPERATIONS = %i[stats schema sources groups dedupe matches diagnostics extract_images diff].freeze
     SEARCHES = %i[search email phone].freeze
 
     def initialize(options, arguments, stdout: $stdout, stderr: $stderr)
@@ -18,7 +18,7 @@ module Abbu
     end
 
     def run
-      @input = nil
+      @input = @comparison_input = nil
       validate!
       @input = open_input
       print_result
@@ -97,11 +97,17 @@ module Abbu
       return listing if %i[schema sources groups].include?(operation)
 
       case operation
+      when :diff then snapshot_diff
       when :extract_images then output.images(@options[:extract_images])
       when :dedupe then output.duplicates
       when nil then output.contacts
       else output.public_send(operation)
       end
+    end
+
+    def snapshot_diff
+      @comparison_input = Abbu.open(@options[:diff], strict: @options[:strict])
+      SnapshotDiff.new(@input, @comparison_input).to_h
     end
 
     def listing
@@ -134,6 +140,9 @@ module Abbu
     end
 
     def report_diagnostics
+      if @comparison_input && !@comparison_input.diagnostics.empty?
+        @stderr.puts("Comparison input diagnostics: #{@comparison_input.diagnostics.length}")
+      end
       return unless @input && operation != :diagnostics
 
       @input.diagnostics.each do |diagnostic|

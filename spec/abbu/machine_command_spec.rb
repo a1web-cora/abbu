@@ -31,6 +31,41 @@ RSpec.describe Abbu::MachineCommand do
     expect(status).to eq(0)
   end
 
+  it 'compares snapshots through the JSON dispatcher and reports both inputs diagnostics' do
+    payload, status = run_command(diff: fixture)
+    expect(payload).to include('schema_version' => 1, 'changed' => [], 'added' => [], 'removed' => [])
+    expect(payload.fetch('unchanged')).not_to be_empty
+    expect(status).to eq(0)
+    expect(stderr.string).to include('Comparison input diagnostics:', 'missing_optional_data')
+  end
+
+  it 'compares an explicit live input to an archive without changing the diff schema' do
+    payload, status = run_command({ diff: fixture, live_path: fixture }, [])
+    expect(payload).to include('schema_version' => 1)
+    expect(status).to eq(0)
+  end
+
+  it 'applies strict parsing to the comparison input and emits a single error' do
+    plist = File.expand_path('../fixtures/PlistContacts.abbu', __dir__)
+    payload, status = run_command({ diff: fixture, strict: true }, [plist])
+    expect(payload).to include('error' => include('code' => 'invalid_input'))
+    expect(status).to eq(2)
+  end
+
+  it 'clears comparison diagnostics when a reused command fails validation' do
+    options = { diff: fixture }
+    command = described_class.new(options, [fixture], stdout: stdout, stderr: stderr)
+    expect(command.run).to eq(0)
+    stdout.truncate(0)
+    stdout.rewind
+    stderr.truncate(0)
+    stderr.rewind
+    options[:stats] = true
+    expect(command.run).to eq(2)
+    expect(JSON.parse(stdout.string)).to include('error' => include('code' => 'invalid_input'))
+    expect(stderr.string).to be_empty
+  end
+
   %i[calendar_year calendar_stamp calendar_id].each do |key|
     it "rejects #{key} before opening the input" do
       payload, status = run_command({ key => 'calendar metadata' }, ['/missing.abbu'])
